@@ -1,0 +1,8 @@
+[package]
+name = "firecam702/profileservice"
+version = "1.0.0"
+license = "Apache License 2.0"
+authors = ["loleris"]
+description = "Forked ProfileService"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "server"

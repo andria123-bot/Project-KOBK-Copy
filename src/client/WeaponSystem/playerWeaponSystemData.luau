@@ -1,0 +1,64 @@
+local playerWeaponSystemData = {
+    weaponSystem = {
+        inventory = {
+            "HK416";
+            "Khrissy10R";
+            "MG42";
+            "Knife";
+            "Grenade";
+            "";
+            "";
+            "";
+            "";
+        };
+        
+        gear = {
+            ChestRig = nil,
+            Backpack = nil,
+            Leggings = nil,
+            TShirt = nil,
+            Helmet = nil,
+            Pants = nil,
+            Armor = nil,
+            Mask = nil,
+        },
+
+        animations = {
+            FirstPerson = {
+                nil; -- Shoot/use
+                nil; -- Equip/draw
+                nil; -- Deequip/holster
+                nil; -- Empty Shoot
+                nil; -- Reload 
+                nil; -- Empty Reload
+                nil; -- Inspect
+                nil; -- Idle
+            };
+
+            ThirdPerson = {
+                nil; -- Shoot/use
+                nil; -- Equip/draw
+                nil; -- Deequip/holster
+                nil; -- Reload 
+                nil; -- Empty Reload
+                nil; -- Inspect
+                nil; -- Idle
+            };
+        };
+
+        sounds = {
+            nil; -- equip/draw
+            nil; -- shoot/use
+            nil; -- reload
+            nil; -- empty reload
+            nil; -- inspect
+            nil; -- deequip/holster
+        };
+        
+        module = nil,
+        viewmodel = nil,
+        currentSlot = 0
+    }
+}
+
+return playerWeaponSystemData

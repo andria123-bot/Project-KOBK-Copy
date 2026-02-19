@@ -1,0 +1,12 @@
+[package]
+name = "reflectionnnn/networker"
+description = "Service based networker."
+authors = ["Reflection"]
+license = "MIT"
+version = "1.0.1"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+include = ["src", "LICENSE"]
+
+[dependencies]
+Janitor = "howmanysmall/janitor@1.18.3"
