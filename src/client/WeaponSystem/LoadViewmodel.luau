@@ -12,7 +12,7 @@ local secondaryViewmodelsFolder = viewmodelsFolder:FindFirstChild("Secondary")
 local danebisViewmodelsFolder = viewmodelsFolder:FindFirstChild("Danebi")
 local throwableViewmodelsFolder = viewmodelsFolder:FindFirstChild("Throwable")
 
-local weaponCategories = require(script.Parent.weaponCategories)
+local weaponCategories = require(script.Parent.WeaponCategories)
 
 function viewmodelFinder.GetViewmodel(Item)
 	if not Item then

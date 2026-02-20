@@ -5,14 +5,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local camera = game.workspace.CurrentCamera
 
 
-local moduleFolder = game.ReplicatedStorage:FindFirstChild("Modules")
+local moduleFolder = game.ReplicatedStorage.Shared:FindFirstChild("Modules")
 
 local primaryModulesFolder = moduleFolder:FindFirstChild("Primary")
 local secondaryModulesFolder = moduleFolder:FindFirstChild("Secondary")
 local danebisModulesFolder = moduleFolder:FindFirstChild("Danebi")
 local throwableModulesFolder = moduleFolder:FindFirstChild("Throwable")
 
-local weaponCategories = require(script.Parent.weaponCategories)
+local weaponCategories = require(script.Parent.WeaponCategories)
 
 function moduleFinder.GetModule(Item)
 	if not Item then
@@ -67,7 +67,7 @@ function moduleFinder.GetModule(Item)
 			local clonedModule = moduleToClone:Clone()
 
 			clonedModule.Parent = camera
-			return clonedModule	
+			return require(clonedModule)
 		else
 			warn("No module found for item: " .. Item)
 			return nil

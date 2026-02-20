@@ -7,6 +7,7 @@ local everyItem = {
             "MG42",
             "SCARH",
             "RAM7",
+            "AK74"
         },
 		secondaryWeapons = {
             "Khrissy10R",

@@ -57,7 +57,7 @@ local playerWeaponSystemData = {
         
         module = nil,
         viewmodel = nil,
-        currentSlot = 0
+        currentSlot = 0,
     }
 }
 
