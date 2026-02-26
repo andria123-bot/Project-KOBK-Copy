@@ -66,7 +66,6 @@ function moduleFinder.GetModule(Item)
         if moduleToClone then
 			local clonedModule = moduleToClone:Clone()
 
-			clonedModule.Parent = camera
 			return require(clonedModule)
 		else
 			warn("No module found for item: " .. Item)

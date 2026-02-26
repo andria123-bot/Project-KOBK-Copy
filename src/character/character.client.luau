@@ -37,10 +37,11 @@ end)
 UIS.InputEnded:Connect(function(input)
     if humanoid then
         if input.KeyCode == Enum.KeyCode.LeftShift then
-            humanoid.WalkSpeed = 15
+            humanoid.WalkSpeed = 16
         end
     end
 end)
 
 -- game.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 humanoid.BreakJointsOnDeath = false
+UIS.MouseIconEnabled = false
