@@ -12,7 +12,7 @@ remoteManager.LoadSlotRemote.Name = "LoadSlot"
 
 remoteManager.ItemFoleyRemote = Instance.new("RemoteEvent")
 remoteManager.ItemFoleyRemote.Parent = ReplicatedStorage.Shared.Remotes
-remoteManager.ItemFeloyRemote.Name = "ItemFoley"
+remoteManager.ItemFoleyRemote.Name = "ItemFoley"
 
 remoteManager.PlayerAddedRemote = Instance.new("RemoteEvent")
 remoteManager.PlayerAddedRemote.Parent = ReplicatedStorage.Shared.Remotes

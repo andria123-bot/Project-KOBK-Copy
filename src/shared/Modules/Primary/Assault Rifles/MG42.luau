@@ -48,10 +48,11 @@ local data = {
 
 	sprintCF = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-95/5), math.rad(95/4), math.rad(95/5)),
 	
+	aimCF = CFrame.new(),
 	currentSwayAMT = .1,
 	swayAMT = .2,
 	aimSwayAMT = -.9,
-	swayCF = CFrame.new(),
+	swayCF = CFrame.new(0, 0, 0),
 	lastCameraCF = CFrame.new(0, 0, 0),
 
 	-- Durability

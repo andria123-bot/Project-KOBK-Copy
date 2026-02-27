@@ -16,19 +16,19 @@ local WeaponCategories = require(script.Parent.WeaponCategories)
 
 local weaponSystem = playerWeaponSystem.weaponSystem -- module
 
-local canChange = true
-local isReloading = false
-local isShooting = false
-local isEquipedWeapon = false
-local isAiming = false
-local isSprinting = false
-local isReloading = false
-local isInspecting = false
-
 local canShoot = true
-local canSprint = true
+local canAim = true
 local canReload = true
 local canInspect = true
+local canSprint = true
+local canChange = true
+
+local isShooting = false
+local isAiming = false
+local isReloading = false
+local isSprinting = false
+local isInspecting = false
+local isEquipedWeapon = false
 
 local fireSound
 
@@ -65,7 +65,7 @@ function loadSlot(Item)
 
 			game.ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(weaponSystem.module.sounds[2], .1)
 
-			canShoot = true
+			canShoot, canAim, canInspect, canReload = true, true, true, true
 			aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
 		end
 	end
@@ -102,7 +102,7 @@ function Reload()
 		canShoot = false
 		canInspect = false
 		isReloading = true
-		canChange = true
+		-- canChange = true
 
 		-- weaponSystem.animations.FirstPerson[1]:Stop()
 		-- weaponSystem.animations.FirstPerson[2]:Stop()
@@ -111,15 +111,15 @@ function Reload()
 		-- weaponSystem.animations.ThirdPerson[6]:Stop()
 		-- weaponSystem.animations.FirstPerson[8]:Stop()
 
-		if weaponSystem.module.ammo > 0 then
-			-- weaponSystem.animations.FirstPerson[5]:Play()
-			-- weaponSystem.animations.ThirdPerson[4]:Play()
-			-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
-		else
-			-- weaponSystem.animations.FirstPerson[6]:Play()
-			-- weaponSystem.animations.ThirdPerson[5]:Play()
-			-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
-		end
+		-- if weaponSystem.module.ammo > 0 then
+		-- 	-- weaponSystem.animations.FirstPerson[5]:Play()
+		-- 	-- weaponSystem.animations.ThirdPerson[4]:Play()
+		-- 	-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
+		-- else
+		-- 	-- weaponSystem.animations.FirstPerson[6]:Play()
+		-- 	-- weaponSystem.animations.ThirdPerson[5]:Play()
+		-- 	-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
+		-- end
 
 		camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
 		wait(weaponSystem.module.reloadTime)
@@ -163,6 +163,11 @@ RunService.RenderStepped:Connect(function(dt)
 		end
 
 		if humanoid then
+			local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
+			local X,Y,_ = rot:ToOrientation() 
+			weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
+			weaponSystem.module.lastCameraCF = camera.CFrame
+
 			if weaponSystem.viewmodel ~= nil and weaponSystem.module ~= nil then
 				if humanoid.MoveDirection.Magnitude > 0 then
 					if humanoid.WalkSpeed == 16 then
@@ -196,7 +201,9 @@ RunService.RenderStepped:Connect(function(dt)
 	end
 end)
 
-UIS.InputBegan:Connect(function(input)
+UIS.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+
 	if canChange then
 		if input.KeyCode == Enum.KeyCode.One then
 			if weaponSystem.currentSlot ~= 1 and not isReloading then
@@ -306,25 +313,17 @@ UserInputService.InputEnded:Connect(function(input)
 	end
 end)
 
-mouse.Button1Down:Connect(function()
-	isShooting = true
-end)
-
 ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerDied").OnClientEvent:Connect(function()
-	print("Reviced player death on client.")
 	for i, v in pairs(camera:GetDescendants()) do
-		if v:IsA("Model") and v:IsA("ModuleScript") then
+		if v:IsA("Model") then
 			v:Destroy()
 			canChange = false
-			print("Clearing camera.")
 		end
 	end
-	print("Cleared camera.")
 	
-	for i, v in pairs(game.ReplicatedStorage.Modules:GetDescendants()) do
+	for i, v in pairs(game.ReplicatedStorage.Shared.Modules:GetDescendants()) do
 		if v:IsA("ModuleScript") and v.Name ~= "FastCastRedux" and v.Name ~= "ActiveSignal" and v.Name ~= "Signal" and v.Name ~= "Table" and v.Name ~= "TypeDefinitions"  and v.Name ~= "TypeMarshaller" and v.Name ~= "Misc" then
 			require(v).ammo = require(v).maxAmmo
-			print("Required ammo")
 		end
 	end
 
@@ -344,8 +343,14 @@ while wait() do
 
 		ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
 
+		if weaponSystem.module.ammo == 0 then
+			task.wait(.5)
+			Reload()
+		end
+
 		mouse.Button1Up:Connect(function()
 			isShooting = false
+			canSprint = true
 		end)
 
 		wait(weaponSystem.module.fireRate)
