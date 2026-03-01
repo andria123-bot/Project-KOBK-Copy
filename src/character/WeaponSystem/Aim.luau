@@ -13,7 +13,7 @@ function AimHelper:Init(weaponModule, viewmodel)
     self.viewmodel = viewmodel
 end
 
-function AimHelper:switchAimpart() -- call it whenever player presses v or b
+function AimHelper:switchAimpart()
     if currentAimPart == 1 then
 		currentAimPart = 2
 	else

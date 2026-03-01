@@ -1,7 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
-local UserInputService = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait() or script.Parent
 local humanoid = character:WaitForChild("Humanoid")
@@ -9,12 +8,13 @@ local humanoid = character:WaitForChild("Humanoid")
 local camera = game.Workspace.CurrentCamera
 local mouse = player:GetMouse()
 
-local viewmodelFinder = require(script.Parent.LoadViewmodel)
-local moduleFinder = require(script.Parent.LoadModule)
-local playerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
+local ViewmodelFinder = require(script.Parent.LoadViewmodel)
+local ModuleFinder = require(script.Parent.LoadModule)
+local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 local WeaponCategories = require(script.Parent.WeaponCategories)
+local ViewmoduleRotation = require(script.Parent.ViewmodelRotation)
 
-local weaponSystem = playerWeaponSystem.weaponSystem -- module
+local weaponSystem = PlayerWeaponSystem.weaponSystem -- module
 
 local canShoot = true
 local canAim = true
@@ -23,18 +23,19 @@ local canInspect = true
 local canSprint = true
 local canChange = true
 
-local isShooting = false
 local isAiming = false
 local isReloading = false
 local isSprinting = false
 local isInspecting = false
 local isEquipedWeapon = false
+local isShooting = false
 
 local fireSound
 
 local bobOffset = CFrame.new()
 
 local AimHelper = require(script.Parent.Aim)
+local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 local aimHelper = AimHelper
 
 local debounce = false
@@ -44,8 +45,8 @@ local currentAimPart = 1
 
 function loadSlot(Item)
 	if isReloading == false then
-		local newViewmodel = viewmodelFinder.GetViewmodel(Item)
-		local newModule = moduleFinder.GetModule(Item)
+		local newViewmodel = ViewmodelFinder.GetViewmodel(Item)
+		local newModule = ModuleFinder.GetModule(Item)
 
 		for _, v in pairs(camera:GetChildren()) do
 			if v:IsA("Model") and v.Name ~= Item then
@@ -63,10 +64,17 @@ function loadSlot(Item)
 			weaponSystem.animations.FirstPerson[1].AnimationId = weaponSystem.module.fireAnim
 			weaponSystem.animations.FirstPerson[1] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[1])
 
+			weaponSystem.animations.FirstPerson[2] = Instance.new("Animation")
+			weaponSystem.animations.FirstPerson[2].Parent = weaponSystem.viewmodel
+			weaponSystem.animations.FirstPerson[2].Name = "Equip"
+			weaponSystem.animations.FirstPerson[2].AnimationId = weaponSystem.module.equipAnim
+			weaponSystem.animations.FirstPerson[2] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[2])
+
 			game.ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(weaponSystem.module.sounds[2], .1)
 
 			canShoot, canAim, canInspect, canReload = true, true, true, true
 			aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
+			ViewmodelRotation:Init(weaponSystem.module, weaponSystem.viewmodel)
 		end
 	end
 end
@@ -75,18 +83,18 @@ function Shoot()
 	canSprint = false
 
 	if canShoot then
-		if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 and debounce == true then
+		if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 then
 			if weaponSystem.module.fireMode == "Semi" then
 				weaponSystem.animations.FirstPerson[1]:Play()
 				weaponSystem.module.ammo -= 1
 
 				ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
 
-				deboucne = true
+				debounce = true
 
 				wait(weaponSystem.module.debounce)
 
-				deboucne = false
+				debounce = false
 			end
 
 			if weaponSystem.module.fireMode == "Full Auto" then
@@ -94,6 +102,7 @@ function Shoot()
 			end
 		end
 	end
+
 end
 
 function Reload()
@@ -143,6 +152,7 @@ local hud = player.PlayerGui:WaitForChild("HUD")
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem.module and weaponSystem.viewmodel then
+
 		if hud then
 			if weaponSystem.viewmodel and weaponSystem.module and isEquipedWeapon then
 				if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee or weaponSystem.module.isGrenade then
@@ -162,32 +172,34 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 
-		if humanoid then
-			local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
-			local X,Y,_ = rot:ToOrientation() 
-			weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
-			weaponSystem.module.lastCameraCF = camera.CFrame
+		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
+		local X,Y,_ = rot:ToOrientation() 
+		weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
+		weaponSystem.module.lastCameraCF = camera.CFrame
 
-			if weaponSystem.viewmodel ~= nil and weaponSystem.module ~= nil then
-				if humanoid.MoveDirection.Magnitude > 0 then
-					if humanoid.WalkSpeed == 16 then
-						bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y/7, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1-0.001^dt)
-						isSprinting = false
-					elseif humanoid.WalkSpeed == 22 then
-						bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y/3, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * weaponSystem.module.sprintCF, 1-0.001^dt)
-						isSprinting = true
-					end
-				else
-					bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y/3, 0), 1-0.001^dt)
+		if weaponSystem.viewmodel ~= nil and weaponSystem.module ~= nil then
+			if humanoid.MoveDirection.Magnitude > 0 then
+				if humanoid.WalkSpeed == 16 then
+					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y/7, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1-0.001^dt)
 					isSprinting = false
+				elseif humanoid.WalkSpeed == 22 then
+					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y/3, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * weaponSystem.module.sprintCF, 1-0.001^dt)
+					isSprinting = true
 				end
+			else
+				bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y/3, 0), 1-0.001^dt)
+				isSprinting = false
 			end
+		end
 
-			for _, v in pairs(camera:GetChildren()) do
-				if v:IsA("Model") then
-					v:SetPrimaryPartCFrame(camera.CFrame * weaponSystem.module.swayCF * weaponSystem.module.aimCF * bobOffset)
-					updateCameraShake()
-				end
+		local moveDir = humanoid.MoveDirection
+		local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, moveDir, isAiming))
+
+
+		for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
+			if v:IsA("Model") then
+				v:SetPrimaryPartCFrame(camera.CFrame * weaponSystem.module.swayCF * weaponSystem.module.aimCF * bobOffset * rotOffset)
+				updateCameraShake()
 			end
 		end
 
@@ -294,20 +306,26 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 	end
 
-	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		isAiming = true
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if character and weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.ammo ~= 0 and not debounce and not isReloading and canShoot then
+			Shoot()
+		end
 	end
 
-	if character and weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.ammo ~= 0 and not debounce and not isReloading and canShoot then
-		Shoot()
+	if input.UserInputType == Enum.UserInputType.MouseButton2 then
+		isAiming = true
 	end
 
 	if input.KeyCode == Enum.KeyCode.R then
 		Reload()
 	end
+
+	if input.KeyCode == Enum.KeyCode.V then
+		AimHelper:switchAimpart()
+	end
 end)
 
-UserInputService.InputEnded:Connect(function(input)
+UIS.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		isAiming = false
 	end
@@ -336,22 +354,31 @@ ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerDied").OnClientEvent:Connec
 	end
 end)
 
+mouse.Button1Up:Connect(function()
+	isShooting = false
+	canSprint = true
+end)
+
 while wait() do
 	if isShooting and weaponSystem.module and weaponSystem.module.ammo > 0 and isReloading ~= true and canShoot == true then
+		print("Shooting")
 		weaponSystem.animations.FirstPerson[1]:Play()
 		weaponSystem.module.ammo -= 1
 
 		ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
 
-		if weaponSystem.module.ammo == 0 then
-			task.wait(.5)
-			Reload()
-		end
+		-- if weaponSystem.module.ammo == 0 then
+		-- 	task.wait(.5)
+		-- 	Reload()
+		-- 	repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
+		-- 	debounce = false
 
-		mouse.Button1Up:Connect(function()
-			isShooting = false
-			canSprint = true
-		end)
+		-- 	canSprint = true
+		-- else
+		-- 	debounce = true
+		-- 	wait(weaponSystem.module.debounce)
+		-- 	debounce = false
+		-- end
 
 		wait(weaponSystem.module.fireRate)
 	end
