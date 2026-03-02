@@ -8,13 +8,13 @@ local humanoid = character:WaitForChild("Humanoid")
 local camera = game.Workspace.CurrentCamera
 local mouse = player:GetMouse()
 
-local ViewmodelFinder = require(script.Parent.LoadViewmodel)
-local ModuleFinder = require(script.Parent.LoadModule)
+local LoadViewmodel = require(script.Parent.LoadViewmodel)
+local LoadModule = require(script.Parent.LoadModule)
 local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 local WeaponCategories = require(script.Parent.WeaponCategories)
 local ViewmoduleRotation = require(script.Parent.ViewmodelRotation)
 
-local weaponSystem = PlayerWeaponSystem.weaponSystem -- module
+local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
 
 local canShoot = true
 local canAim = true
@@ -29,8 +29,7 @@ local isSprinting = false
 local isInspecting = false
 local isEquipedWeapon = false
 local isShooting = false
-
-local fireSound
+local isEquipping = false
 
 local bobOffset = CFrame.new()
 
@@ -45,36 +44,41 @@ local currentAimPart = 1
 
 function loadSlot(Item)
 	if isReloading == false then
-		local newViewmodel = ViewmodelFinder.GetViewmodel(Item)
-		local newModule = ModuleFinder.GetModule(Item)
+		weaponSystem.module = LoadModule.GetModule(Item)
 
 		for _, v in pairs(camera:GetChildren()) do
-			if v:IsA("Model") and v.Name ~= Item then
+			if v:IsA("Model") then
 				v:Destroy()
 			end
 		end
 
-		if newViewmodel and newModule and character then
-			weaponSystem.viewmodel = newViewmodel
-			weaponSystem.module = newModule
+		if weaponSystem.module then
+			weaponSystem.viewmodel = LoadViewmodel.GetViewmodel(Item):Clone()
+			weaponSystem.viewmodel.Parent = camera
+				
+			if weaponSystem.viewmodel then
+				weaponSystem.animations.FirstPerson[1] = Instance.new("Animation")
+				weaponSystem.animations.FirstPerson[1].Parent = weaponSystem.viewmodel
+				weaponSystem.animations.FirstPerson[1].Name = "Fire"
+				weaponSystem.animations.FirstPerson[1].AnimationId = weaponSystem.module.fireAnim
+				weaponSystem.animations.FirstPerson[1] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[1])
 
-			weaponSystem.animations.FirstPerson[1] = Instance.new("Animation")
-			weaponSystem.animations.FirstPerson[1].Parent = weaponSystem.viewmodel
-			weaponSystem.animations.FirstPerson[1].Name = "Fire"
-			weaponSystem.animations.FirstPerson[1].AnimationId = weaponSystem.module.fireAnim
-			weaponSystem.animations.FirstPerson[1] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[1])
+				weaponSystem.animations.FirstPerson[2] = Instance.new("Animation")
+				weaponSystem.animations.FirstPerson[2].Parent = weaponSystem.viewmodel
+				weaponSystem.animations.FirstPerson[2].Name = "Equip"
+				weaponSystem.animations.FirstPerson[2].AnimationId = weaponSystem.module.equipAnim
+				weaponSystem.animations.FirstPerson[2] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[2])
 
-			weaponSystem.animations.FirstPerson[2] = Instance.new("Animation")
-			weaponSystem.animations.FirstPerson[2].Parent = weaponSystem.viewmodel
-			weaponSystem.animations.FirstPerson[2].Name = "Equip"
-			weaponSystem.animations.FirstPerson[2].AnimationId = weaponSystem.module.equipAnim
-			weaponSystem.animations.FirstPerson[2] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[2])
+				isEquipping = true
+				canShoot = false
+				canAim = false
 
-			game.ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(weaponSystem.module.sounds[2], .1)
+				weaponSystem.animations.FirstPerson[2]:Play()
 
-			canShoot, canAim, canInspect, canReload = true, true, true, true
-			aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
-			ViewmodelRotation:Init(weaponSystem.module, weaponSystem.viewmodel)
+				canShoot, canAim, canInspect, canReload = true, true, true, true
+				aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
+				ViewmodelRotation:Init(weaponSystem.module, weaponSystem.viewmodel)
+			end
 		end
 	end
 end
@@ -194,7 +198,6 @@ RunService.RenderStepped:Connect(function(dt)
 
 		local moveDir = humanoid.MoveDirection
 		local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, moveDir, isAiming))
-
 
 		for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
 			if v:IsA("Model") then
@@ -367,18 +370,18 @@ while wait() do
 
 		ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
 
-		-- if weaponSystem.module.ammo == 0 then
-		-- 	task.wait(.5)
-		-- 	Reload()
-		-- 	repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
-		-- 	debounce = false
+		if weaponSystem.module.ammo == 0 then
+			task.wait(.5)
+			Reload()
+			-- repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
+			debounce = false
 
-		-- 	canSprint = true
-		-- else
-		-- 	debounce = true
-		-- 	wait(weaponSystem.module.debounce)
-		-- 	debounce = false
-		-- end
+			canSprint = true
+		else
+			debounce = true
+			wait(weaponSystem.module.debounce)
+			debounce = false
+		end
 
 		wait(weaponSystem.module.fireRate)
 	end

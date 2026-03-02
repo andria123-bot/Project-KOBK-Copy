@@ -64,11 +64,7 @@ function viewmodelFinder.GetViewmodel(Item)
         end
 
         if viewmodelToClone then
-			local clonedViewmodel = viewmodelToClone:Clone()
-
-			clonedViewmodel.Parent = camera
-
-			return clonedViewmodel	
+			return viewmodelToClone	
 		else
 			warn("No viewmodel found for item: " .. Item)
 			return nil
