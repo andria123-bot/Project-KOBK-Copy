@@ -4,7 +4,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local camera = game.workspace.CurrentCamera
 
-
 local viewmodelsFolder = game.ReplicatedStorage:WaitForChild("Viewmodels")
 
 local primaryViewmodelsFolder = viewmodelsFolder:FindFirstChild("Primary")

@@ -29,7 +29,6 @@ local isSprinting = false
 local isInspecting = false
 local isEquipedWeapon = false
 local isShooting = false
-local isEquipping = false
 
 local bobOffset = CFrame.new()
 
@@ -46,8 +45,13 @@ function loadSlot(Item)
 	if isReloading == false then
 		weaponSystem.module = LoadModule.GetModule(Item)
 
+
 		for _, v in pairs(camera:GetChildren()) do
 			if v:IsA("Model") then
+				weaponSystem.animations.FirstPerson[1]:Stop()
+				weaponSystem.animations.FirstPerson[2]:Stop()
+				weaponSystem.animations.FirstPerson[3]:Play()
+				repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
 				v:Destroy()
 			end
 		end
@@ -69,11 +73,31 @@ function loadSlot(Item)
 				weaponSystem.animations.FirstPerson[2].AnimationId = weaponSystem.module.equipAnim
 				weaponSystem.animations.FirstPerson[2] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[2])
 
-				isEquipping = true
-				canShoot = false
-				canAim = false
+				weaponSystem.animations.FirstPerson[3] = Instance.new("Animation")
+				weaponSystem.animations.FirstPerson[3].Parent = weaponSystem.viewmodel
+				weaponSystem.animations.FirstPerson[3].Name = "Deequip"
+				weaponSystem.animations.FirstPerson[3].AnimationId = weaponSystem.module.deequipAnim
+				weaponSystem.animations.FirstPerson[3] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[3])
 
-				weaponSystem.animations.FirstPerson[2]:Play()
+				for i, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
+					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
+						v.Transparency = 1
+					end
+				end
+
+				weaponSystem.animations.FirstPerson[3]:Play()
+
+				task.wait(.1)
+
+				for i, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
+					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
+						if v.Parent:IsA("Folder") or v.Name == "Main" or v.Name == "FakeCamera" or v.Name == "AimPart" or v.Name == "AimPart2" or v.Name == "HumanoidRootPart" or v.Name == "CasingEject" or v.Name == "Muzzle" then
+							
+						else
+							v.Transparency = 0
+						end
+					end
+				end
 
 				canShoot, canAim, canInspect, canReload = true, true, true, true
 				aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
@@ -89,6 +113,7 @@ function Shoot()
 	if canShoot then
 		if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 then
 			if weaponSystem.module.fireMode == "Semi" then
+				weaponSystem.animations.FirstPerson[2]:Stop()
 				weaponSystem.animations.FirstPerson[1]:Play()
 				weaponSystem.module.ammo -= 1
 
