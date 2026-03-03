@@ -63,6 +63,9 @@ function loadSlot(Item)
 
 		canShoot = false
 		canInspect = false
+		canReload = false
+
+		isInspecting = false
 
 		for _, v in pairs(camera:GetChildren()) do
 			if v:IsA("Model") then
@@ -125,6 +128,12 @@ function loadSlot(Item)
 				weaponSystem.animations.FirstPerson[7].AnimationId = weaponSystem.module.inspectAnim
 				weaponSystem.animations.FirstPerson[7] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[7])
 
+				weaponSystem.animations.FirstPerson[8] = Instance.new("Animation")
+				weaponSystem.animations.FirstPerson[8].Parent = weaponSystem.viewmodel
+				weaponSystem.animations.FirstPerson[8].Name = "Idle"
+				weaponSystem.animations.FirstPerson[8].AnimationId = weaponSystem.module.idleAnim
+				weaponSystem.animations.FirstPerson[8] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[8])
+
 				for i, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
 						v.Transparency = 1
@@ -156,6 +165,7 @@ end
 
 function Shoot()
 	canSprint = false
+	isInspecting = false
 
 	if canShoot then
 		if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 then
@@ -193,6 +203,8 @@ function Shoot()
 
 					debounce = false
 				end
+
+				canSprint = true
 			end
 
 			if weaponSystem.module.fireMode == "Full Auto" then
@@ -205,17 +217,17 @@ end
 function Inspect()
 	if weaponSystem.animations then
 		if canInspect and isInspecting == false and isReloading == false and isShooting == false and isAiming == false then
-			weaponSystem.animations.FirstPerson[7]:Stop()
-			
+			canAim = false
+
 			isInspecting = true
-			-- weaponSystem.animations.FirstPerson[8]:Stop()
+			weaponSystem.animations.FirstPerson[8]:Stop()
 			dof.FarIntensity = 1
 			dof.FocusDistance = 10.44
 			dof.InFocusRadius = 25.215
 			dof.NearIntensity = 0.183
 			weaponSystem.animations.FirstPerson[7]:Play()
 			-- weaponSystem.animations.ThirdPerson[6]:Play()
-			-- game.ReplicatedStorage.Remotes.Main.itemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
 
 			repeat task.wait() until weaponSystem.animations.FirstPerson[7].IsPlaying == false
 
@@ -224,6 +236,8 @@ function Inspect()
 			dof.FocusDistance = .05
 			dof.InFocusRadius = 30
 			dof.NearIntensity = .75
+
+			canAim = true
 		end
 	end
 end
@@ -240,19 +254,19 @@ function Reload()
 		weaponSystem.animations.FirstPerson[1]:Stop()
 		weaponSystem.animations.FirstPerson[2]:Stop()
 		weaponSystem.animations.FirstPerson[3]:Stop()
-		-- weaponSystem.animations.FirstPerson[7]:Stop()
+		weaponSystem.animations.FirstPerson[7]:Stop()
 		-- weaponSystem.animations.ThirdPerson[6]:Stop()
-		-- weaponSystem.animations.FirstPerson[8]:Stop()
+		weaponSystem.animations.FirstPerson[8]:Stop()
 
 
 		if weaponSystem.module.ammo > 0 then
 			weaponSystem.animations.FirstPerson[5]:Play()
 			-- weaponSystem.animations.ThirdPerson[4]:Play()
-			-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
 		else
 			weaponSystem.animations.FirstPerson[6]:Play()
 			-- weaponSystem.animations.ThirdPerson[5]:Play()
-			-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
 		end
 
 		camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
@@ -280,7 +294,7 @@ RunService.RenderStepped:Connect(function(dt)
 
 		if hud then
 			if weaponSystem.viewmodel and weaponSystem.module and isEquipedWeapon then
-				print(weaponSystem.animations.FirstPerson[4].IsPlaying)
+				print(canInspect, isInspecting, isReloading, isShooting, isAiming)
 				if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee or weaponSystem.module.isGrenade then
 					hud.Enabled = false
 				else
@@ -500,7 +514,7 @@ while wait() do
 			weaponSystem.animations.FirstPerson[1]:Stop()
 			weaponSystem.animations.FirstPerson[4]:Play()
 
-			-- weaponSystem.animations.FirstPerson[8]:Stop()
+			weaponSystem.animations.FirstPerson[8]:Stop()
 		else
 			weaponSystem.animations.FirstPerson[4]:Stop()
 			weaponSystem.animations.FirstPerson[1]:Play()
