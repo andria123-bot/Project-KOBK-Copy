@@ -2,7 +2,7 @@ local data = {
 	name = "HK416",
 
 	fireAnim = "rbxassetid://95024054063945",
-	emptyFireAnim = "rbxassetid://88699433754390",
+	emptyFireAnim = "rbxassetid://88699433754390", -- 88699433754390
 	equipAnim = "rbxassetid://133514477466822",
 	deequipAnim = "rbxassetid://96095541989669",
 	reloadAnim = "rbxassetid://98970778537699",

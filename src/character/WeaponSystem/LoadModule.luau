@@ -64,7 +64,7 @@ function moduleFinder.GetModule(Item)
         end
 
         if moduleToClone then
-			local clonedModule = moduleToClone:Clone()
+			local clonedModule = moduleToClone
 
 			return require(clonedModule)
 		else

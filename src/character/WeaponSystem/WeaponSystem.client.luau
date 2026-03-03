@@ -41,6 +41,20 @@ local debounce = false
 local defaultFOV = 70
 local currentAimPart = 1
 
+function stopAllAnims()
+	for i, v in pairs(weaponSystem.animations.FirstPerson) do
+		if v ~= nil and v.IsPlaying then
+			v:Stop()
+		end
+	end
+
+	for i, v in pairs(weaponSystem.animations.ThirdPerson) do
+		if v ~= nil and v.IsPlaying then
+			v:Stop()
+		end
+	end
+end
+
 function loadSlot(Item)
 	if isReloading == false then
 		weaponSystem.module = LoadModule.GetModule(Item)
@@ -50,6 +64,9 @@ function loadSlot(Item)
 			if v:IsA("Model") then
 				weaponSystem.animations.FirstPerson[1]:Stop()
 				weaponSystem.animations.FirstPerson[2]:Stop()
+				weaponSystem.animations.FirstPerson[4]:Stop()
+				weaponSystem.animations.FirstPerson[5]:Stop()
+
 				weaponSystem.animations.FirstPerson[3]:Play()
 				repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
 				v:Destroy()
@@ -79,13 +96,30 @@ function loadSlot(Item)
 				weaponSystem.animations.FirstPerson[3].AnimationId = weaponSystem.module.deequipAnim
 				weaponSystem.animations.FirstPerson[3] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[3])
 
+				weaponSystem.animations.FirstPerson[4] = Instance.new("Animation")
+				weaponSystem.animations.FirstPerson[4].Parent = weaponSystem.viewmodel
+				weaponSystem.animations.FirstPerson[4].Name = "EmptyFire"
+				weaponSystem.animations.FirstPerson[4].AnimationId = weaponSystem.module.emptyFireAnim
+				weaponSystem.animations.FirstPerson[4] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[4])
+
+				weaponSystem.animations.FirstPerson[5] = Instance.new("Animation")
+				weaponSystem.animations.FirstPerson[5].Parent = weaponSystem.viewmodel
+				weaponSystem.animations.FirstPerson[5].Name = "Reload"
+				weaponSystem.animations.FirstPerson[5].AnimationId = weaponSystem.module.reloadAnim
+				weaponSystem.animations.FirstPerson[5] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[5])
+				
+				weaponSystem.animations.FirstPerson[6] = Instance.new("Animation")
+				weaponSystem.animations.FirstPerson[6].Name = "EmptyReload"
+				weaponSystem.animations.FirstPerson[6].AnimationId = weaponSystem.module.emptyReloadAnim
+				weaponSystem.animations.FirstPerson[6] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[6])
+
 				for i, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
 						v.Transparency = 1
 					end
 				end
 
-				weaponSystem.animations.FirstPerson[3]:Play()
+				weaponSystem.animations.FirstPerson[2]:Play()
 
 				task.wait(.1)
 
@@ -114,7 +148,21 @@ function Shoot()
 		if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 then
 			if weaponSystem.module.fireMode == "Semi" then
 				weaponSystem.animations.FirstPerson[2]:Stop()
-				weaponSystem.animations.FirstPerson[1]:Play()
+				weaponSystem.animations.FirstPerson[5]:Stop()
+
+				
+				if weaponSystem.module.ammo == 1 then
+					weaponSystem.animations.FirstPerson[1]:Stop()
+					weaponSystem.animations.FirstPerson[4]:Play()
+
+					-- weaponSystem.animations.FirstPerson[8]:Stop()
+				else
+					weaponSystem.animations.FirstPerson[4]:Stop()
+					weaponSystem.animations.FirstPerson[1]:Play()
+
+					-- weaponSystem.animations.ThirdPerson[1]:Play()
+				end
+
 				weaponSystem.module.ammo -= 1
 
 				ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
@@ -142,22 +190,23 @@ function Reload()
 		isReloading = true
 		-- canChange = true
 
-		-- weaponSystem.animations.FirstPerson[1]:Stop()
-		-- weaponSystem.animations.FirstPerson[2]:Stop()
-		-- weaponSystem.animations.FirstPerson[3]:Stop()
+		weaponSystem.animations.FirstPerson[1]:Stop()
+		weaponSystem.animations.FirstPerson[2]:Stop()
+		weaponSystem.animations.FirstPerson[3]:Stop()
 		-- weaponSystem.animations.FirstPerson[7]:Stop()
 		-- weaponSystem.animations.ThirdPerson[6]:Stop()
 		-- weaponSystem.animations.FirstPerson[8]:Stop()
 
-		-- if weaponSystem.module.ammo > 0 then
-		-- 	-- weaponSystem.animations.FirstPerson[5]:Play()
-		-- 	-- weaponSystem.animations.ThirdPerson[4]:Play()
-		-- 	-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
-		-- else
-		-- 	-- weaponSystem.animations.FirstPerson[6]:Play()
-		-- 	-- weaponSystem.animations.ThirdPerson[5]:Play()
-		-- 	-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
-		-- end
+
+		if weaponSystem.module.ammo > 0 then
+			weaponSystem.animations.FirstPerson[5]:Play()
+			-- weaponSystem.animations.ThirdPerson[4]:Play()
+			-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
+		else
+			weaponSystem.animations.FirstPerson[6]:Play()
+			-- weaponSystem.animations.ThirdPerson[5]:Play()
+			-- ReplicatedStorage.Shared.Remotes:WaitForChild("itemFoley"):FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
+		end
 
 		camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
 		wait(weaponSystem.module.reloadTime)
@@ -184,6 +233,7 @@ RunService.RenderStepped:Connect(function(dt)
 
 		if hud then
 			if weaponSystem.viewmodel and weaponSystem.module and isEquipedWeapon then
+				print(weaponSystem.animations.FirstPerson[4].IsPlaying)
 				if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee or weaponSystem.module.isGrenade then
 					hud.Enabled = false
 				else
@@ -389,8 +439,20 @@ end)
 
 while wait() do
 	if isShooting and weaponSystem.module and weaponSystem.module.ammo > 0 and isReloading ~= true and canShoot == true then
-		print("Shooting")
 		weaponSystem.animations.FirstPerson[1]:Play()
+
+		if weaponSystem.module.ammo == 1 then
+			weaponSystem.animations.FirstPerson[1]:Stop()
+			weaponSystem.animations.FirstPerson[4]:Play()
+
+			-- weaponSystem.animations.FirstPerson[8]:Stop()
+		else
+			weaponSystem.animations.FirstPerson[4]:Stop()
+			weaponSystem.animations.FirstPerson[1]:Play()
+
+			-- weaponSystem.animations.ThirdPerson[1]:Play()
+		end
+
 		weaponSystem.module.ammo -= 1
 
 		ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
@@ -398,7 +460,7 @@ while wait() do
 		if weaponSystem.module.ammo == 0 then
 			task.wait(.5)
 			Reload()
-			-- repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
+			repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
 			debounce = false
 
 			canSprint = true
