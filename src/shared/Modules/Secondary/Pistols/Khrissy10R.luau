@@ -34,6 +34,13 @@ local data = {
 
 	sprintCF = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-95/5), math.rad(95/4), math.rad(95/5));
 
+	aimCF = CFrame.new(),
+	currentSwayAMT = -.25,
+	swayAMT = -.25,
+	aimSwayAMT = .45,
+	swayCF = CFrame.new(0, 0, 0),
+	lastCameraCF = CFrame.new(0, 0, 0),
+
 	imageIconId = "rbxassetid://120213357895445",
 
 	canAim = true,
@@ -90,7 +97,7 @@ local data = {
 	bulletSpeed = 450,
 	bulletDistance = 130,
 	slotType = "Loadout",
-	ammoType = ".9",
+	ammoType = "0.9mm",
 	canBeStored = true,
 
 	isGrenade = false,

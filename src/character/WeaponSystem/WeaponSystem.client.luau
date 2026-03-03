@@ -16,6 +16,8 @@ local ViewmoduleRotation = require(script.Parent.ViewmodelRotation)
 
 local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
 
+local dof = game.Lighting.DepthOfField
+
 local canShoot = true
 local canAim = true
 local canReload = true
@@ -59,6 +61,8 @@ function loadSlot(Item)
 	if isReloading == false then
 		weaponSystem.module = LoadModule.GetModule(Item)
 
+		canShoot = false
+		canInspect = false
 
 		for _, v in pairs(camera:GetChildren()) do
 			if v:IsA("Model") then
@@ -66,6 +70,8 @@ function loadSlot(Item)
 				weaponSystem.animations.FirstPerson[2]:Stop()
 				weaponSystem.animations.FirstPerson[4]:Stop()
 				weaponSystem.animations.FirstPerson[5]:Stop()
+				weaponSystem.animations.FirstPerson[6]:Stop()
+				weaponSystem.animations.FirstPerson[7]:Stop()
 
 				weaponSystem.animations.FirstPerson[3]:Play()
 				repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
@@ -113,6 +119,12 @@ function loadSlot(Item)
 				weaponSystem.animations.FirstPerson[6].AnimationId = weaponSystem.module.emptyReloadAnim
 				weaponSystem.animations.FirstPerson[6] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[6])
 
+				weaponSystem.animations.FirstPerson[7] = Instance.new("Animation")
+				weaponSystem.animations.FirstPerson[7].Parent = weaponSystem.viewmodel
+				weaponSystem.animations.FirstPerson[7].Name = "Inspect"
+				weaponSystem.animations.FirstPerson[7].AnimationId = weaponSystem.module.inspectAnim
+				weaponSystem.animations.FirstPerson[7] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[7])
+
 				for i, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
 						v.Transparency = 1
@@ -134,6 +146,7 @@ function loadSlot(Item)
 				end
 
 				canShoot, canAim, canInspect, canReload = true, true, true, true
+
 				aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
 				ViewmodelRotation:Init(weaponSystem.module, weaponSystem.viewmodel)
 			end
@@ -146,9 +159,10 @@ function Shoot()
 
 	if canShoot then
 		if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 then
-			if weaponSystem.module.fireMode == "Semi" then
+			if weaponSystem.module.fireMode == "Semi Auto" then
 				weaponSystem.animations.FirstPerson[2]:Stop()
 				weaponSystem.animations.FirstPerson[5]:Stop()
+				weaponSystem.animations.FirstPerson[6]:Stop()
 
 				
 				if weaponSystem.module.ammo == 1 then
@@ -165,13 +179,20 @@ function Shoot()
 
 				weaponSystem.module.ammo -= 1
 
-				ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
+				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
 
-				debounce = true
+				if weaponSystem.module.ammo == 0 then
+					task.wait(.5)
+					Reload()
+					repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
+					debounce = false
+				else
+					debounce = true
 
-				wait(weaponSystem.module.debounce)
+					wait(weaponSystem.module.debounce)
 
-				debounce = false
+					debounce = false
+				end
 			end
 
 			if weaponSystem.module.fireMode == "Full Auto" then
@@ -179,7 +200,32 @@ function Shoot()
 			end
 		end
 	end
+end
 
+function Inspect()
+	if weaponSystem.animations then
+		if canInspect and isInspecting == false and isReloading == false and isShooting == false and isAiming == false then
+			weaponSystem.animations.FirstPerson[7]:Stop()
+			
+			isInspecting = true
+			-- weaponSystem.animations.FirstPerson[8]:Stop()
+			dof.FarIntensity = 1
+			dof.FocusDistance = 10.44
+			dof.InFocusRadius = 25.215
+			dof.NearIntensity = 0.183
+			weaponSystem.animations.FirstPerson[7]:Play()
+			-- weaponSystem.animations.ThirdPerson[6]:Play()
+			-- game.ReplicatedStorage.Remotes.Main.itemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
+
+			repeat task.wait() until weaponSystem.animations.FirstPerson[7].IsPlaying == false
+
+			isInspecting = false
+			dof.FarIntensity = .1
+			dof.FocusDistance = .05
+			dof.InFocusRadius = 30
+			dof.NearIntensity = .75
+		end
+	end
 end
 
 function Reload()
@@ -188,6 +234,7 @@ function Reload()
 		canShoot = false
 		canInspect = false
 		isReloading = true
+		isInspecting = false
 		-- canChange = true
 
 		weaponSystem.animations.FirstPerson[1]:Stop()
@@ -401,6 +448,10 @@ UIS.InputBegan:Connect(function(input, gpe)
 	if input.KeyCode == Enum.KeyCode.V then
 		AimHelper:switchAimpart()
 	end
+
+	if input.KeyCode == Enum.KeyCode.H then
+		Inspect()
+	end
 end)
 
 UIS.InputEnded:Connect(function(input)
@@ -439,7 +490,11 @@ end)
 
 while wait() do
 	if isShooting and weaponSystem.module and weaponSystem.module.ammo > 0 and isReloading ~= true and canShoot == true then
-		weaponSystem.animations.FirstPerson[1]:Play()
+		weaponSystem.animations.FirstPerson[2]:Stop()
+		weaponSystem.animations.FirstPerson[5]:Stop()
+		weaponSystem.animations.FirstPerson[6]:Stop()
+
+		weaponSystem.animations.FirstPerson[7]:Stop()
 
 		if weaponSystem.module.ammo == 1 then
 			weaponSystem.animations.FirstPerson[1]:Stop()
@@ -460,14 +515,6 @@ while wait() do
 		if weaponSystem.module.ammo == 0 then
 			task.wait(.5)
 			Reload()
-			repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
-			debounce = false
-
-			canSprint = true
-		else
-			debounce = true
-			wait(weaponSystem.module.debounce)
-			debounce = false
 		end
 
 		wait(weaponSystem.module.fireRate)
