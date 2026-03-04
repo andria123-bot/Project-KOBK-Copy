@@ -72,4 +72,9 @@ local playerWeaponSystemData = {
 
 playerWeaponSystemData.weaponSystem.state = playerWeaponSystemData.weaponSystem.states[1]
 
+function playerWeaponSystemData:setState(newState)
+    print(newState) 
+    playerWeaponSystemData.weaponSystem.state = newState
+end
+
 return playerWeaponSystemData

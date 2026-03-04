@@ -14,6 +14,7 @@ local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 local WeaponCategories = require(script.Parent.WeaponCategories)
 local ViewmoduleRotation = require(script.Parent.ViewmodelRotation)
 
+local playerWeaponSystemData = PlayerWeaponSystem -- player module
 local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
 
 local dof = game.Lighting.DepthOfField
@@ -165,9 +166,9 @@ end
 
 function Shoot()
 	canSprint = false
-	isInspecting = false
+	playerWeaponSystemData:setState(weaponSystem.states[2])
 
-	if canShoot then
+	if weaponSystem.state == weaponSystem.states[2] then
 		if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 then
 			if weaponSystem.module.fireMode == "Semi Auto" then
 				weaponSystem.animations.FirstPerson[2]:Stop()
@@ -204,6 +205,7 @@ function Shoot()
 					debounce = false
 				end
 
+				playerWeaponSystemData.setState(weaponSystem.states[1])
 				canSprint = true
 			end
 
@@ -211,12 +213,16 @@ function Shoot()
 				isShooting = true
 			end
 		end
+	else
+		print("Wrong State: ", weaponSystem.state)
 	end
 end
 
 function Inspect()
 	if weaponSystem.animations then
-		if canInspect and isInspecting == false and isReloading == false and isShooting == false and isAiming == false then
+		playerWeaponSystemData:setState(weaponSystem.states[4])
+
+		if weaponSystem.state == weaponSystem.states[4] then
 			canAim = false
 
 			isInspecting = true
@@ -237,45 +243,55 @@ function Inspect()
 			dof.InFocusRadius = 30
 			dof.NearIntensity = .75
 
+			playerWeaponSystemData:setState(weaponSystem.states[4])
 			canAim = true
+		else
+			print("Wrong State: ", weaponSystem.state)
 		end
 	end
 end
 
 function Reload()
-	if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee == false and weaponSystem.module.isGrenade == false and isReloading == false and canReload and weaponSystem.module.ammo < weaponSystem.module.maxAmmo and isAiming == false then
-		camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
-		canShoot = false
-		canInspect = false
-		isReloading = true
-		isInspecting = false
-		-- canChange = true
+	if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee == false and weaponSystem.module.isGrenade == false and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
+		playerWeaponSystemData:setState(weaponSystem.states[3])
 
-		weaponSystem.animations.FirstPerson[1]:Stop()
-		weaponSystem.animations.FirstPerson[2]:Stop()
-		weaponSystem.animations.FirstPerson[3]:Stop()
-		weaponSystem.animations.FirstPerson[7]:Stop()
-		-- weaponSystem.animations.ThirdPerson[6]:Stop()
-		weaponSystem.animations.FirstPerson[8]:Stop()
+		if weaponSystem.state == weaponSystem.states[3] then
+			camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
+			canShoot = false
+			canInspect = false
+			isReloading = true
+			isInspecting = false
+			-- canChange = true
+
+			weaponSystem.animations.FirstPerson[1]:Stop()
+			weaponSystem.animations.FirstPerson[2]:Stop()
+			weaponSystem.animations.FirstPerson[3]:Stop()
+			weaponSystem.animations.FirstPerson[7]:Stop()
+			-- weaponSystem.animations.ThirdPerson[6]:Stop()
+			weaponSystem.animations.FirstPerson[8]:Stop()
 
 
-		if weaponSystem.module.ammo > 0 then
-			weaponSystem.animations.FirstPerson[5]:Play()
-			-- weaponSystem.animations.ThirdPerson[4]:Play()
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
+			if weaponSystem.module.ammo > 0 then
+				weaponSystem.animations.FirstPerson[5]:Play()
+				-- weaponSystem.animations.ThirdPerson[4]:Play()
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
+			else
+				weaponSystem.animations.FirstPerson[6]:Play()
+				-- weaponSystem.animations.ThirdPerson[5]:Play()
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
+			end
+
+			camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
+			wait(weaponSystem.module.reloadTime)
+
+			playerWeaponSystemData:setState(weaponSystem.states[1])
+			canShoot = true
+			canInspect = true
+			isReloading = false
+			weaponSystem.module.ammo = weaponSystem.module.maxAmmo
 		else
-			weaponSystem.animations.FirstPerson[6]:Play()
-			-- weaponSystem.animations.ThirdPerson[5]:Play()
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
+			print("Wrong State: ", weaponSystem.state)
 		end
-
-		camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
-		wait(weaponSystem.module.reloadTime)
-
-		canShoot = true
-		canInspect = true
-		isReloading = false
-		weaponSystem.module.ammo = weaponSystem.module.maxAmmo
 	end
 end
 
@@ -294,8 +310,7 @@ RunService.RenderStepped:Connect(function(dt)
 
 		if hud then
 			if weaponSystem.viewmodel and weaponSystem.module and isEquipedWeapon then
-				print(canInspect, isInspecting, isReloading, isShooting, isAiming)
-				if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee or weaponSystem.module.isGrenade then
+					if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee or weaponSystem.module.isGrenade then
 					hud.Enabled = false
 				else
 					hud.Enabled = true
@@ -342,14 +357,9 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 
-		aimHelper:Aim(dt, {
-			isAiming = isAiming,
-			canAim = canAim,
-			isSprinting = isSprinting,
-			isReloading = isReloading,
-			isInspecting = isInspecting,
-			currentAimPart = currentAimPart
-		})
+		if weaponSystem.state == weaponSystem.states[5] then
+			aimHelper:Aim(dt)
+		end
 	end
 end)
 
@@ -453,7 +463,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		isAiming = true
+		playerWeaponSystemData:setState(weaponSystem.states[5])
 	end
 
 	if input.KeyCode == Enum.KeyCode.R then
@@ -470,9 +480,10 @@ UIS.InputBegan:Connect(function(input, gpe)
 end)
 
 UIS.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		isAiming = false
-	end
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        print("RMB Released - Setting state to 1")
+        playerWeaponSystemData:setState(weaponSystem.states[1])
+    end
 end)
 
 ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerDied").OnClientEvent:Connect(function()

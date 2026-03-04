@@ -2,10 +2,8 @@ local AimHelper = {}
 
 AimHelper.weaponModule = nil
 AimHelper.viewmodel = nil
-AimHelper.isReloading = nil
-AimHelper.isInspecting = nil
-AimHelper.isAiming = nil
-AimHelper.canAim = nil
+
+local playerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 
 local currentAimPart = 1
 
@@ -22,11 +20,10 @@ function AimHelper:switchAimpart()
 	end
 end
 
-function AimHelper:Aim(dt, state)
+function AimHelper:Aim(dt)
 	if not (self.weaponModule and self.viewmodel and self.weaponModule.canAim) then return end
-	if state.isReloading or state.isInspecting then return end
 
-	if self.canAim then
+	if playerWeaponSystem.weaponSystem.state == playerWeaponSystem.weaponSystem.states[5] then
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end
 
@@ -39,7 +36,7 @@ function AimHelper:Aim(dt, state)
 
 		local targetOffset = CFrame.new()
 
-		if state.isAiming and targetPart and not state.isSprinting then
+		if targetPart then
 			targetOffset = targetPart.CFrame:ToObjectSpace(primary.CFrame)
 			self.weaponModule.currentSwayAMT = self.weaponModule.aimSwayAMT
 		else
@@ -48,6 +45,10 @@ function AimHelper:Aim(dt, state)
 
 		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
 		self.weaponModule.aimCF = self.weaponModule.aimCF:Lerp(targetOffset, alpha)
+
+		-- playerWeaponSystem:setState(playerWeaponSystem.weaponSystem.states[1])
+	else
+		print("Wrong State: ", playerWeaponSystem.weaponSystem.state)
 	end
 end
 
