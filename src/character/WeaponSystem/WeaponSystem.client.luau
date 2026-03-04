@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait() or script.Parent
+local character = player.Character or player.CharacterAdded:Wait() or script.Parent.Parent
 local humanoid = character:WaitForChild("Humanoid")
 
 local camera = game.Workspace.CurrentCamera
@@ -70,14 +70,16 @@ function loadSlot(Item)
 
 		for _, v in pairs(camera:GetChildren()) do
 			if v:IsA("Model") then
-				stopAllAnims()
+				weaponSystem.animations.FirstPerson[1]:Stop()
+				weaponSystem.animations.FirstPerson[2]:Stop()
+				weaponSystem.animations.FirstPerson[4]:Stop()
+				weaponSystem.animations.FirstPerson[5]:Stop()
+				weaponSystem.animations.FirstPerson[6]:Stop()
+				weaponSystem.animations.FirstPerson[7]:Stop()
 
-				if weaponSystem.animations.FirstPerson[3] then
-					weaponSystem.animations.ThirdPerson[3]:Play()
-					game.ReplicatedStorage.Events.ItemFoley:FireServer(script.Parent.Head:WaitForChild("Deequip"))
-					repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false 
-					v:Destroy()
-				end
+				weaponSystem.animations.FirstPerson[3]:Play()
+				repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
+				v:Destroy()
 			end
 		end
 
@@ -132,6 +134,20 @@ function loadSlot(Item)
 				weaponSystem.animations.FirstPerson[8].Name = "Idle"
 				weaponSystem.animations.FirstPerson[8].AnimationId = weaponSystem.module.idleAnim
 				weaponSystem.animations.FirstPerson[8] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[8])
+
+				ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(Item)
+
+				if character then
+					if character.UpperTorso:FindFirstChildWhichIsA("Sound") then
+						weaponSystem.module.sounds[1] = character.UpperTorso:FindFirstChild("Equip")
+						weaponSystem.module.sounds[2] = character.UpperTorso:FindFirstChild("Shoot")
+						weaponSystem.module.sounds[3] = character.UpperTorso:FindFirstChild("Reload")
+						weaponSystem.module.sounds[4] = character.UpperTorso:FindFirstChild("EmptyReload")
+						weaponSystem.module.sounds[5] = character.UpperTorso:FindFirstChild("Inspect")
+						weaponSystem.module.sounds[6] = character.UpperTorso:FindFirstChild("Deequip")
+						print("Found Sounds")
+					end
+				end
 
 				for i, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
@@ -190,6 +206,7 @@ function Shoot()
 				weaponSystem.module.ammo -= 1
 
 				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
 
 				if weaponSystem.module.ammo == 0 then
 					task.wait(.5)
@@ -260,7 +277,7 @@ function Reload()
 			isReloading = true
 			isInspecting = false
 			-- canChange = true
-
+  
 			weaponSystem.animations.FirstPerson[1]:Stop()
 			weaponSystem.animations.FirstPerson[2]:Stop()
 			weaponSystem.animations.FirstPerson[3]:Stop()
