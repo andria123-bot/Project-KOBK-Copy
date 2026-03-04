@@ -70,16 +70,16 @@ function loadSlot(Item)
 
 		for _, v in pairs(camera:GetChildren()) do
 			if v:IsA("Model") then
-				weaponSystem.animations.FirstPerson[1]:Stop()
-				weaponSystem.animations.FirstPerson[2]:Stop()
-				weaponSystem.animations.FirstPerson[4]:Stop()
-				weaponSystem.animations.FirstPerson[5]:Stop()
-				weaponSystem.animations.FirstPerson[6]:Stop()
-				weaponSystem.animations.FirstPerson[7]:Stop()
+				stopAllAnims()
 
-				weaponSystem.animations.FirstPerson[3]:Play()
+				if weaponSystem.animations.FirstPerson[3] then
+					weaponSystem.animations.FirstPerson[3]:Play()
+					
+					-- ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent.Head:WaitForChild("Deequip"))
+					repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
+					v:Destroy()
+				end
 				repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
-				v:Destroy()
 			end
 		end
 
@@ -145,7 +145,6 @@ function loadSlot(Item)
 						weaponSystem.module.sounds[4] = character.UpperTorso:FindFirstChild("EmptyReload")
 						weaponSystem.module.sounds[5] = character.UpperTorso:FindFirstChild("Inspect")
 						weaponSystem.module.sounds[6] = character.UpperTorso:FindFirstChild("Deequip")
-						print("Found Sounds")
 					end
 				end
 
