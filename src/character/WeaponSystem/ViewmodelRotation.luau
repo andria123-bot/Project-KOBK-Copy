@@ -1,5 +1,6 @@
 local ViewmodelRotation = {}
 local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 ViewmodelRotation.KeyEvents = {
     LeftPressed = Instance.new("BindableEvent"),
@@ -11,6 +12,7 @@ ViewmodelRotation.KeyEvents = {
 ViewmodelRotation.weaponModule = nil
 ViewmodelRotation.viewmodel = nil
 ViewmodelRotation.aimPart = nil
+ViewmodelRotation.humanoid = nil -- Add this to store humanoid reference
 
 ViewmodelRotation.targetRotation = 0
 ViewmodelRotation.currentRotation = 0
@@ -18,10 +20,15 @@ ViewmodelRotation.currentRotation = 0
 ViewmodelRotation.isMovingLeft = false
 ViewmodelRotation.isMovingRight = false
 
-function ViewmodelRotation:Init(weaponModule, viewmodel, aimPart)
+-- Track actual strafing input separately from movement direction
+ViewmodelRotation.isStrafingLeft = false
+ViewmodelRotation.isStrafingRight = false
+
+function ViewmodelRotation:Init(weaponModule, viewmodel, aimPart, humanoid)
     self.weaponModule = weaponModule
     self.viewmodel = viewmodel
     self.aimPart = aimPart
+    self.humanoid = humanoid
 end
 
 function ViewmodelRotation:OnLeftPressed(callback)
@@ -45,16 +52,17 @@ function ViewmodelRotation:getRotation(dt, moveDirection, isAiming)
         return 0
     end
 
-    if moveDirection then
-        self.isMovingLeft = moveDirection.X < 0
-        self.isMovingRight = moveDirection.X > 0
-    end
-
-    if moveDirection and moveDirection.X ~= 0 then
+    if self.isStrafingLeft then
         if isAiming then
-            self.targetRotation = math.rad(3.2) * moveDirection.X
+            self.targetRotation = -math.rad(-3.2) -- Negative for left
         else
-            self.targetRotation = math.rad(7.5) * moveDirection.X
+            self.targetRotation = -math.rad(-7.5)
+        end
+    elseif self.isStrafingRight then
+        if isAiming then
+            self.targetRotation = -math.rad(3.2) -- Positive for right
+        else
+            self.targetRotation = -math.rad(7.5)
         end
     else
         self.targetRotation = 0
@@ -67,14 +75,17 @@ function ViewmodelRotation:getRotation(dt, moveDirection, isAiming)
     return self.currentRotation
 end
 
+-- Update input handlers to track strafing state
 UIS.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
 
     if input.KeyCode == Enum.KeyCode.A then
+        ViewmodelRotation.isStrafingLeft = true
         ViewmodelRotation.isMovingLeft = true
         ViewmodelRotation.KeyEvents.LeftPressed:Fire()
     elseif input.KeyCode == Enum.KeyCode.D then
+        ViewmodelRotation.isStrafingRight = true
         ViewmodelRotation.isMovingRight = true
         ViewmodelRotation.KeyEvents.RightPressed:Fire()
     end
@@ -84,9 +95,11 @@ UIS.InputEnded:Connect(function(input)
     if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
 
     if input.KeyCode == Enum.KeyCode.A then
+        ViewmodelRotation.isStrafingLeft = false
         ViewmodelRotation.isMovingLeft = false
         ViewmodelRotation.KeyEvents.LeftReleased:Fire()
     elseif input.KeyCode == Enum.KeyCode.D then
+        ViewmodelRotation.isStrafingRight = false
         ViewmodelRotation.isMovingRight = false
         ViewmodelRotation.KeyEvents.RightReleased:Fire()
     end

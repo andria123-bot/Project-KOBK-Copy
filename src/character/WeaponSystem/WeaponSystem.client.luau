@@ -344,6 +344,7 @@ RunService.RenderStepped:Connect(function(dt)
 
 		aimHelper:Aim(dt, {
 			isAiming = isAiming,
+			canAim = canAim,
 			isSprinting = isSprinting,
 			isReloading = isReloading,
 			isInspecting = isInspecting,

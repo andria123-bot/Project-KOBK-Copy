@@ -54,11 +54,22 @@ local playerWeaponSystemData = {
             nil; -- inspect
             nil; -- deequip/holster
         };
+
+        states = {
+            "Idle",
+            "Shooting",
+            "Reloading",
+            "Inspecting",
+            "Aiming",
+            "Sprinting",
+        },
         
         module = nil,
         viewmodel = nil,
         currentSlot = 0,
     }
 }
+
+playerWeaponSystemData.weaponSystem.state = playerWeaponSystemData.weaponSystem.states[1]
 
 return playerWeaponSystemData
