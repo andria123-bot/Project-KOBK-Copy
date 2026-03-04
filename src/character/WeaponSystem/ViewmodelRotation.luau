@@ -12,7 +12,7 @@ ViewmodelRotation.KeyEvents = {
 ViewmodelRotation.weaponModule = nil
 ViewmodelRotation.viewmodel = nil
 ViewmodelRotation.aimPart = nil
-ViewmodelRotation.humanoid = nil -- Add this to store humanoid reference
+ViewmodelRotation.humanoid = nil
 
 ViewmodelRotation.targetRotation = 0
 ViewmodelRotation.currentRotation = 0
@@ -20,7 +20,6 @@ ViewmodelRotation.currentRotation = 0
 ViewmodelRotation.isMovingLeft = false
 ViewmodelRotation.isMovingRight = false
 
--- Track actual strafing input separately from movement direction
 ViewmodelRotation.isStrafingLeft = false
 ViewmodelRotation.isStrafingRight = false
 
@@ -47,19 +46,19 @@ function ViewmodelRotation:OnRightReleased(callback)
     return self.KeyEvents.RightReleased.Event:Connect(callback)
 end
 
-function ViewmodelRotation:getRotation(dt, moveDirection, isAiming)
+function ViewmodelRotation:getRotation(dt, state)
     if not self.weaponModule or not self.viewmodel then
         return 0
     end
 
     if self.isStrafingLeft then
-        if isAiming then
+        if state == "Aiming" then
             self.targetRotation = -math.rad(-3.2) -- Negative for left
         else
             self.targetRotation = -math.rad(-7.5)
         end
     elseif self.isStrafingRight then
-        if isAiming then
+        if state == "Aiming" then
             self.targetRotation = -math.rad(3.2) -- Positive for right
         else
             self.targetRotation = -math.rad(7.5)
@@ -75,7 +74,6 @@ function ViewmodelRotation:getRotation(dt, moveDirection, isAiming)
     return self.currentRotation
 end
 
--- Update input handlers to track strafing state
 UIS.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.UserInputType ~= Enum.UserInputType.Keyboard then return end

@@ -70,16 +70,14 @@ function loadSlot(Item)
 
 		for _, v in pairs(camera:GetChildren()) do
 			if v:IsA("Model") then
-				weaponSystem.animations.FirstPerson[1]:Stop()
-				weaponSystem.animations.FirstPerson[2]:Stop()
-				weaponSystem.animations.FirstPerson[4]:Stop()
-				weaponSystem.animations.FirstPerson[5]:Stop()
-				weaponSystem.animations.FirstPerson[6]:Stop()
-				weaponSystem.animations.FirstPerson[7]:Stop()
+				stopAllAnims()
 
-				weaponSystem.animations.FirstPerson[3]:Play()
-				repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
-				v:Destroy()
+				if weaponSystem.animations.FirstPerson[3] then
+					weaponSystem.animations.ThirdPerson[3]:Play()
+					game.ReplicatedStorage.Events.ItemFoley:FireServer(script.Parent.Head:WaitForChild("Deequip"))
+					repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false 
+					v:Destroy()
+				end
 			end
 		end
 
@@ -174,6 +172,7 @@ function Shoot()
 				weaponSystem.animations.FirstPerson[2]:Stop()
 				weaponSystem.animations.FirstPerson[5]:Stop()
 				weaponSystem.animations.FirstPerson[6]:Stop()
+				weaponSystem.animations.FirstPerson[7]:Stop()
 
 				
 				if weaponSystem.module.ammo == 1 then
@@ -233,17 +232,16 @@ function Inspect()
 			dof.NearIntensity = 0.183
 			weaponSystem.animations.FirstPerson[7]:Play()
 			-- weaponSystem.animations.ThirdPerson[6]:Play()
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
-
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect")) -- Sound is not begin created on server
 			repeat task.wait() until weaponSystem.animations.FirstPerson[7].IsPlaying == false
 
-			isInspecting = false
+			-- weaponSystem.animations.FirstPerson[7]:Stop()
 			dof.FarIntensity = .1
 			dof.FocusDistance = .05
 			dof.InFocusRadius = 30
 			dof.NearIntensity = .75
 
-			playerWeaponSystemData:setState(weaponSystem.states[4])
+			playerWeaponSystemData:setState(weaponSystem.states[1])
 			canAim = true
 		else
 			print("Wrong State: ", weaponSystem.state)
@@ -326,7 +324,8 @@ RunService.RenderStepped:Connect(function(dt)
 				hud.Enabled = false
 			end
 		end
-
+			
+		print(weaponSystem.animations.FirstPerson[7].IsPlaying)
 		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
 		local X,Y,_ = rot:ToOrientation() 
 		weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
@@ -347,8 +346,7 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 
-		local moveDir = humanoid.MoveDirection
-		local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, moveDir, isAiming))
+		local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
 
 		for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
 			if v:IsA("Model") then
@@ -357,7 +355,7 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 
-		if weaponSystem.state == weaponSystem.states[5] then
+		if weaponSystem.state == weaponSystem.states[5] or weaponSystem.state == weaponSystem.states[1] then
 			aimHelper:Aim(dt)
 		end
 	end
@@ -481,7 +479,6 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        print("RMB Released - Setting state to 1")
         playerWeaponSystemData:setState(weaponSystem.states[1])
     end
 end)
@@ -519,7 +516,6 @@ while wait() do
 		weaponSystem.animations.FirstPerson[2]:Stop()
 		weaponSystem.animations.FirstPerson[5]:Stop()
 		weaponSystem.animations.FirstPerson[6]:Stop()
-
 		weaponSystem.animations.FirstPerson[7]:Stop()
 
 		if weaponSystem.module.ammo == 1 then

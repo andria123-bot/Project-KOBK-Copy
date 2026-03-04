@@ -46,7 +46,11 @@ function AimHelper:Aim(dt)
 		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
 		self.weaponModule.aimCF = self.weaponModule.aimCF:Lerp(targetOffset, alpha)
 
-		-- playerWeaponSystem:setState(playerWeaponSystem.weaponSystem.states[1])
+	elseif playerWeaponSystem.weaponSystem.state == playerWeaponSystem.weaponSystem.states[1] then
+		self.weaponModule.currentSwayAMT = self.weaponModule.swayAMT
+		
+		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
+		self.weaponModule.aimCF = self.weaponModule.aimCF:Lerp(CFrame.new(), alpha)
 	else
 		print("Wrong State: ", playerWeaponSystem.weaponSystem.state)
 	end
