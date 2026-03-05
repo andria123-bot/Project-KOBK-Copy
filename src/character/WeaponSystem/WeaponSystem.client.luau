@@ -190,13 +190,11 @@ function Shoot()
 			weaponSystem.animations.FirstPerson[5]:Stop()
 			weaponSystem.animations.FirstPerson[6]:Stop()
 			weaponSystem.animations.FirstPerson[7]:Stop()
-
+			weaponSystem.animations.FirstPerson[8]:Stop()
 			
 			if weaponSystem.module.ammo == 1 then
 				weaponSystem.animations.FirstPerson[1]:Stop()
 				weaponSystem.animations.FirstPerson[4]:Play()
-
-				-- weaponSystem.animations.FirstPerson[8]:Stop()
 			else
 				weaponSystem.animations.FirstPerson[4]:Stop()
 				weaponSystem.animations.FirstPerson[1]:Play()
@@ -287,7 +285,6 @@ function Reload()
 					ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
 				end
 
-				print(11)
 				camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
 				wait(weaponSystem.module.reloadTime)
 
@@ -333,8 +330,9 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 			
-		print(weaponSystem.state)
-		-- print(weaponSystem.modifiers.IsShooting)
+		-- print(weaponSystem.state) -- Debugging
+		print(weaponSystem.animations.FirstPerson[4].IsPlaying)
+
 		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
 		local X,Y,_ = rot:ToOrientation() 
 		weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
@@ -361,6 +359,18 @@ RunService.RenderStepped:Connect(function(dt)
 			if v:IsA("Model") then
 				v:SetPrimaryPartCFrame(camera.CFrame * weaponSystem.module.swayCF * weaponSystem.module.aimCF * bobOffset * rotOffset)
 				updateCameraShake()
+
+				if weaponSystem.module and weaponSystem.animations and weaponSystem.viewmodel then
+					if not weaponSystem.module.isMelee then
+						if not weaponSystem.animations.FirstPerson[1].IsPlaying and not weaponSystem.animations.FirstPerson[4].IsPlaying and not weaponSystem.animations.FirstPerson[2].IsPlaying and not weaponSystem.animations.FirstPerson[6].IsPlaying and not weaponSystem.animations.FirstPerson[5].IsPlaying and not weaponSystem.animations.FirstPerson[7].IsPlaying and not weaponSystem.animations.FirstPerson[3].IsPlaying then
+							if not weaponSystem.animations.FirstPerson[8].IsPlaying then
+								weaponSystem.animations.FirstPerson[8]:Play()
+							end
+						else
+							weaponSystem.animations.FirstPerson[8]:Stop()
+						end
+					end
+				end
 			end
 		end
 
@@ -549,17 +559,18 @@ while wait() do
 				weaponSystem.animations.FirstPerson[5]:Stop()
 				weaponSystem.animations.FirstPerson[6]:Stop()
 				weaponSystem.animations.FirstPerson[7]:Stop()
+				weaponSystem.animations.FirstPerson[8]:Stop()
 
 				if weaponSystem.module.ammo == 1 then
-					weaponSystem.animations.FirstPerson[1]:Stop()
 					weaponSystem.animations.FirstPerson[4]:Play()
+					weaponSystem.animations.FirstPerson[1]:Stop()
 
-					weaponSystem.animations.FirstPerson[8]:Stop()
+					-- weaponSystem.animations.ThirdPerson[1]:Stop()
+					-- weaponSystem.animations.FirstPerson[8]:Stop()
 				else
 					weaponSystem.animations.FirstPerson[4]:Stop()
-					weaponSystem.animations.FirstPerson[1]:Play()
-
 					-- weaponSystem.animations.ThirdPerson[1]:Play()
+					weaponSystem.animations.FirstPerson[1]:Play()
 				end
 
 				weaponSystem.module.ammo -= 1
