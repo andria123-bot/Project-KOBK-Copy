@@ -51,36 +51,18 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 			createSound("EmptyReload", module.sounds[4], 1)
 			createSound("Inspect", module.sounds[5], 1)
 			createSound("Deequip", module.sounds[6], 1)
-            print("Created")
 		end
 	end
 end)
 
 game.Players.PlayerAdded:Connect(function(player)
-	local leaderstats = Instance.new("Folder", player)
-	leaderstats.Name = 'leaderstats'
-
-	local kills = Instance.new("IntValue", leaderstats)
-	kills.Name = "Kills"
-	kills.Value = 0
-	
-	local deaths = Instance.new("IntValue", leaderstats)
-	deaths.Name = "Deaths"
-	deaths.Value = 0
-	
-	local assists = Instance.new("IntValue", leaderstats)
-	assists.Name = "Assists"
-	assists.Value = 0
-	
 	player.CharacterAdded:Connect(function(character)
 		character:FindFirstChild("Humanoid").Died:Connect(function()
-			deaths.Value += 1
-			
 			if character.PrimaryPart:FindFirstChild("Owner") and character.PrimaryPart:FindFirstChild("Owner").Value ~= nil then
 				if character.PrimaryPart:FindFirstChild("Assist") and character.PrimaryPart:FindFirstChild("Assist").Value ~= nil then
-					game.ReplicatedStorage.Remotes.Main.Killed:FireAllClients(player.DisplayName, (character.PrimaryPart.Owner.Value).DisplayName, character.PrimaryPart.Assist.Value.Name)
+					ReplicatedStorage.Shared.Remotes.Killed:FireAllClients(player.DisplayName, (character.PrimaryPart.Owner.Value).DisplayName, character.PrimaryPart.Assist.Value.Name)
 				else
-					game.ReplicatedStorage.Remotes.Main.Killed:FireAllClients(player.DisplayName, (character.PrimaryPart.Owner.Value).DisplayName, nil)
+					ReplicatedStorage.Shared.Remotes.Killed:FireAllClients(player.DisplayName, (character.PrimaryPart.Owner.Value).DisplayName, nil)
 				end
 				local owner = character.PrimaryPart.Owner.Value
 
@@ -93,7 +75,7 @@ game.Players.PlayerAdded:Connect(function(player)
 					end
 				end
 			else
-				game.ReplicatedStorage.Remotes.Main.Killed:FireAllClients(player.Name, nil, nil)
+				ReplicatedStorage.Shared.Remotes.Killed:FireAllClients(player.Name, nil, nil)
 				-- Died Not killed
 			end
 			
@@ -110,7 +92,7 @@ game.Players.PlayerAdded:Connect(function(player)
 				end
 			end
 			
-			game.ReplicatedStorage.Remotes.Main.PlayerDied:FireClient(player)
+			ReplicatedStorage.Shared.Remotes.PlayerDied:FireClient(player)
 		end)
 
 		wait(.1)

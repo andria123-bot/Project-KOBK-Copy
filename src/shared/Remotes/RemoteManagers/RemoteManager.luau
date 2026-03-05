@@ -30,4 +30,8 @@ remoteManager.MeleeRemote = Instance.new("RemoteEvent")
 remoteManager.MeleeRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.MeleeRemote.Name = "Melee"
 
+remoteManager.KilledRemote = Instance.new("RemoteEvent")
+remoteManager.KilledRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.KilledRemote.Name = "Killed"
+
 return remoteManager

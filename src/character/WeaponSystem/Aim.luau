@@ -4,6 +4,7 @@ AimHelper.weaponModule = nil
 AimHelper.viewmodel = nil
 
 local playerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
+local WeaponCategories = require(script.Parent.WeaponCategories)
 
 local currentAimPart = 1
 
@@ -22,8 +23,8 @@ end
 
 function AimHelper:Aim(dt)
 	if not (self.weaponModule and self.viewmodel and self.weaponModule.canAim) then return end
-
-	if playerWeaponSystem.weaponSystem.state == playerWeaponSystem.weaponSystem.states[5] then
+	
+	if playerWeaponSystem.weaponSystem.modifiers.IsAiming then
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end
 

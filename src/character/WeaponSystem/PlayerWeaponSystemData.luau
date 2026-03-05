@@ -62,8 +62,17 @@ local playerWeaponSystemData = {
             "Inspecting",
             "Aiming",
             "Sprinting",
+            "Changing",
+            "Dead",
         },
         
+        modifiers = {
+            IsAiming = false;
+            IsInspecting = false;
+            IsShooting = false;
+            IsReloading = false;
+        },
+
         module = nil,
         viewmodel = nil,
         currentSlot = 0,
