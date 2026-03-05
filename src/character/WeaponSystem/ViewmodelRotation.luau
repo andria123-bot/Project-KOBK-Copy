@@ -1,50 +1,47 @@
-local ViewmodelRotation = {}
+local ViewmodelRot = {}
 local UIS = game:GetService("UserInputService")
 
-ViewmodelRotation.KeyEvents = {
+ViewmodelRot.KeyEvents = {
     LeftPressed = Instance.new("BindableEvent"),
     LeftReleased = Instance.new("BindableEvent"),
     RightPressed = Instance.new("BindableEvent"),
     RightReleased = Instance.new("BindableEvent")
 }
 
-ViewmodelRotation.weaponModule = nil
-ViewmodelRotation.viewmodel = nil
+ViewmodelRot.weaponModule = nil
+ViewmodelRot.viewmodel = nil
 
-ViewmodelRotation.targetRotation = 0
-ViewmodelRotation.currentRotation = 0
+ViewmodelRot.targetRotation = 0
+ViewmodelRot.currentRotation = 0
 
-ViewmodelRotation.isMovingLeft = false
-ViewmodelRotation.isMovingRight = false
+ViewmodelRot.isMovingLeft = false
+ViewmodelRot.isMovingRight = false
 
-ViewmodelRotation.isStrafingLeft = false
-ViewmodelRotation.isStrafingRight = false
+ViewmodelRot.isStrafingLeft = false
+ViewmodelRot.isStrafingRight = false
 
-function ViewmodelRotation:Init(weaponModule, viewmodel)
+function ViewmodelRot:Init(weaponModule, viewmodel)
     self.weaponModule = weaponModule
     self.viewmodel = viewmodel
 end
 
-print("GGG", ViewmodelRotation.weaponModule)
-local state = ViewmodelRotation.weaponModule.state
-
-function ViewmodelRotation:OnLeftPressed(callback)
+function ViewmodelRot:OnLeftPressed(callback)
     return self.KeyEvents.LeftPressed.Event:Connect(callback)
 end
 
-function ViewmodelRotation:OnLeftReleased(callback)
+function ViewmodelRot:OnLeftReleased(callback)
     return self.KeyEvents.LeftReleased.Event:Connect(callback)
 end
 
-function ViewmodelRotation:OnRightPressed(callback)
+function ViewmodelRot:OnRightPressed(callback)
     return self.KeyEvents.RightPressed.Event:Connect(callback)
 end
 
-function ViewmodelRotation:OnRightReleased(callback)
+function ViewmodelRot:OnRightReleased(callback)
     return self.KeyEvents.RightReleased.Event:Connect(callback)
 end
 
-function ViewmodelRotation:getRotation(dt)
+function ViewmodelRot:getRotation(dt, state)
     if not self.weaponModule or not self.viewmodel then
         return 0
     end
@@ -79,13 +76,13 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
     if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
 
     if input.KeyCode == Enum.KeyCode.A then
-        ViewmodelRotation.isStrafingLeft = true
-        ViewmodelRotation.isMovingLeft = true
-        ViewmodelRotation.KeyEvents.LeftPressed:Fire()
+        ViewmodelRot.isStrafingLeft = true
+        ViewmodelRot.isMovingLeft = true
+        ViewmodelRot.KeyEvents.LeftPressed:Fire()
     elseif input.KeyCode == Enum.KeyCode.D then
-        ViewmodelRotation.isStrafingRight = true
-        ViewmodelRotation.isMovingRight = true
-        ViewmodelRotation.KeyEvents.RightPressed:Fire()
+        ViewmodelRot.isStrafingRight = true
+        ViewmodelRot.isMovingRight = true
+        ViewmodelRot.KeyEvents.RightPressed:Fire()
     end
 end)
 
@@ -93,14 +90,14 @@ UIS.InputEnded:Connect(function(input)
     if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
 
     if input.KeyCode == Enum.KeyCode.A then
-        ViewmodelRotation.isStrafingLeft = false
-        ViewmodelRotation.isMovingLeft = false
-        ViewmodelRotation.KeyEvents.LeftReleased:Fire()
+        ViewmodelRot.isStrafingLeft = false
+        ViewmodelRot.isMovingLeft = false
+        ViewmodelRot.KeyEvents.LeftReleased:Fire()
     elseif input.KeyCode == Enum.KeyCode.D then
-        ViewmodelRotation.isStrafingRight = false
-        ViewmodelRotation.isMovingRight = false
-        ViewmodelRotation.KeyEvents.RightReleased:Fire()
+        ViewmodelRot.isStrafingRight = false
+        ViewmodelRot.isMovingRight = false
+        ViewmodelRot.KeyEvents.RightReleased:Fire()
     end
 end)
 
-return ViewmodelRotation
+return ViewmodelRot

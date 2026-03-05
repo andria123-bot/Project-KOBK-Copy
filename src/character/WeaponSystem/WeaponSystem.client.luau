@@ -12,9 +12,9 @@ local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local LoadModule = require(script.Parent.LoadModule)
 local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 local WeaponCategories = require(script.Parent.WeaponCategories)
-local VIMROT = script.Parent.ViewmodelRotation
+local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 
-local playerWeaponSystemData = PlayerWeaponSystem -- player module
+local playerWeaponSystemData = PlayerWeaponSystem
 local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
 
 local dof = game.Lighting.DepthOfField
@@ -167,7 +167,7 @@ function loadSlot(Item)
 				PlayerWeaponSystem:setState(weaponSystem.states[1])
 				aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
 
-				require(ViewmodelRotation.Init(weaponSystem.module, weaponSystem.viewmodel))
+				ViewmodelRotation:Init(weaponSystem.module, weaponSystem.viewmodel)
 			end
 		end
 	end
@@ -355,11 +355,11 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 
-		-- local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
+		local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
 
 		for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
 			if v:IsA("Model") then
-				v:SetPrimaryPartCFrame(camera.CFrame * weaponSystem.module.swayCF * weaponSystem.module.aimCF * bobOffset)-- * rotOffset
+				v:SetPrimaryPartCFrame(camera.CFrame * weaponSystem.module.swayCF * weaponSystem.module.aimCF * bobOffset * rotOffset)
 				updateCameraShake()
 			end
 		end
@@ -469,8 +469,9 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.state ~= weaponSystem.states[4] and weaponSystem.state == weaponSystem.states[1] then
+		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.state ~= weaponSystem.states[4] and weaponSystem.state == weaponSystem.states[1] then
 			weaponSystem.modifiers.IsAiming = true
+			PlayerWeaponSystem:setState(weaponSystem.states[5])
 		end	
 	end
 
@@ -502,14 +503,15 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.state ~= weaponSystem.states[4] or weaponSystem.state == weaponSystem.states[1] then
+		if weaponSystem.module and weaponSystem.viewmodel and (weaponSystem.state ~= weaponSystem.states[4] or weaponSystem.state == weaponSystem.states[1]) then
 			weaponSystem.modifiers.IsAiming = false
+			PlayerWeaponSystem:setState(weaponSystem.states[1])
 		end	
     end
 end)
 
 ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
-	for i, v in pairs(camera:GetDescendants()) do -- needs to be fixed
+	for i, v in pairs(camera:GetDescendants()) do
 		if v:IsA("Model") then
 			v:Destroy()
 			weaponSystem.state = weaponSystem.states[8]
@@ -525,7 +527,7 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 	if weaponSystem.viewmodel and weaponSystem.module then
 		weaponSystem.module = nil
 		weaponSystem.viewmodel:Destroy()
-		-- PlayerWeaponSystemData:setState(weaponSystem.states[1])
+		hud.Enabled = false
 	end
 end)
 
