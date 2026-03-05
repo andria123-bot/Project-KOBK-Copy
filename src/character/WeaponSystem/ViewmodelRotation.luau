@@ -1,6 +1,5 @@
 local ViewmodelRotation = {}
 local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
 ViewmodelRotation.KeyEvents = {
     LeftPressed = Instance.new("BindableEvent"),
@@ -11,8 +10,6 @@ ViewmodelRotation.KeyEvents = {
 
 ViewmodelRotation.weaponModule = nil
 ViewmodelRotation.viewmodel = nil
-ViewmodelRotation.aimPart = nil
-ViewmodelRotation.humanoid = nil
 
 ViewmodelRotation.targetRotation = 0
 ViewmodelRotation.currentRotation = 0
@@ -23,12 +20,13 @@ ViewmodelRotation.isMovingRight = false
 ViewmodelRotation.isStrafingLeft = false
 ViewmodelRotation.isStrafingRight = false
 
-function ViewmodelRotation:Init(weaponModule, viewmodel, aimPart, humanoid)
+function ViewmodelRotation:Init(weaponModule, viewmodel)
     self.weaponModule = weaponModule
     self.viewmodel = viewmodel
-    self.aimPart = aimPart
-    self.humanoid = humanoid
 end
+
+print("GGG", ViewmodelRotation.weaponModule)
+local state = ViewmodelRotation.weaponModule.state
 
 function ViewmodelRotation:OnLeftPressed(callback)
     return self.KeyEvents.LeftPressed.Event:Connect(callback)
@@ -46,19 +44,21 @@ function ViewmodelRotation:OnRightReleased(callback)
     return self.KeyEvents.RightReleased.Event:Connect(callback)
 end
 
-function ViewmodelRotation:getRotation(dt, state)
+function ViewmodelRotation:getRotation(dt)
     if not self.weaponModule or not self.viewmodel then
         return 0
     end
 
     if self.isStrafingLeft then
         if state == "Aiming" then
+            print(1)
             self.targetRotation = -math.rad(-3.2) -- Negative for left
         else
             self.targetRotation = -math.rad(-7.5)
         end
     elseif self.isStrafingRight then
         if state == "Aiming" then
+            print(12)
             self.targetRotation = -math.rad(3.2) -- Positive for right
         else
             self.targetRotation = -math.rad(7.5)

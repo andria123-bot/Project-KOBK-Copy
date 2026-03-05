@@ -12,7 +12,7 @@ local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local LoadModule = require(script.Parent.LoadModule)
 local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 local WeaponCategories = require(script.Parent.WeaponCategories)
-local ViewmoduleRotation = require(script.Parent.ViewmodelRotation)
+local VIMROT = script.Parent.ViewmodelRotation
 
 local playerWeaponSystemData = PlayerWeaponSystem -- player module
 local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
@@ -23,7 +23,6 @@ local bobOffset = CFrame.new()
 
 local AimHelper = require(script.Parent.Aim)
 local PlayerWeaponSystemData = require(script.Parent.PlayerWeaponSystemData)
-local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 local aimHelper = AimHelper
 
 local debounce = false
@@ -47,7 +46,17 @@ function stopAllAnims()
 end
 
 function loadSlot(Item)
-	if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[3] or weaponSystem.state == weaponSystem.states[4] then
+	if weaponSystem.state == weaponSystem.states[1] 
+	or weaponSystem.state == weaponSystem.states[3] 
+	or weaponSystem.state == weaponSystem.states[4] then
+
+		PlayerWeaponSystem:setState(weaponSystem.states[7])
+
+		weaponSystem.modifiers.IsAiming = false
+		weaponSystem.modifiers.IsInspecting = false
+		weaponSystem.modifiers.IsReloading = false
+		weaponSystem.modifiers.IsShooting = false
+
 		weaponSystem.module = LoadModule.GetModule(Item)
 
 		for _, v in pairs(camera:GetChildren()) do
@@ -56,66 +65,66 @@ function loadSlot(Item)
 
 				if weaponSystem.animations.FirstPerson[3] then
 					weaponSystem.animations.FirstPerson[3]:Play()
-					
-					-- ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent.Head:WaitForChild("Deequip"))
 					repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
-					v:Destroy()
 				end
-				repeat task.wait() until weaponSystem.animations.FirstPerson[3].IsPlaying == false
+
+				v:Destroy()
 			end
 		end
 
 		if weaponSystem.module then
 			weaponSystem.viewmodel = LoadViewmodel.GetViewmodel(Item):Clone()
 			weaponSystem.viewmodel.Parent = camera
-				
-			if weaponSystem.viewmodel and weaponSystem.state == weaponSystem.states[1] then
+
+			if weaponSystem.viewmodel then
+				local animator = weaponSystem.viewmodel.AnimationController.Animator
+
 				weaponSystem.animations.FirstPerson[1] = Instance.new("Animation")
 				weaponSystem.animations.FirstPerson[1].Parent = weaponSystem.viewmodel
 				weaponSystem.animations.FirstPerson[1].Name = "Fire"
 				weaponSystem.animations.FirstPerson[1].AnimationId = weaponSystem.module.fireAnim
-				weaponSystem.animations.FirstPerson[1] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[1])
+				weaponSystem.animations.FirstPerson[1] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[1])
 
 				weaponSystem.animations.FirstPerson[2] = Instance.new("Animation")
 				weaponSystem.animations.FirstPerson[2].Parent = weaponSystem.viewmodel
 				weaponSystem.animations.FirstPerson[2].Name = "Equip"
 				weaponSystem.animations.FirstPerson[2].AnimationId = weaponSystem.module.equipAnim
-				weaponSystem.animations.FirstPerson[2] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[2])
+				weaponSystem.animations.FirstPerson[2] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[2])
 
 				weaponSystem.animations.FirstPerson[3] = Instance.new("Animation")
 				weaponSystem.animations.FirstPerson[3].Parent = weaponSystem.viewmodel
 				weaponSystem.animations.FirstPerson[3].Name = "Deequip"
 				weaponSystem.animations.FirstPerson[3].AnimationId = weaponSystem.module.deequipAnim
-				weaponSystem.animations.FirstPerson[3] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[3])
+				weaponSystem.animations.FirstPerson[3] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[3])
 
 				weaponSystem.animations.FirstPerson[4] = Instance.new("Animation")
 				weaponSystem.animations.FirstPerson[4].Parent = weaponSystem.viewmodel
 				weaponSystem.animations.FirstPerson[4].Name = "EmptyFire"
 				weaponSystem.animations.FirstPerson[4].AnimationId = weaponSystem.module.emptyFireAnim
-				weaponSystem.animations.FirstPerson[4] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[4])
+				weaponSystem.animations.FirstPerson[4] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[4])
 
 				weaponSystem.animations.FirstPerson[5] = Instance.new("Animation")
 				weaponSystem.animations.FirstPerson[5].Parent = weaponSystem.viewmodel
 				weaponSystem.animations.FirstPerson[5].Name = "Reload"
 				weaponSystem.animations.FirstPerson[5].AnimationId = weaponSystem.module.reloadAnim
-				weaponSystem.animations.FirstPerson[5] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[5])
-				
+				weaponSystem.animations.FirstPerson[5] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[5])
+
 				weaponSystem.animations.FirstPerson[6] = Instance.new("Animation")
 				weaponSystem.animations.FirstPerson[6].Name = "EmptyReload"
 				weaponSystem.animations.FirstPerson[6].AnimationId = weaponSystem.module.emptyReloadAnim
-				weaponSystem.animations.FirstPerson[6] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[6])
+				weaponSystem.animations.FirstPerson[6] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[6])
 
 				weaponSystem.animations.FirstPerson[7] = Instance.new("Animation")
 				weaponSystem.animations.FirstPerson[7].Parent = weaponSystem.viewmodel
 				weaponSystem.animations.FirstPerson[7].Name = "Inspect"
 				weaponSystem.animations.FirstPerson[7].AnimationId = weaponSystem.module.inspectAnim
-				weaponSystem.animations.FirstPerson[7] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[7])
+				weaponSystem.animations.FirstPerson[7] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[7])
 
 				weaponSystem.animations.FirstPerson[8] = Instance.new("Animation")
 				weaponSystem.animations.FirstPerson[8].Parent = weaponSystem.viewmodel
 				weaponSystem.animations.FirstPerson[8].Name = "Idle"
 				weaponSystem.animations.FirstPerson[8].AnimationId = weaponSystem.module.idleAnim
-				weaponSystem.animations.FirstPerson[8] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[8])
+				weaponSystem.animations.FirstPerson[8] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[8])
 
 				ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(Item)
 
@@ -130,7 +139,7 @@ function loadSlot(Item)
 					end
 				end
 
-				for i, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
+				for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
 						v.Transparency = 1
 					end
@@ -140,27 +149,32 @@ function loadSlot(Item)
 
 				task.wait(.1)
 
-				for i, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
+				for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
-						if v.Parent:IsA("Folder") or v.Name == "Main" or v.Name == "FakeCamera" or v.Name == "AimPart" or v.Name == "AimPart2" or v.Name == "HumanoidRootPart" or v.Name == "CasingEject" or v.Name == "Muzzle" then
-							
-						else
+						if not (v.Parent:IsA("Folder") 
+						or v.Name == "Main" 
+						or v.Name == "FakeCamera" 
+						or v.Name == "AimPart" 
+						or v.Name == "AimPart2" 
+						or v.Name == "HumanoidRootPart" 
+						or v.Name == "CasingEject" 
+						or v.Name == "Muzzle") then
 							v.Transparency = 0
 						end
 					end
 				end
 
-				canShoot, canAim, canInspect, canReload = true, true, true, true
-
+				PlayerWeaponSystem:setState(weaponSystem.states[1])
 				aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
-				ViewmodelRotation:Init(weaponSystem.module, weaponSystem.viewmodel)
+
+				require(ViewmodelRotation.Init(weaponSystem.module, weaponSystem.viewmodel))
 			end
 		end
 	end
 end
 
 function Shoot()
-	if weaponSystem.state ~= weaponSystem.states[1] and not weaponSystem.modifiers.IsAiming then 
+	if weaponSystem.state ~= weaponSystem.states[1] and weaponSystem.state ~= weaponSystem.states[5] then
 		return
 	end
 
@@ -170,7 +184,7 @@ function Shoot()
 		return
 	end
 
-	if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 then
+	if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 and weaponSystem.state ~= weaponSystem.states[7] then
 		if weaponSystem.module.fireMode == "Semi Auto" then
 			weaponSystem.animations.FirstPerson[2]:Stop()
 			weaponSystem.animations.FirstPerson[5]:Stop()
@@ -319,7 +333,7 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 			
-		-- print(weaponSystem.state)
+		print(weaponSystem.state)
 		-- print(weaponSystem.modifiers.IsShooting)
 		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
 		local X,Y,_ = rot:ToOrientation() 
@@ -341,11 +355,11 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 
-		local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
+		-- local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
 
 		for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
 			if v:IsA("Model") then
-				v:SetPrimaryPartCFrame(camera.CFrame * weaponSystem.module.swayCF * weaponSystem.module.aimCF * bobOffset * rotOffset)
+				v:SetPrimaryPartCFrame(camera.CFrame * weaponSystem.module.swayCF * weaponSystem.module.aimCF * bobOffset)-- * rotOffset
 				updateCameraShake()
 			end
 		end
@@ -359,7 +373,10 @@ end)
 UIS.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 
-	if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[3] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.state ~= weaponSystem.states[8] then
+	if (weaponSystem.state == weaponSystem.states[1] 
+	or weaponSystem.state == weaponSystem.states[3] 
+	or weaponSystem.state == weaponSystem.states[4]) 
+	and weaponSystem.state ~= weaponSystem.states[8] then
 		if input.KeyCode == Enum.KeyCode.One then
 			if weaponSystem.currentSlot ~= 1 and weaponSystem.state ~= weaponSystem.states[3] then
 				if weaponSystem.inventory[1] ~= "Nil" then
@@ -520,14 +537,12 @@ mouse.Button1Up:Connect(function()
 			playerWeaponSystemData:setState(weaponSystem.states[1])
 		end
 	end
-
-
 end)
 
 while wait() do
 	if weaponSystem.module and weaponSystem.viewmodel then
 		if weaponSystem.state == weaponSystem.states[2] or weaponSystem.modifiers.IsShooting then
-			if weaponSystem.module and weaponSystem.module.ammo > 0 then
+			if weaponSystem.module and weaponSystem.module.ammo > 0 and weaponSystem.state ~= weaponSystem.states[7] then
 				weaponSystem.animations.FirstPerson[2]:Stop()
 				weaponSystem.animations.FirstPerson[5]:Stop()
 				weaponSystem.animations.FirstPerson[6]:Stop()

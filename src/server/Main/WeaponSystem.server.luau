@@ -108,7 +108,6 @@ end)
 ReplicatedStorage.Shared.Remotes.Shoot.OnServerEvent:Connect(function(player, MuzzlePos, lookPos, damage, headshot, item, muzzleCF)
 	if player.Character then
 		local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
-        print(sound)
 		if sound then
 			sound:Play()
 		end
