@@ -248,7 +248,7 @@ function Inspect()
 			dof.NearIntensity = 0.183
 			weaponSystem.animations.FirstPerson[7]:Play()
 			-- weaponSystem.animations.ThirdPerson[6]:Play()
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect")) -- Sound is not begin created on server
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
 			repeat task.wait() until weaponSystem.animations.FirstPerson[7].IsPlaying == false
 
 			-- weaponSystem.animations.FirstPerson[7]:Stop()
@@ -258,7 +258,6 @@ function Inspect()
 			dof.NearIntensity = .75
 
 			playerWeaponSystemData:setState(weaponSystem.states[1])
-			canAim = true
 		else
 			print("Wrong State: ", weaponSystem.state)
 		end
