@@ -70,7 +70,7 @@ local data = {
 
 	damage = 55,
 	headshot = 73,
-	debounce = 0.1,
+	debounce = .1,
 	reloadTime = 2.3,
 	jamChance = 0.005,
 	value = 3000,

@@ -174,15 +174,8 @@ function loadSlot(Item)
 end
 
 function Shoot()
-	if weaponSystem.state ~= weaponSystem.states[1] and weaponSystem.state ~= weaponSystem.states[5] then
-		return
-	end
-
+	if weaponSystem.state ~= weaponSystem.states[1] and weaponSystem.state ~= weaponSystem.states[5] then return end
 	playerWeaponSystemData:setState(weaponSystem.states[2])
-
-	if weaponSystem.state ~= weaponSystem.states[2] then
-		return
-	end
 
 	if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 and weaponSystem.state ~= weaponSystem.states[7] then
 		if weaponSystem.module.fireMode == "Semi Auto" then
@@ -204,19 +197,34 @@ function Shoot()
 
 			weaponSystem.module.ammo -= 1
 
+			local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+			muzzleFlash.Parent = game.Workspace
+			muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+
+			for i, v in pairs(muzzleFlash:GetChildren()) do
+				if v:IsA("ParticleEmitter") then
+					v:Emit(1)
+				end
+			end
+
+			game:GetService("Debris"):AddItem(muzzleFlash, 0.05)
+
 			ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
+
+			PlayerWeaponSystem:setState(weaponSystem.states[1])
 
 			if weaponSystem.module.ammo == 0 then
 				if weaponSystem.state == weaponSystem.states[1] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
 					task.wait(.5)
 
 					playerWeaponSystemData:setState(weaponSystem.states[3])
+					
 					weaponSystem.modifiers.IsInspecting = false
 					weaponSystem.modifiers.IsShooting = false
 					weaponSystem.modifiers.IsReloading = true
 					Reload()
-
+					
 					repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
 					debounce = false
 				end
@@ -566,10 +574,10 @@ while wait() do
 					weaponSystem.animations.FirstPerson[1]:Stop()
 
 					-- weaponSystem.animations.ThirdPerson[1]:Stop()
-					-- weaponSystem.animations.FirstPerson[8]:Stop()
 				else
 					weaponSystem.animations.FirstPerson[4]:Stop()
 					-- weaponSystem.animations.ThirdPerson[1]:Play()
+
 					weaponSystem.animations.FirstPerson[1]:Play()
 				end
 
