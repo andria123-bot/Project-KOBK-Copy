@@ -37,47 +37,54 @@ local data = {
 	aimSmooth = .00025,
 	canSemi = true,
 	canFullAuto = true,
-	ammo = 30,       
+	ammo = 30,
 	maxAmmo = 30,
 	fireMode = "Full Auto",
 
-	fireRate = 0.09, 
+	fireRate = 0.085,
 
-	sprintCF = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-95/5), math.rad(95/4), math.rad(95/5));
+	sprintCF = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-95/5), math.rad(95/4), math.rad(95/5)),
 
-	durable = 500,  
+	aimCF = CFrame.new(),
+	currentSwayAMT = -.35,
+	swayAMT = -.28,
+	aimSwayAMT = .45,
+	swayCF = CFrame.new(0, 0, 0),
+	lastCameraCF = CFrame.new(0, 0, 0),
+
+	durable = 550,
 	isStackable = false,
 	maxStack = 1,
 
 	-- Piercing
 	canPenetrate = true,
-	maxDepth = 2.2,   
-	damageFalloff = 0.7,
+	maxDepth = 2.0,
+	damageFalloff = 0.72,
 
-	-- Can Add Attachments
+	-- Attachments
 	canAddSight = true,
 	canAddLaser = true,
 	canAddExtendedMag = true,
 
 	-- Damage
-	damage = 27.5,    
-	headshot = 67,
-	debounce = 0.07,
-	reloadTime = 3.5,  
-	jamChance = 0.01,  
-	value = 5500,
+	damage = 26,
+	headshot = 64,
+	debounce = 0.065,
+	reloadTime = 2.9,
+	jamChance = 0.006,
+	value = 5200,
 
 	-- Recoil
-	x = 1.0,          
-	y = 0.06,
+	x = 0.85,
+	y = 0.05,
 
 	-- Spread
-	hipfire = 2.2,
-	aimed = 0.35,
-	increasePerShot = 0.22,
-	maxSpread = 4.5,
-	bulletSpeed = 330, 
-	bulletDistance = 525,
+	hipfire = 2.0,
+	aimed = 0.28,
+	increasePerShot = 0.20,
+	maxSpread = 4.2,
+	bulletSpeed = 340,
+	bulletDistance = 540,
 
 	slotType = "Loadout",
 	ammoType = "5.56x45",
@@ -88,7 +95,9 @@ local data = {
 	isShootgun = false,
 }
 
-local fastcast = require(game.ReplicatedStorage.Modules.FastCastRedux)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local fastcast = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastRedux)
 local caster = fastcast.new()
 fastcast.VisualizeCasts = false
 

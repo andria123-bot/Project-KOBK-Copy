@@ -382,7 +382,7 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 
-		if weaponSystem.state == weaponSystem.states[5] or weaponSystem.state == weaponSystem.states[1] then
+		if weaponSystem.state == weaponSystem.states[5] or weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[2] then
 			aimHelper:Aim(dt)
 		end
 	end

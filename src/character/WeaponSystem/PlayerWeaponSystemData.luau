@@ -6,7 +6,7 @@ local playerWeaponSystemData = {
             "MG42";
             "Knife";
             "Grenade";
-            "";
+            "M4A1";
             "";
             "";
             "";

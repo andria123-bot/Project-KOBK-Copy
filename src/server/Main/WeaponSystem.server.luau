@@ -1,6 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local remoteManagers = require(ReplicatedStorage.Shared.Remotes.RemoteManagers.RemoteManager)
+local FastCastReduxManager = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastReduxManager)
+FastCastReduxManager:changeParent()
 
 ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player, item)
 	if player.Character then
@@ -11,6 +13,8 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 		end
 
 		local weapons = ReplicatedStorage.Weapons -- flder of weapons to clone to my hand
+
+		print(weapons:GetChildren())
 
 		for i,v in pairs(player.Character:GetChildren()) do
 			if v:IsA("Model") and weapons:FindFirstChild(v.Name) then
@@ -24,8 +28,12 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 
 			local joint = Instance.new("Motor6D")
 			joint.Parent = gun
-			joint.Part0 = player.Character:FindFirstChild("Right Arm")
+			joint.Part0 = player.Character:FindFirstChild("RightHand")
 			joint.Part1 = gun.PrimaryPart
+
+			print(joint.Parent)
+			print(joint.Part0)
+			print(joint.Part1)
 		end
 		
 		local module

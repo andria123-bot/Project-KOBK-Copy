@@ -3,7 +3,6 @@
 -- ActiveCast class type.
 -- The ActiveCast type represents a currently running cast.
 
-
 -----------------------------------------------------------
 --------------------- TYPE DEFINITION ---------------------
 -----------------------------------------------------------
