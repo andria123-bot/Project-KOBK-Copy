@@ -586,8 +586,8 @@ while wait() do
 				ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
 
 				if weaponSystem.module.ammo == 0 then
-					if weaponSystem.state == weaponSystem.states[1] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
-						task.wait(.5)
+					if weaponSystem.state == weaponSystem.states[2] then 
+						task.wait(.4)
 
 						playerWeaponSystemData:setState(weaponSystem.states[3])
 						weaponSystem.modifiers.IsInspecting = false
