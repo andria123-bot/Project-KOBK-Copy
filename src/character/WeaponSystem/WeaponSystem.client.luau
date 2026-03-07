@@ -126,6 +126,27 @@ function loadSlot(Item)
 				weaponSystem.animations.FirstPerson[8].AnimationId = weaponSystem.module.idleAnim
 				weaponSystem.animations.FirstPerson[8] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[8])
 
+
+
+				weaponSystem.animations.ThirdPerson[7] = Instance.new("Animation")
+				weaponSystem.animations.ThirdPerson[7].Parent = player.Character
+				weaponSystem.animations.ThirdPerson[7].Name = "IdleAnim"
+				weaponSystem.animations.ThirdPerson[7].AnimationId = weaponSystem.module.tpIdleAnim
+				weaponSystem.animations.ThirdPerson[7] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[7])
+
+				if weaponSystem.animations.ThirdPerson[7] and weaponSystem.module.tpIdleAnim ~= nil then
+					player.Character:FindFirstChild("IdleAnim").AnimationId = weaponSystem.module.tpIdleAnim
+					weaponSystem.animations.ThirdPerson[7] = character.Humanoid:LoadAnimation(player.Character:FindFirstChild("IdleAnim"))
+					weaponSystem.animations.ThirdPerson[7]:Play()
+				else
+					weaponSystem.animations.ThirdPerson[7] = Instance.new("Animation")
+					weaponSystem.animations.ThirdPerson[7].Parent = player.Character
+					weaponSystem.animations.ThirdPerson[7].Name = "IdleAnim"
+					weaponSystem.animations.ThirdPerson[7].AnimationId = weaponSystem.module.tpIdleAnim
+					weaponSystem.animations.ThirdPerson[7] = character.Humanoid:LoadAnimation(weaponSystem.animations.ThirdPerson[7])
+					weaponSystem.animations.ThirdPerson[7]:Play()
+				end
+
 				ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(Item)
 
 				if character then

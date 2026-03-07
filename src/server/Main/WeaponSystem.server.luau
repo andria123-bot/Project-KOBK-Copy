@@ -4,6 +4,8 @@ local remoteManagers = require(ReplicatedStorage.Shared.Remotes.RemoteManagers.R
 local FastCastReduxManager = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastReduxManager)
 FastCastReduxManager:changeParent()
 
+ReplicatedStorage.Localscripts.Animate.Parent = game.StarterPlayer.StarterCharacterScripts
+
 ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player, item)
 	if player.Character then
 		for i, v in pairs(player.Character:WaitForChild("UpperTorso"):GetChildren()) do
