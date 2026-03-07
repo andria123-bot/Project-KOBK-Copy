@@ -59,6 +59,12 @@ function loadSlot(Item)
 
 		weaponSystem.module = LoadModule.GetModule(Item)
 
+		if player.Character:FindFirstChild("IdleAnim") then 
+			weaponSystem.animations.ThirdPerson[7]:Destroy()
+			weaponSystem.animations.FirstPerson[3]:Play()
+			player.Character.IdleAnim:Destroy()
+		end
+
 		for _, v in pairs(camera:GetChildren()) do
 			if v:IsA("Model") then
 				stopAllAnims()
@@ -127,27 +133,47 @@ function loadSlot(Item)
 				weaponSystem.animations.FirstPerson[8] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[8])
 
 
+				weaponSystem.animations.ThirdPerson[1] = Instance.new("Animation")
+				weaponSystem.animations.ThirdPerson[1].Parent = player.Character
+				weaponSystem.animations.ThirdPerson[1].Name = "ShootAnim"
+				weaponSystem.animations.ThirdPerson[1].AnimationId = weaponSystem.module.tpShootAnim
+				weaponSystem.animations.ThirdPerson[1] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[1])
+
+				weaponSystem.animations.ThirdPerson[2] = Instance.new("Animation")
+				weaponSystem.animations.ThirdPerson[2].Parent = player.Character
+				weaponSystem.animations.ThirdPerson[2].Name = "EquipAnim"
+				weaponSystem.animations.ThirdPerson[2].AnimationId = weaponSystem.module.tpEquipAnim
+				weaponSystem.animations.ThirdPerson[2] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[2])
+
+				weaponSystem.animations.ThirdPerson[3] = Instance.new("Animation")
+				weaponSystem.animations.ThirdPerson[3].Parent = player.Character
+				weaponSystem.animations.ThirdPerson[3].Name = "DeequipAnim"
+				weaponSystem.animations.ThirdPerson[3].AnimationId = weaponSystem.module.tpDeequipAnim
+				weaponSystem.animations.ThirdPerson[3] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[3])
+
+				weaponSystem.animations.ThirdPerson[4] = Instance.new("Animation")
+				weaponSystem.animations.ThirdPerson[4].Parent = player.Character
+				weaponSystem.animations.ThirdPerson[4].Name = "ReloadAnim"
+				weaponSystem.animations.ThirdPerson[4].AnimationId = weaponSystem.module.tpReloadAnim
+				weaponSystem.animations.ThirdPerson[4] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[4])
+
+				weaponSystem.animations.ThirdPerson[5] = Instance.new("Animation")
+				weaponSystem.animations.ThirdPerson[5].Parent = player.Character
+				weaponSystem.animations.ThirdPerson[5].Name = "EmptyReloadAnim"
+				weaponSystem.animations.ThirdPerson[5].AnimationId = weaponSystem.module.tpEmptyReloadAnim
+				weaponSystem.animations.ThirdPerson[5] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[5])
+
+				weaponSystem.animations.ThirdPerson[6] = Instance.new("Animation")
+				weaponSystem.animations.ThirdPerson[6].Parent = player.Character
+				weaponSystem.animations.ThirdPerson[6].Name = "InspectAnim"
+				weaponSystem.animations.ThirdPerson[6] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[6])
 
 				weaponSystem.animations.ThirdPerson[7] = Instance.new("Animation")
 				weaponSystem.animations.ThirdPerson[7].Parent = player.Character
 				weaponSystem.animations.ThirdPerson[7].Name = "IdleAnim"
 				weaponSystem.animations.ThirdPerson[7].AnimationId = weaponSystem.module.tpIdleAnim
 				weaponSystem.animations.ThirdPerson[7] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[7])
-
-				if weaponSystem.animations.ThirdPerson[7] and weaponSystem.module.tpIdleAnim ~= nil then
-					player.Character:FindFirstChild("IdleAnim").AnimationId = weaponSystem.module.tpIdleAnim
-					weaponSystem.animations.ThirdPerson[7] = character.Humanoid:LoadAnimation(player.Character:FindFirstChild("IdleAnim"))
-					weaponSystem.animations.ThirdPerson[7]:Play()
-				else
-					weaponSystem.animations.ThirdPerson[7] = Instance.new("Animation")
-					weaponSystem.animations.ThirdPerson[7].Parent = player.Character
-					weaponSystem.animations.ThirdPerson[7].Name = "IdleAnim"
-					weaponSystem.animations.ThirdPerson[7].AnimationId = weaponSystem.module.tpIdleAnim
-					weaponSystem.animations.ThirdPerson[7] = character.Humanoid:LoadAnimation(weaponSystem.animations.ThirdPerson[7])
-					weaponSystem.animations.ThirdPerson[7]:Play()
-				end
-
-				ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(Item)
+				weaponSystem.animations.ThirdPerson[7]:Play()
 
 				if character then
 					if character.UpperTorso:FindFirstChildWhichIsA("Sound") then
@@ -205,6 +231,12 @@ function Shoot()
 			weaponSystem.animations.FirstPerson[6]:Stop()
 			weaponSystem.animations.FirstPerson[7]:Stop()
 			weaponSystem.animations.FirstPerson[8]:Stop()
+
+			weaponSystem.animations.ThirdPerson[2]:Stop()
+			weaponSystem.animations.ThirdPerson[4]:Stop()
+			weaponSystem.animations.ThirdPerson[5]:Stop()
+			weaponSystem.animations.ThirdPerson[6]:Stop()
+
 			
 			if weaponSystem.module.ammo == 1 then
 				weaponSystem.animations.FirstPerson[1]:Stop()
@@ -213,7 +245,7 @@ function Shoot()
 				weaponSystem.animations.FirstPerson[4]:Stop()
 				weaponSystem.animations.FirstPerson[1]:Play()
 
-				-- weaponSystem.animations.ThirdPerson[1]:Play()
+				weaponSystem.animations.ThirdPerson[1]:Play()
 			end
 
 			weaponSystem.module.ammo -= 1
@@ -276,7 +308,7 @@ function Inspect()
 			dof.InFocusRadius = 25.215
 			dof.NearIntensity = 0.183
 			weaponSystem.animations.FirstPerson[7]:Play()
-			-- weaponSystem.animations.ThirdPerson[6]:Play()
+			weaponSystem.animations.ThirdPerson[6]:Play()
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
 			repeat task.wait() until weaponSystem.animations.FirstPerson[7].IsPlaying == false
 
@@ -296,21 +328,20 @@ function Reload()
 		if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee == false and weaponSystem.module.isGrenade == false and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
 			if weaponSystem.state == weaponSystem.states[3] then
 				camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
-				weaponSystem.animations.FirstPerson[1]:Stop()
 				weaponSystem.animations.FirstPerson[2]:Stop()
-				weaponSystem.animations.FirstPerson[3]:Stop()
+				weaponSystem.animations.FirstPerson[5]:Stop()
+				weaponSystem.animations.ThirdPerson[4]:Stop()
+				weaponSystem.animations.FirstPerson[6]:Stop()
 				weaponSystem.animations.FirstPerson[7]:Stop()
-				-- weaponSystem.animations.ThirdPerson[6]:Stop()
 				weaponSystem.animations.FirstPerson[8]:Stop()
-
 
 				if weaponSystem.module.ammo > 0 then
 					weaponSystem.animations.FirstPerson[5]:Play()
-					-- weaponSystem.animations.ThirdPerson[4]:Play()
+					weaponSystem.animations.ThirdPerson[4]:Play()
 					ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
 				else
 					weaponSystem.animations.FirstPerson[6]:Play()
-					-- weaponSystem.animations.ThirdPerson[5]:Play()
+					weaponSystem.animations.ThirdPerson[5]:Play()
 					ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
 				end
 
@@ -589,14 +620,19 @@ while wait() do
 				weaponSystem.animations.FirstPerson[7]:Stop()
 				weaponSystem.animations.FirstPerson[8]:Stop()
 
+				weaponSystem.animations.ThirdPerson[2]:Stop()
+				weaponSystem.animations.ThirdPerson[4]:Stop()
+				weaponSystem.animations.ThirdPerson[5]:Stop()
+				weaponSystem.animations.ThirdPerson[6]:Stop()
+
 				if weaponSystem.module.ammo == 1 then
 					weaponSystem.animations.FirstPerson[4]:Play()
 					weaponSystem.animations.FirstPerson[1]:Stop()
 
-					-- weaponSystem.animations.ThirdPerson[1]:Stop()
+					weaponSystem.animations.ThirdPerson[1]:Stop()
 				else
 					weaponSystem.animations.FirstPerson[4]:Stop()
-					-- weaponSystem.animations.ThirdPerson[1]:Play()
+					weaponSystem.animations.ThirdPerson[1]:Play()
 
 					weaponSystem.animations.FirstPerson[1]:Play()
 				end

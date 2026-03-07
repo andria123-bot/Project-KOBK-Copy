@@ -24,7 +24,7 @@ end
 function AimHelper:Aim(dt)
 	if not (self.weaponModule and self.viewmodel and self.weaponModule.canAim) then return end
 	
-	if playerWeaponSystem.weaponSystem.modifiers.IsAiming  then
+	if playerWeaponSystem.weaponSystem.modifiers.IsAiming then
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end
 

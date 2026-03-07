@@ -16,8 +16,6 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 
 		local weapons = ReplicatedStorage.Weapons -- flder of weapons to clone to my hand
 
-		print(weapons:GetChildren())
-
 		for i,v in pairs(player.Character:GetChildren()) do
 			if v:IsA("Model") and weapons:FindFirstChild(v.Name) then
 				v:Destroy()
