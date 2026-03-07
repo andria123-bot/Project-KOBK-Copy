@@ -489,7 +489,6 @@ UIS.InputBegan:Connect(function(input, gpe)
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.state ~= weaponSystem.states[4] and weaponSystem.state == weaponSystem.states[1] then
 			weaponSystem.modifiers.IsAiming = true
-			PlayerWeaponSystem:setState(weaponSystem.states[5])
 		end	
 	end
 
@@ -586,7 +585,7 @@ while wait() do
 				ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
 
 				if weaponSystem.module.ammo == 0 then
-					if weaponSystem.state == weaponSystem.states[2] then 
+					if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[2] then 
 						task.wait(.4)
 
 						playerWeaponSystemData:setState(weaponSystem.states[3])
@@ -599,57 +598,11 @@ while wait() do
 
 
 				wait(weaponSystem.module.fireRate)
+				PlayerWeaponSystemData:setState(weaponSystem.states[1])
 			end
 		end
 	end
 end
-
--- weaponSystem.animations.FirstPerson[1] = Instance.new("Animation")
--- weaponSystem.animations.FirstPerson[1].Parent = weaponSystem.viewmodel
--- weaponSystem.animations.FirstPerson[1].Name = "Fire"
--- weaponSystem.animations.FirstPerson[1].AnimationId = weaponSystem.module.fireAnim
--- weaponSystem.animations.FirstPerson[1] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[1])
-
--- weaponSystem.animations.FirstPerson[2] = Instance.new("Animation")
--- weaponSystem.animations.FirstPerson[2].Parent = weaponSystem.viewmodel
--- weaponSystem.animations.FirstPerson[2].Name = "Equip"
--- weaponSystem.animations.FirstPerson[2].AnimationId = weaponSystem.module.equipAnim
--- weaponSystem.animations.FirstPerson[2] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[2])
-
--- weaponSystem.animations.FirstPerson[3] = Instance.new("Animation")
--- weaponSystem.animations.FirstPerson[3].Parent = weaponSystem.viewmodel
--- weaponSystem.animations.FirstPerson[3].Name = "Deequip"
--- weaponSystem.animations.FirstPerson[3].AnimationId = weaponSystem.module.deequipAnim
--- weaponSystem.animations.FirstPerson[3] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[3])
-
--- weaponSystem.animations.FirstPerson[4] = Instance.new("Animation")
--- weaponSystem.animations.FirstPerson[4].Parent = weaponSystem.viewmodel
--- weaponSystem.animations.FirstPerson[4].Name = "EmptyFire"
--- weaponSystem.animations.FirstPerson[4].AnimationId = weaponSystem.module.emptyFireAnim
--- weaponSystem.animations.FirstPerson[4] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[4])
-
--- weaponSystem.animations.FirstPerson[5] = Instance.new("Animation")
--- weaponSystem.animations.FirstPerson[5].Parent = weaponSystem.viewmodel
--- weaponSystem.animations.FirstPerson[5].Name = "Reload"
--- weaponSystem.animations.FirstPerson[5].AnimationId = weaponSystem.module.reloadAnim
--- weaponSystem.animations.FirstPerson[5] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[5])
-
--- weaponSystem.animations.FirstPerson[6] = Instance.new("Animation")
--- weaponSystem.animations.FirstPerson[6].Name = "EmptyReload"
--- weaponSystem.animations.FirstPerson[6].AnimationId = weaponSystem.module.emptyReloadAnim
--- weaponSystem.animations.FirstPerson[6] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[6])
-
--- weaponSystem.animations.FirstPerson[7] = Instance.new("Animation")
--- weaponSystem.animations.FirstPerson[7].Parent = weaponSystem.viewmodel
--- weaponSystem.animations.FirstPerson[7].Name = "Inspect"
--- weaponSystem.animations.FirstPerson[7].AnimationId = weaponSystem.module.inspectAnim
--- weaponSystem.animations.FirstPerson[7] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[7])
-
--- weaponSystem.animations.FirstPerson[8] = Instance.new("Animation")
--- weaponSystem.animations.FirstPerson[8].Parent = weaponSystem.viewmodel
--- weaponSystem.animations.FirstPerson[8].Name = "Idle"
--- weaponSystem.animations.FirstPerson[8].AnimationId = weaponSystem.module.idleAnim
--- weaponSystem.animations.FirstPerson[8] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.FirstPerson[8])
 
 -- weaponSystem.animations.ThirdPerson[7] = Instance.new("Animation")
 -- weaponSystem.animations.ThirdPerson[7].Parent = player.Character

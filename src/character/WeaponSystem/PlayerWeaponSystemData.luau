@@ -55,6 +55,8 @@ local playerWeaponSystemData = {
             nil; -- deequip/holster
         };
 
+        state = "",
+
         states = {
             "Idle",
             "Shooting",
@@ -65,7 +67,7 @@ local playerWeaponSystemData = {
             "Changing",
             "Dead",
         },
-        
+
         modifiers = {
             IsAiming = false;
             IsInspecting = false;
