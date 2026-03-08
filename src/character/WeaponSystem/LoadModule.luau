@@ -24,7 +24,6 @@ function moduleFinder.GetModule(Item)
         local moduleToClone
 
         if not moduleToClone then
-            print(primaryModulesFolder["Assault Rifles"].M4A1)
             for _, category in ipairs(weaponCategories.primaryCategories) do
                 local moduleCategory = primaryModulesFolder:FindFirstChild(category)
                 if moduleCategory then

@@ -166,14 +166,17 @@ function loadSlot(Item)
 				weaponSystem.animations.ThirdPerson[6] = Instance.new("Animation")
 				weaponSystem.animations.ThirdPerson[6].Parent = player.Character
 				weaponSystem.animations.ThirdPerson[6].Name = "InspectAnim"
+				weaponSystem.animations.ThirdPerson[6].AnimationId = weaponSystem.module.tpInspectAnim
 				weaponSystem.animations.ThirdPerson[6] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[6])
 
 				weaponSystem.animations.ThirdPerson[7] = Instance.new("Animation")
 				weaponSystem.animations.ThirdPerson[7].Parent = player.Character
 				weaponSystem.animations.ThirdPerson[7].Name = "IdleAnim"
 				weaponSystem.animations.ThirdPerson[7].AnimationId = weaponSystem.module.tpIdleAnim
-				weaponSystem.animations.ThirdPerson[7] = weaponSystem.viewmodel.AnimationController.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[7])
+				weaponSystem.animations.ThirdPerson[7] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[7])
 				weaponSystem.animations.ThirdPerson[7]:Play()
+
+				ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(Item)
 
 				if character then
 					if character.UpperTorso:FindFirstChildWhichIsA("Sound") then
@@ -323,6 +326,11 @@ function Inspect()
 	end
 end
 
+--[[	Current bugs:
+	1) Reload delay is wrong or i have to reset state
+	2) During Inspecting player should be able to reload
+]]
+
 function Reload()
 	if weaponSystem.state == weaponSystem.states[3] and weaponSystem.modifiers.IsReloading then
 		if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee == false and weaponSystem.module.isGrenade == false and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
@@ -332,7 +340,7 @@ function Reload()
 				weaponSystem.animations.FirstPerson[5]:Stop()
 				weaponSystem.animations.ThirdPerson[4]:Stop()
 				weaponSystem.animations.FirstPerson[6]:Stop()
-				weaponSystem.animations.FirstPerson[7]:Stop()
+				weaponSystem.animations.ThirdPerson[7]:Stop()
 				weaponSystem.animations.FirstPerson[8]:Stop()
 
 				if weaponSystem.module.ammo > 0 then
@@ -391,7 +399,6 @@ RunService.RenderStepped:Connect(function(dt)
 		end
 			
 		-- print(weaponSystem.state) -- Debugging
-		print(weaponSystem.animations.FirstPerson[4].IsPlaying)
 
 		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
 		local X,Y,_ = rot:ToOrientation() 

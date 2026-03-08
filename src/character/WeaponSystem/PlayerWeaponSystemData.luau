@@ -82,7 +82,7 @@ local playerWeaponSystemData = {
 }
 
 playerWeaponSystemData.weaponSystem.state = playerWeaponSystemData.weaponSystem.states[1]
-print(playerWeaponSystemData.weaponSystem.state)
+
 function playerWeaponSystemData:setState(newState)
     print(newState) 
     playerWeaponSystemData.weaponSystem.state = newState

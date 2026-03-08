@@ -52,8 +52,6 @@ function AimHelper:Aim(dt)
 		
 		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
 		self.weaponModule.aimCF = self.weaponModule.aimCF:Lerp(CFrame.new(), alpha)
-	else
-		print("Wrong State: ", playerWeaponSystem.weaponSystem.state)
 	end
 end
 

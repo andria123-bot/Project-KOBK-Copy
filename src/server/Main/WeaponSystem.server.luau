@@ -42,7 +42,9 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
             if v:FindFirstChild(item) then
                 module = require(v:FindFirstChild(item))
             end
-		end	    
+		end
+
+		print(module)
 		
 		local function createSound(name, id, volume)
 			local sound = Instance.new("Sound")
@@ -51,7 +53,7 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 			sound.SoundId = id
 			sound.Volume = volume
 		end
-
+		
 		if module then
 			createSound("Equip", module.sounds[1], 1)
 			createSound("Shoot", module.sounds[2], 1)
@@ -59,7 +61,7 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 			createSound("EmptyReload", module.sounds[4], 1)
 			createSound("Inspect", module.sounds[5], 1)
 			createSound("Deequip", module.sounds[6], 1)
-		end
+		end	
 	end
 end)
 
@@ -168,7 +170,7 @@ ReplicatedStorage.Shared.Remotes.Melee.OnServerEvent:Connect(function(player, li
 				
 				local sound = Instance.new("Sound")
 				sound.Parent = hit
-				sound.SoundId = require(ReplicatedStorage.Modules.Misc).HumanImpactSound
+				sound.SoundId = require(ReplicatedStorage.Shared.Modules.Misc).HumanImpactSound
 				sound.Volume = 1
 				sound:Play()
 				
