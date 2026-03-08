@@ -335,7 +335,9 @@ function Reload()
 	if weaponSystem.state == weaponSystem.states[3] and weaponSystem.modifiers.IsReloading then
 		if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee == false and weaponSystem.module.isGrenade == false and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
 			if weaponSystem.state == weaponSystem.states[3] then
-				camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
+				playerWeaponSystemData:setState(weaponSystem.states[3])
+
+				-- camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
 				weaponSystem.animations.FirstPerson[2]:Stop()
 				weaponSystem.animations.FirstPerson[5]:Stop()
 				weaponSystem.animations.ThirdPerson[4]:Stop()
@@ -398,7 +400,7 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 			
-		-- print(weaponSystem.state) -- Debugging
+		print(weaponSystem.state) -- Debugging
 
 		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
 		local X,Y,_ = rot:ToOrientation() 
