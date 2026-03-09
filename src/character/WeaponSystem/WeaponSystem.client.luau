@@ -301,7 +301,6 @@ end
 --]]
 
 function Shoot()
-	print("shooting")
 	print(weaponSystem.state)
 	PlayerWeaponSystemData:setState(weaponSystem.states[2])
 	weaponSystem.modifiers.IsReloading = false
@@ -350,59 +349,41 @@ function Inspect()
 	end
 end
 
---[[	Current bugs:
-	1) Reload delay is wrong or i have to reset state
-
-	if weaponSystem.state == weaponSystem.states[3] and weaponSystem.modifiers.IsReloading then
-		if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee == false and weaponSystem.module.isGrenade == false and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
-			-- camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
-			weaponSystem.animations.FirstPerson[2]:Stop()
-			weaponSystem.animations.FirstPerson[5]:Stop()
-			weaponSystem.animations.ThirdPerson[4]:Stop()
-			weaponSystem.animations.FirstPerson[6]:Stop()
-			weaponSystem.animations.FirstPerson[7]:Stop()
-			weaponSystem.animations.ThirdPerson[7]:Stop()
-			weaponSystem.animations.FirstPerson[8]:Stop()
-
-			if weaponSystem.module.ammo > 0 then
-				weaponSystem.animations.FirstPerson[5]:Play()
-				weaponSystem.animations.ThirdPerson[4]:Play()
-				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
-			else
-				weaponSystem.animations.FirstPerson[6]:Play()
-				weaponSystem.animations.ThirdPerson[5]:Play()
-				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
-			end
-
-			camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
-			task.wait(weaponSystem.module.reloadTime)
-
-			weaponSystem.module.ammo = weaponSystem.module.maxAmmo
-			weaponSystem.modifiers.IsReloading = false
-			playerWeaponSystemData:setState(weaponSystem.states[1])
-		end
-	end
-]]
-
 function Reload()
-	if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsShooting then
+	if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsShooting then 
 		weaponSystem.modifiers.IsReloading = true
+		camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
+
+		weaponSystem.animations.FirstPerson[2]:Stop()
+		weaponSystem.animations.FirstPerson[5]:Stop()
+		weaponSystem.animations.ThirdPerson[4]:Stop()
+		weaponSystem.animations.FirstPerson[6]:Stop()
+		weaponSystem.animations.FirstPerson[7]:Stop()
+		weaponSystem.animations.ThirdPerson[7]:Stop()
+		weaponSystem.animations.FirstPerson[8]:Stop()
+
+		if weaponSystem.module.ammo > 0 then
+			weaponSystem.animations.FirstPerson[5]:Play()
+			weaponSystem.animations.ThirdPerson[4]:Play()
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
+		else
+			weaponSystem.animations.FirstPerson[6]:Play()
+			weaponSystem.animations.ThirdPerson[5]:Play()
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
+		end
 
 		local i = 0
 		while i < weaponSystem.module.reloadTime do
-			weaponSystem.animations.FirstPerson[7]:Stop()
-			PlayerWeaponSystemData:setState(weaponSystem.states[3])
-
 			if weaponSystem.modifiers.IsShooting then
 				weaponSystem.modifiers.IsReloading = false
-				PlayerWeaponSystemData:setState(weaponSystem.states[1])
+				PlayerWeaponSystemData:setState(weaponSystem.states[2])
 				return
 			end
-
-			wait(.05) 
-			i = i + .05
+			wait(0.05)
+			i = i + 0.05
 		end
 
+		
 		weaponSystem.module.ammo = weaponSystem.module.maxAmmo
 		weaponSystem.modifiers.IsReloading = false
 		PlayerWeaponSystemData:setState(weaponSystem.states[1])
