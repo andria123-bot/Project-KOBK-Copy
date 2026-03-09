@@ -30,10 +30,6 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 			joint.Parent = gun
 			joint.Part0 = player.Character:FindFirstChild("RightHand")
 			joint.Part1 = gun.PrimaryPart
-
-			print(joint.Parent)
-			print(joint.Part0)
-			print(joint.Part1)
 		end
 		
 		local module
@@ -44,8 +40,6 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
             end
 		end
 
-		print(module)
-		
 		local function createSound(name, id, volume)
 			local sound = Instance.new("Sound")
 			sound.Parent = player.Character.UpperTorso
