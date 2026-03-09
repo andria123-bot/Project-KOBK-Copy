@@ -300,14 +300,57 @@ end
 	end
 --]]
 
-function Shoot()
-	print(weaponSystem.state)
-	PlayerWeaponSystemData:setState(weaponSystem.states[2])
+--[[	PlayerWeaponSystemData:setState(weaponSystem.states[2])
 	weaponSystem.modifiers.IsReloading = false
 
 	weaponSystem.modifiers.IsShooting = true
 	wait(weaponSystem.module.fireRate)
-	print(weaponSystem.state)
+	]]
+
+function Shoot()
+	if weaponSystem.module and weaponSystem.viewmodel and character then
+		if weaponSystem.module.ammo > 0 then
+			if weaponSystem.module.fireMode == "Semi Auto" then
+				weaponSystem.animations.FirstPerson[2]:Stop()
+				weaponSystem.animations.FirstPerson[5]:Stop()
+				weaponSystem.animations.FirstPerson[6]:Stop()
+				weaponSystem.animations.FirstPerson[7]:Stop()
+				weaponSystem.animations.FirstPerson[8]:Stop()
+
+				weaponSystem.animations.ThirdPerson[2]:Stop()
+				weaponSystem.animations.ThirdPerson[4]:Stop()
+				weaponSystem.animations.ThirdPerson[5]:Stop()
+				weaponSystem.animations.ThirdPerson[6]:Stop()
+
+				if weaponSystem.module.ammo == 1 then
+					weaponSystem.animations.FirstPerson[1]:Stop()
+					weaponSystem.animations.FirstPerson[4]:Play()
+				else
+					weaponSystem.animations.FirstPerson[4]:Stop()
+					weaponSystem.animations.FirstPerson[1]:Play()
+
+					weaponSystem.animations.ThirdPerson[1]:Play()
+				end
+
+				weaponSystem.module.ammo -= 1
+
+				local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+				muzzleFlash.Parent = game.Workspace
+				muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+
+				for i, v in pairs(muzzleFlash:GetChildren()) do
+					if v:IsA("ParticleEmitter") then
+						v:Emit(1)
+					end
+				end
+			end
+
+
+			if weaponSystem.module.fireMode == "Full Auto" then
+				weaponSystem.modifiers.IsShooting = true
+			end
+		end
+	end
 end
 
 function Inspect()
