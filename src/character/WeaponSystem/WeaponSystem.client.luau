@@ -310,17 +310,20 @@ function Shoot()
 	print(weaponSystem.state)
 end
 
---[[
-
-if weaponSystem.modifiers.IsInspecting and weaponSystem.state == weaponSystem.states[4] and not weaponSystem.modifiers.IsReloading then
-			weaponSystem.modifiers.IsInspecting = true
+function Inspect()
+	if weaponSystem.animations and weaponSystem.viewmodel and weaponSystem.module then
+		PlayerWeaponSystemData:setState(weaponSystem.states[4])
+		if weaponSystem.state == weaponSystem.states[4] then 
 			weaponSystem.animations.FirstPerson[8]:Stop()
+			weaponSystem.animations.FirstPerson[7]:Play()
+
 			dof.FarIntensity = 1
 			dof.FocusDistance = 10.44
 			dof.InFocusRadius = 25.215
 			dof.NearIntensity = 0.183
 			weaponSystem.animations.FirstPerson[7]:Play()
 			weaponSystem.animations.ThirdPerson[6]:Play()
+			
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
 			repeat task.wait() until weaponSystem.animations.FirstPerson[7].IsPlaying == false
 
@@ -329,18 +332,7 @@ if weaponSystem.modifiers.IsInspecting and weaponSystem.state == weaponSystem.st
 			dof.FocusDistance = .05
 			dof.InFocusRadius = 30
 			dof.NearIntensity = .75
-			PlayerWeaponSystemData:setState(weaponSystem.states[1])
-			weaponSystem.modifiers.IsInspecting = false
-		end
---]]
 
-function Inspect()
-	if weaponSystem.animations and weaponSystem.viewmodel and weaponSystem.module then
-		PlayerWeaponSystemData:setState(weaponSystem.states[4])
-		if weaponSystem.state == weaponSystem.states[4] then 
-			weaponSystem.animations.FirstPerson[7]:Play()
-
-			repeat task.wait() until weaponSystem.animations.FirstPerson[7].IsPlaying == false
 			weaponSystem.animations.FirstPerson[7]:Stop()
 			if weaponSystem.state == weaponSystem.states[4] then
 				PlayerWeaponSystemData:setState(weaponSystem.states[1])
@@ -382,7 +374,6 @@ function Reload()
 			wait(0.05)
 			i = i + 0.05
 		end
-
 		
 		weaponSystem.module.ammo = weaponSystem.module.maxAmmo
 		weaponSystem.modifiers.IsReloading = false
