@@ -537,17 +537,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 	end
 
-	--[[
-		if weaponSystem.state == weaponSystem.states[1] or weaponSystem.modifiers.IsInspecting or weaponSystem.state == weaponSystem.states[4] then
-			weaponSystem.modifiers.IsInspecting = false
-			PlayerWeaponSystemData:setState(weaponSystem.states[1])
-			Shoot()
-		end
-	--]]
-
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		if character and weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.ammo ~= 0 and not debounce then
-
 			Shoot()
 		end
 	end
@@ -558,19 +549,10 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end	
 	end
 
-	--[[
-		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
-			playerWeaponSystemData:setState(weaponSystem.states[3])
-			weaponSystem.modifiers.IsInspecting = false
-			weaponSystem.modifiers.IsShooting = false
-
-			weaponSystem.modifiers.IsReloading = true
+	if input.KeyCode == Enum.KeyCode.R then
+		if weaponSystem.module and weaponSystem.viewmodel then
 			Reload()
 		end
-	--]]
-
-	if input.KeyCode == Enum.KeyCode.R then
-		Reload()
 	end
 
 	if input.KeyCode == Enum.KeyCode.T then
@@ -579,15 +561,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 	end
 
-	--[[
-					PlayerWeaponSystemData:setState(weaponSystem.states[4])
-			weaponSystem.modifiers.IsInspecting = true
-	--]]
-
 	if input.KeyCode == Enum.KeyCode.H then
 		if weaponSystem.module and weaponSystem.viewmodel then
-			
-			print(weaponSystem.state)
 			Inspect()
 		end
 	end
@@ -606,7 +581,7 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 	for i, v in pairs(camera:GetDescendants()) do
 		if v:IsA("Model") then
 			v:Destroy()
-			weaponSystem.state = weaponSystem.states[8]
+			-- weaponSystem.state = weaponSystem.states[8]
 		end
 	end
 	
@@ -622,14 +597,6 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 		hud.Enabled = false
 	end
 end)
-
---[[
-	if weaponSystem.state ~= weaponSystem.states[4] or weaponSystem.state == weaponSystem.states[1] then
-		weaponSystem.modifiers.IsInspecting = false
-		weaponSystem.modifiers.IsShooting = false
-		playerWeaponSystemData:setState(weaponSystem.states[1])
-	end
---]]
 
 mouse.Button1Up:Connect(function()
 	if weaponSystem.module and weaponSystem.viewmodel and (weaponSystem.modifiers.IsShooting and weaponSystem.state == weaponSystem.states[2]) then
@@ -667,20 +634,27 @@ while wait() do
 
 				weaponSystem.module.ammo -= 1
 
-				ReplicatedStorage.Shared.Remotes.Shoot:FireServer()
+				local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+				muzzleFlash.Parent = game.Workspace
+				muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
 
-				if weaponSystem.module.ammo == 0 then
-					if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[2] or weaponSystem.state == weaponSystem.states[4] then 
-						task.wait(.4)
-
-						playerWeaponSystemData:setState(weaponSystem.states[3])
-						weaponSystem.modifiers.IsInspecting = false
-						weaponSystem.modifiers.IsShooting = false
-						weaponSystem.modifiers.IsReloading = true
-						Reload()
+				for i, v in pairs(muzzleFlash:GetChildren()) do
+					if v:IsA("ParticleEmitter") then
+						v:Emit(1)
 					end
 				end
 
+				game:GetService("Debris"):AddItem(muzzleFlash, 0.05)
+
+				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
+
+				if weaponSystem.module.ammo == 0 then
+					if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
+						task.wait(.5)
+						Reload()
+					end
+				end
 
 				wait(weaponSystem.module.fireRate)
 			end
