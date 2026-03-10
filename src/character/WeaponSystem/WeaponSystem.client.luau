@@ -348,6 +348,7 @@ function Shoot()
 
 			if weaponSystem.module.fireMode == "Full Auto" then
 				weaponSystem.modifiers.IsShooting = true
+				PlayerWeaponSystemData:setState(weaponSystem.states[2])
 			end
 		end
 	end
@@ -356,7 +357,8 @@ end
 function Inspect()
 	if weaponSystem.animations and weaponSystem.viewmodel and weaponSystem.module then
 		PlayerWeaponSystemData:setState(weaponSystem.states[4])
-		if weaponSystem.state == weaponSystem.states[4] then 
+		weaponSystem.modifiers.IsInspecting = true
+		if weaponSystem.state == weaponSystem.states[4] and weaponSystem.modifiers.IsInspecting then 
 			weaponSystem.animations.FirstPerson[8]:Stop()
 			weaponSystem.animations.FirstPerson[7]:Play()
 
@@ -376,8 +378,8 @@ function Inspect()
 			dof.InFocusRadius = 30
 			dof.NearIntensity = .75
 
-			weaponSystem.animations.FirstPerson[7]:Stop()
 			if weaponSystem.state == weaponSystem.states[4] then
+				weaponSystem.modifiers.IsInspecting = false
 				PlayerWeaponSystemData:setState(weaponSystem.states[1])
 			end
 		end
@@ -387,6 +389,8 @@ end
 function Reload()
 	if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsShooting then 
 		weaponSystem.modifiers.IsReloading = true
+		PlayerWeaponSystemData:setState(weaponSystem.states[3])
+		weaponSystem.modifiers.IsInspecting = false
 		camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
 
 		weaponSystem.animations.FirstPerson[2]:Stop()
