@@ -196,6 +196,9 @@ function loadSlot(Item)
 				end
 
 				weaponSystem.animations.FirstPerson[2]:Play()
+				weaponSystem.animations.ThirdPerson[2]:Play()
+
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
 
 				task.wait(.1)
 
@@ -329,8 +332,9 @@ function Reload()
 		if weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
 			weaponSystem.modifiers.IsReloading = true
 			PlayerWeaponSystemData:setState(weaponSystem.states[3])
+
 			weaponSystem.modifiers.IsInspecting = false
-			camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
+			-- camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
 
 			weaponSystem.animations.FirstPerson[2]:Stop()
 			weaponSystem.animations.FirstPerson[5]:Stop()
@@ -543,7 +547,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.module and weaponSystem.viewmodel then
+		if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
 			weaponSystem.modifiers.IsAiming = true
 			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
 		end	
@@ -570,7 +574,7 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.module and weaponSystem.viewmodel then
+		if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
 			weaponSystem.modifiers.IsAiming = false
 			PlayerWeaponSystemData:setState(weaponSystem.states[1])
 		end	
