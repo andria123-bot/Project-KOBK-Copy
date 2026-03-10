@@ -325,6 +325,21 @@ function Inspect()
 	end
 end
 
+function melee(isLightStab) 
+	if isLightStab then
+		weaponSystem.animations.FirstPerson[1]:Play()
+		weaponSystem.animations.ThirdPerson[1]:Play()
+	else
+		weaponSystem.animations.FirstPerson[4]:Play()
+		weaponSystem.animations.ThirdPerson[5]:Play()
+	end
+
+	local damage = weaponSystem.module.damage
+	local criticalDamage = weaponSystem.module.headshot
+
+	ReplicatedStorage.Shared.Remotes.Melee:FireServer(isLightStab, damage, criticalDamage, camera.CFrame.Position, camera.CFrame.LookVector)
+end
+
 function Reload()
 	if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsShooting then 
 		if weaponSystem.modifiers.IsReloading then return end
@@ -388,7 +403,7 @@ RunService.RenderStepped:Connect(function(dt)
 
 		if hud then
 			if weaponSystem.viewmodel and weaponSystem.module and isEquipedWeapon then
-					if weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.isMelee or weaponSystem.module.isGrenade then
+				if weaponSystem.module.isMelee or weaponSystem.module.isGrenade then
 					hud.Enabled = false
 				else
 					hud.Enabled = true
@@ -405,25 +420,27 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 			
-		print(weaponSystem.state) -- Debugging
+		-- print(weaponSystem.state) -- Debugging
 
-		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
-		local X,Y,_ = rot:ToOrientation() 
-		weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
-		weaponSystem.module.lastCameraCF = camera.CFrame
+		if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
+			local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
+			local X,Y,_ = rot:ToOrientation() 
+			weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
+			weaponSystem.module.lastCameraCF = camera.CFrame
 
-		if weaponSystem.viewmodel ~= nil and weaponSystem.module ~= nil then
-			if humanoid.MoveDirection.Magnitude > 0 then
-				if humanoid.WalkSpeed == 16 then
-					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y/7, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1-0.001^dt)
+			if weaponSystem.viewmodel ~= nil and weaponSystem.module ~= nil then
+				if humanoid.MoveDirection.Magnitude > 0 then
+					if humanoid.WalkSpeed == 16 then
+						bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y/7, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1-0.001^dt)
+						isSprinting = false
+					elseif humanoid.WalkSpeed == 22 then
+						bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y/3, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * weaponSystem.module.sprintCF, 1-0.001^dt)
+						isSprinting = true
+					end
+				else
+					bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y/3, 0), 1-0.001^dt)
 					isSprinting = false
-				elseif humanoid.WalkSpeed == 22 then
-					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y/3, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * weaponSystem.module.sprintCF, 1-0.001^dt)
-					isSprinting = true
 				end
-			else
-				bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y/3, 0), 1-0.001^dt)
-				isSprinting = false
 			end
 		end
 
@@ -544,17 +561,29 @@ UIS.InputBegan:Connect(function(input, gpe)
 		if character and weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.ammo ~= 0 and not debounce then
 			Shoot()
 		end
+
+		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.isMelee then
+			melee(true)
+		end
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
-			weaponSystem.modifiers.IsAiming = true
-			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+		if weaponSystem.module and weaponSystem.viewmodel then
+			if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
+				if not weaponSystem.modifiers.IsReloading then
+					weaponSystem.modifiers.IsAiming = true
+					PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+				end
+			end
 		end	
+
+		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.isMelee then
+			melee(false)
+		end
 	end
 
 	if input.KeyCode == Enum.KeyCode.R then
-		if weaponSystem.module and weaponSystem.viewmodel then
+		if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.module.isMelee and not weaponSystem.module.isGrenade then
 			Reload()
 		end
 	end

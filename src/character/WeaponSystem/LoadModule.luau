@@ -47,6 +47,8 @@ function moduleFinder.GetModule(Item)
             for _, category in ipairs(weaponCategories.danebisCategories) do
                 local moduleCategory = danebisModulesFolder:FindFirstChild(category)
                 if moduleCategory then
+                    print(moduleCategory)
+                    print(Item)
                     moduleToClone = moduleCategory:FindFirstChild(Item)
                     if moduleToClone then break end
                 end

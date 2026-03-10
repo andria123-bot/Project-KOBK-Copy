@@ -4,9 +4,9 @@ local playerWeaponSystemData = {
             "HK416";
             "Khrissy10R";
             "MG42";
-            "Knife";
-            "Grenade";
+            "Tomahawk";
             "M4A1";
+            "";
             "";
             "";
             "";
