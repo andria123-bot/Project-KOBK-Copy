@@ -164,18 +164,18 @@ ReplicatedStorage.Shared.Remotes.Melee.OnServerEvent:Connect(function(player, li
 				
 				local sound = Instance.new("Sound")
 				sound.Parent = hit
-				sound.SoundId = require(ReplicatedStorage.Shared.Modules.Misc).HumanImpactSound
+				sound.SoundId = require(ReplicatedStorage.Shared.Modules.Misc).AxeHitBodySound
 				sound.Volume = 1
 				sound:Play()
 				
 				game:GetService("Debris"):AddItem(sound, 10)
 			else
-				local bulletHole = game.ReplicatedStorage.Objects.BulletHole:Clone()
+				local bulletHole = ReplicatedStorage.Objects.BulletHole:Clone()
 				bulletHole.CFrame = CFrame.new(ray.Position, ray.Position + ray.Normal)
 				
 				local bulletHolesFolder = Instance.new("Folder")
-				bulletHolesFolder.Parent = game.Workspace
-				bulletHolesFolder.Name = "BulletHolesFolder"
+				bulletHole.Parent = game.Workspace
+				bulletHole.Name = "BulletHolesFolder"
 				
 				if game.Workspace:FindFirstChild("BulletHole") then
 					if game.Workspace:FindFirstChild("bulletHolesFolder") then

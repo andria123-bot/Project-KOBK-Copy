@@ -1,5 +1,6 @@
 local Settings = {
-	HumanImpactSound = "rbxassetid://5955549918";
+	AxeHitBodySound = "rbxassetid://98451433166805";
+	AxeHitHeadSound = "rbxassetid://79268175076859";
 	BulletHitWaterSound = "rbxassetid://90457866442757";
 	CarHitPlayer = "rbxassetid://97803915972527";
 	CarHitWall = "rbxassetid://79409704436353";
