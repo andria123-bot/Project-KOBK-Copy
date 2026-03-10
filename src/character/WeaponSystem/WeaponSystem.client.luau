@@ -351,6 +351,7 @@ function Reload()
 			end
 
 			local i = 0
+
 			while i < weaponSystem.module.reloadTime do
 				if weaponSystem.modifiers.IsShooting then
 					weaponSystem.modifiers.IsReloading = false
@@ -443,9 +444,7 @@ RunService.RenderStepped:Connect(function(dt)
 			end
 		end
 
-		if weaponSystem.state == weaponSystem.states[5] or weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[2] then
-			aimHelper:Aim(dt)
-		end
+		aimHelper:Aim(dt)
 	end
 end)
 
@@ -544,8 +543,9 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.state ~= weaponSystem.states[4] and weaponSystem.state == weaponSystem.states[1] then
+		if weaponSystem.module and weaponSystem.viewmodel then
 			weaponSystem.modifiers.IsAiming = true
+			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
 		end	
 	end
 
@@ -570,7 +570,7 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.module and weaponSystem.viewmodel and (weaponSystem.state ~= weaponSystem.states[4] or weaponSystem.state == weaponSystem.states[1]) then
+		if weaponSystem.module and weaponSystem.viewmodel then
 			weaponSystem.modifiers.IsAiming = false
 			PlayerWeaponSystemData:setState(weaponSystem.states[1])
 		end	
@@ -599,9 +599,14 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 end)
 
 mouse.Button1Up:Connect(function()
-	if weaponSystem.module and weaponSystem.viewmodel and (weaponSystem.modifiers.IsShooting and weaponSystem.state == weaponSystem.states[2]) then
-		PlayerWeaponSystemData:setState(weaponSystem.states[1])
+	if weaponSystem.module and weaponSystem.viewmodel then
 		weaponSystem.modifiers.IsShooting = false
+
+		if weaponSystem.modifiers.IsAiming then
+			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+		else
+			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[1])
+		end
 	end
 end)
 

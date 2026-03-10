@@ -3,7 +3,7 @@ local AimHelper = {}
 AimHelper.weaponModule = nil
 AimHelper.viewmodel = nil
 
-local playerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
+local PlayerWeaponSystemData = require(script.Parent.PlayerWeaponSystemData)
 local WeaponCategories = require(script.Parent.WeaponCategories)
 
 local currentAimPart = 1
@@ -24,7 +24,7 @@ end
 function AimHelper:Aim(dt)
 	if not (self.weaponModule and self.viewmodel and self.weaponModule.canAim) then return end
 	
-	if playerWeaponSystem.weaponSystem.modifiers.IsAiming then
+	if PlayerWeaponSystemData.weaponSystem.state == PlayerWeaponSystemData.weaponSystem.states[5] then
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end
 
@@ -47,7 +47,7 @@ function AimHelper:Aim(dt)
 		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
 		self.weaponModule.aimCF = self.weaponModule.aimCF:Lerp(targetOffset, alpha)
 
-	elseif playerWeaponSystem.weaponSystem.state == playerWeaponSystem.weaponSystem.states[1] then
+	elseif PlayerWeaponSystemData.weaponSystem.state == PlayerWeaponSystemData.weaponSystem.states[1] then
 		self.weaponModule.currentSwayAMT = self.weaponModule.swayAMT
 		
 		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
