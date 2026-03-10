@@ -223,90 +223,6 @@ function loadSlot(Item)
 	end
 end
 
---[[
-	if weaponSystem.state ~= weaponSystem.states[1] and weaponSystem.state ~= weaponSystem.states[5] then return end
-	playerWeaponSystemData:setState(weaponSystem.states[2])
-
-	if character and weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.ammo > 0 and weaponSystem.state ~= weaponSystem.states[7] then
-		if weaponSystem.module.fireMode == "Semi Auto" then
-			weaponSystem.animations.FirstPerson[2]:Stop()
-			weaponSystem.animations.FirstPerson[5]:Stop()
-			weaponSystem.animations.FirstPerson[6]:Stop()
-			weaponSystem.animations.FirstPerson[7]:Stop()
-			weaponSystem.animations.FirstPerson[8]:Stop()
-
-			weaponSystem.animations.ThirdPerson[2]:Stop()
-			weaponSystem.animations.ThirdPerson[4]:Stop()
-			weaponSystem.animations.ThirdPerson[5]:Stop()
-			weaponSystem.animations.ThirdPerson[6]:Stop()
-
-			
-			if weaponSystem.module.ammo == 1 then
-				weaponSystem.animations.FirstPerson[1]:Stop()
-				weaponSystem.animations.FirstPerson[4]:Play()
-			else
-				weaponSystem.animations.FirstPerson[4]:Stop()
-				weaponSystem.animations.FirstPerson[1]:Play()
-
-				weaponSystem.animations.ThirdPerson[1]:Play()
-			end
-
-			weaponSystem.module.ammo -= 1
-
-			local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
-			muzzleFlash.Parent = game.Workspace
-			muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
-
-			for i, v in pairs(muzzleFlash:GetChildren()) do
-				if v:IsA("ParticleEmitter") then
-					v:Emit(1)
-				end
-			end
-
-			game:GetService("Debris"):AddItem(muzzleFlash, 0.05)
-
-			ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
-
-			PlayerWeaponSystemData:setState(weaponSystem.states[1])
-
-			if weaponSystem.module.ammo == 0 then
-				if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
-					task.wait(.5)
-
-					playerWeaponSystemData:setState(weaponSystem.states[3])
-					
-					weaponSystem.modifiers.IsInspecting = false
-					weaponSystem.modifiers.IsShooting = false
-					weaponSystem.modifiers.IsReloading = true
-					Reload()
-					
-					repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
-					debounce = false
-				end
-			else
-				debounce = true
-
-				wait(weaponSystem.module.debounce)
-
-				debounce = false
-			end
-		end
-
-		if weaponSystem.module.fireMode == "Full Auto" then
-			weaponSystem.modifiers.IsShooting = true
-			PlayerWeaponSystemData:setState(weaponSystem.states[2])
-		end
-	end
---]]
-
---[[	PlayerWeaponSystemData:setState(weaponSystem.states[2])
-	weaponSystem.modifiers.IsReloading = false
-
-	weaponSystem.modifiers.IsShooting = true
-	wait(weaponSystem.module.fireRate)
-	]]
-
 function Shoot()
 	if weaponSystem.module and weaponSystem.viewmodel and character then
 		if weaponSystem.module.ammo > 0 then
@@ -343,8 +259,28 @@ function Shoot()
 						v:Emit(1)
 					end
 				end
-			end
 
+				game:GetService("Debris"):AddItem(muzzleFlash, 0.05)
+
+				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
+
+				if weaponSystem.module.ammo == 0 then
+					if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
+						task.wait(.5)
+						Reload()
+						
+						repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
+						debounce = false
+					end
+				else
+					debounce = true
+
+					wait(weaponSystem.module.debounce)
+
+					debounce = false
+				end
+			end
 
 			if weaponSystem.module.fireMode == "Full Auto" then
 				weaponSystem.modifiers.IsShooting = true
@@ -388,43 +324,47 @@ end
 
 function Reload()
 	if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsShooting then 
-		weaponSystem.modifiers.IsReloading = true
-		PlayerWeaponSystemData:setState(weaponSystem.states[3])
-		weaponSystem.modifiers.IsInspecting = false
-		camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
+		if weaponSystem.modifiers.IsReloading then return end
 
-		weaponSystem.animations.FirstPerson[2]:Stop()
-		weaponSystem.animations.FirstPerson[5]:Stop()
-		weaponSystem.animations.ThirdPerson[4]:Stop()
-		weaponSystem.animations.FirstPerson[6]:Stop()
-		weaponSystem.animations.FirstPerson[7]:Stop()
-		weaponSystem.animations.ThirdPerson[7]:Stop()
-		weaponSystem.animations.FirstPerson[8]:Stop()
+		if weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
+			weaponSystem.modifiers.IsReloading = true
+			PlayerWeaponSystemData:setState(weaponSystem.states[3])
+			weaponSystem.modifiers.IsInspecting = false
+			camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
 
-		if weaponSystem.module.ammo > 0 then
-			weaponSystem.animations.FirstPerson[5]:Play()
-			weaponSystem.animations.ThirdPerson[4]:Play()
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
-		else
-			weaponSystem.animations.FirstPerson[6]:Play()
-			weaponSystem.animations.ThirdPerson[5]:Play()
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
-		end
+			weaponSystem.animations.FirstPerson[2]:Stop()
+			weaponSystem.animations.FirstPerson[5]:Stop()
+			weaponSystem.animations.ThirdPerson[4]:Stop()
+			weaponSystem.animations.FirstPerson[6]:Stop()
+			weaponSystem.animations.FirstPerson[7]:Stop()
+			weaponSystem.animations.ThirdPerson[7]:Stop()
+			weaponSystem.animations.FirstPerson[8]:Stop()
 
-		local i = 0
-		while i < weaponSystem.module.reloadTime do
-			if weaponSystem.modifiers.IsShooting then
-				weaponSystem.modifiers.IsReloading = false
-				PlayerWeaponSystemData:setState(weaponSystem.states[2])
-				return
+			if weaponSystem.module.ammo > 0 then
+				weaponSystem.animations.FirstPerson[5]:Play()
+				weaponSystem.animations.ThirdPerson[4]:Play()
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
+			else
+				weaponSystem.animations.FirstPerson[6]:Play()
+				weaponSystem.animations.ThirdPerson[5]:Play()
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
 			end
-			wait(0.05)
-			i = i + 0.05
+
+			local i = 0
+			while i < weaponSystem.module.reloadTime do
+				if weaponSystem.modifiers.IsShooting then
+					weaponSystem.modifiers.IsReloading = false
+					PlayerWeaponSystemData:setState(weaponSystem.states[2])
+					return
+				end
+				wait(0.05)
+				i = i + 0.05
+			end
+			
+			weaponSystem.module.ammo = weaponSystem.module.maxAmmo
+			weaponSystem.modifiers.IsReloading = false
+			PlayerWeaponSystemData:setState(weaponSystem.states[1])
 		end
-		
-		weaponSystem.module.ammo = weaponSystem.module.maxAmmo
-		weaponSystem.modifiers.IsReloading = false
-		PlayerWeaponSystemData:setState(weaponSystem.states[1])
 	end
 end
 
