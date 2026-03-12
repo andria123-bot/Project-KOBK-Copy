@@ -322,7 +322,7 @@ function Inspect()
 				PlayerWeaponSystemData:setState(weaponSystem.states[1])
 			end
 		end
-	end
+	end	
 end
 
 function melee(isLightStab) 
@@ -334,10 +334,7 @@ function melee(isLightStab)
 		weaponSystem.animations.ThirdPerson[5]:Play()
 	end
 
-	local damage = weaponSystem.module.damage
-	local criticalDamage = weaponSystem.module.headshot
-
-	ReplicatedStorage.Shared.Remotes.Melee:FireServer(isLightStab, damage, criticalDamage, camera.CFrame.Position, camera.CFrame.LookVector)
+	ReplicatedStorage.Shared.Remotes.Melee:FireServer(isLightStab, weaponSystem.module, camera.CFrame.Position, camera.CFrame.LookVector)
 end
 
 function Reload()
@@ -377,6 +374,7 @@ function Reload()
 					PlayerWeaponSystemData:setState(weaponSystem.states[2])
 					return
 				end
+
 				wait(0.05)
 				i = i + 0.05
 			end
@@ -422,25 +420,23 @@ RunService.RenderStepped:Connect(function(dt)
 			
 		-- print(weaponSystem.state) -- Debugging
 
-		if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
-			local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
-			local X,Y,_ = rot:ToOrientation() 
-			weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
-			weaponSystem.module.lastCameraCF = camera.CFrame
+		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
+		local X,Y,_ = rot:ToOrientation() 
+		weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
+		weaponSystem.module.lastCameraCF = camera.CFrame
 
-			if weaponSystem.viewmodel ~= nil and weaponSystem.module ~= nil then
-				if humanoid.MoveDirection.Magnitude > 0 then
-					if humanoid.WalkSpeed == 16 then
-						bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y/7, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1-0.001^dt)
-						isSprinting = false
-					elseif humanoid.WalkSpeed == 22 then
-						bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y/3, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * weaponSystem.module.sprintCF, 1-0.001^dt)
-						isSprinting = true
-					end
-				else
-					bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y/3, 0), 1-0.001^dt)
+		if weaponSystem.viewmodel ~= nil and weaponSystem.module ~= nil then
+			if humanoid.MoveDirection.Magnitude > 0 then
+				if humanoid.WalkSpeed == 16 then
+					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y/7, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1-0.001^dt)
 					isSprinting = false
+				elseif humanoid.WalkSpeed == 22 then
+					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y/3, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * weaponSystem.module.sprintCF, 1-0.001^dt)
+					isSprinting = true
 				end
+			else
+				bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y/3, 0), 1-0.001^dt)
+				isSprinting = false
 			end
 		end
 
@@ -562,7 +558,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 			Shoot()
 		end
 
-		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.isMelee then
+		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.isMelee and not weaponSystem.module.isGrenade then
 			melee(true)
 		end
 	end
@@ -577,7 +573,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 			end
 		end	
 
-		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.isMelee then
+		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.isMelee and not weaponSystem.module.isGrenade then
 			melee(false)
 		end
 	end
@@ -699,44 +695,3 @@ while wait() do
 		end
 	end
 end
-
--- weaponSystem.animations.ThirdPerson[7] = Instance.new("Animation")
--- weaponSystem.animations.ThirdPerson[7].Parent = player.Character
--- weaponSystem.animations.ThirdPerson[7].Name = "IdleAnim"
--- weaponSystem.animations.ThirdPerson[7].AnimationId = weaponSystem.module.tpIdleAnim
--- weaponSystem.animations.ThirdPerson[7]:Play()
-
--- weaponSystem.animations.ThirdPerson[1] = Instance.new("Animation")
--- weaponSystem.animations.ThirdPerson[1].Parent = player.Character
--- weaponSystem.animations.ThirdPerson[1].Name = "ShootAnim"
--- weaponSystem.animations.ThirdPerson[1].AnimationId = weaponSystem.module.tpShootAnim
--- weaponSystem.animations.ThirdPerson[1] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[1])
-
--- weaponSystem.animations.ThirdPerson[4] = Instance.new("Animation")
--- weaponSystem.animations.ThirdPerson[4].Parent = player.Character
--- weaponSystem.animations.ThirdPerson[4].Name = "ReloadAnim"
--- weaponSystem.animations.ThirdPerson[4].AnimationId = weaponSystem.module.tpReloadAnim
--- weaponSystem.animations.ThirdPerson[4] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[4])
-
--- weaponSystem.animations.ThirdPerson[5] = Instance.new("Animation")
--- weaponSystem.animations.ThirdPerson[5].Parent = player.Character
--- weaponSystem.animations.ThirdPerson[5].Name = "EmptyReloadAnim"
--- weaponSystem.animations.ThirdPerson[5].AnimationId = weaponSystem.module.tpEmptyReloadAnim
--- weaponSystem.animations.ThirdPerson[5] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[5])
-
--- weaponSystem.animations.ThirdPerson[6] = Instance.new("Animation")
--- weaponSystem.animations.ThirdPerson[6].Parent = player.Character
--- weaponSystem.animations.ThirdPerson[6].Name = "InspectAnim"
--- weaponSystem.animations.ThirdPerson[6] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[6])
-
--- weaponSystem.animations.ThirdPerson[2] = Instance.new("Animation")
--- weaponSystem.animations.ThirdPerson[2].Parent = player.Character
--- weaponSystem.animations.ThirdPerson[2].Name = "EquipAnim"
--- weaponSystem.animations.ThirdPerson[2].AnimationId = weaponSystem.module.tpEquipAnim
--- weaponSystem.animations.ThirdPerson[2] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[2])
-
--- weaponSystem.animations.ThirdPerson[3] = Instance.new("Animation")
--- weaponSystem.animations.ThirdPerson[3].Parent = player.Character
--- weaponSystem.animations.ThirdPerson[3].Name = "DeequipAnim"
--- weaponSystem.animations.ThirdPerson[3].AnimationId = weaponSystem.module.tpDeequipAnim
--- weaponSystem.animations.ThirdPerson[3] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[3])

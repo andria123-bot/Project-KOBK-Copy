@@ -136,7 +136,8 @@ ReplicatedStorage.Shared.Remotes.ItemFoley.OnServerEvent:Connect(function(player
 	end
 end)
 
-ReplicatedStorage.Shared.Remotes.Melee.OnServerEvent:Connect(function(player, lightStab, damage, criticalDamage, origin, direction)
+ReplicatedStorage.Shared.Remotes.Melee.OnServerEvent:Connect(function(player, lightStab, weaponSystemModule, origin, direction)
+	print("Got Fired")
 	local character = player.Character
 	
 	local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
@@ -153,39 +154,50 @@ ReplicatedStorage.Shared.Remotes.Melee.OnServerEvent:Connect(function(player, li
 
 	if ray then
 		local hit = ray.Instance
-
 		if hit then
-			if hit.Parent:FindFirstChildWhichIsA("Humanoid") then
-				if lightStab then
-					hit.Parent.Humanoid:TakeDamage(damage)
-				else
-					hit.Parent.Humanoid:TakeDamage(criticalDamage)
-				end
-				
+			local humanoid = hit.Parent:FindFirstChild("Humanoid")
+
+			if humanoid then
 				local sound = Instance.new("Sound")
 				sound.Parent = hit
-				sound.SoundId = require(ReplicatedStorage.Shared.Modules.Misc).AxeHitBodySound
 				sound.Volume = 1
+
+				local d = weaponSystemModule.damages
+				local isHead = hit.Name == "Head"
+
+				if isHead then
+					if lightStab then
+						humanoid:TakeDamage(d.headshot)
+					else
+						humanoid:TakeDamage(d.heavyHead)
+					end
+				else
+					if lightStab then
+						humanoid:TakeDamage(d.damage)
+					else
+						humanoid:TakeDamage(d.heavyBody)
+					end
+				end	
+
 				sound:Play()
-				
 				game:GetService("Debris"):AddItem(sound, 10)
 			else
-				local bulletHole = ReplicatedStorage.Objects.BulletHole:Clone()
-				bulletHole.CFrame = CFrame.new(ray.Position, ray.Position + ray.Normal)
+				local axeHole = ReplicatedStorage.Objects.AxeHole:Clone()
+				axeHole.CFrame = CFrame.new(ray.Position, ray.Position + ray.Normal)
 				
 				local bulletHolesFolder = Instance.new("Folder")
-				bulletHole.Parent = game.Workspace
-				bulletHole.Name = "BulletHolesFolder"
+				axeHole.Parent = game.Workspace
+				axeHole.Name = "BulletHolesFolder"
 				
 				if game.Workspace:FindFirstChild("BulletHole") then
 					if game.Workspace:FindFirstChild("bulletHolesFolder") then
-						bulletHole.Parent = bulletHolesFolder
+						axeHole.Parent = bulletHolesFolder
 					end
 				end
 				
-				bulletHole.Impact:Play()
+				axeHole.Impact:Play()
 
-				game:GetService("Debris"):AddItem(bulletHole, 15)
+				game:GetService("Debris"):AddItem(axeHole, 15)
 			end
 		end
 	end

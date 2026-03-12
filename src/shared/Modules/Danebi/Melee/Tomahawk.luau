@@ -20,12 +20,19 @@ local data = {
 
 	sounds = {
 		"rbxassetid://129384861068765"; -- equip/draw
-		"rbxassetid://75664775281974"    ; -- Shoot/use
+		"rbxassetid://122795737772215"    ; -- Shoot/use
 		"rbxassetid://134817048219417"; -- reload
 		"rbxassetid://134817048219417"; -- empty reload
 		"rbxassetid://127619339252879"; -- inspect
 		"rbxassetid://127619339252879"; -- deequip/holster
 		--"rbxassetid://6812913751"     ; -- emptyFire
+	};
+
+	damages = {
+		damage = 32,
+		heavyBody = 48,
+		headshot = 64,
+		heavyHead = 100
 	};
 
 	imageIconId = "rbxassetid://81487743965976",
@@ -63,8 +70,6 @@ local data = {
 	canAddLaser = true,
 	canAddExtendedMag = true,
 
-	damage = 43,
-	headshot = 100,
 	debounce = 0.065,
 	reloadTime = 2.9,
 	jamChance = 0.015,
