@@ -171,7 +171,12 @@ ReplicatedStorage.Shared.Remotes.Melee.OnServerEvent:Connect(function(player, li
 					else
 						humanoid:TakeDamage(d.heavyHead)
 					end
-
+				else
+					if lightStab then
+						humanoid:TakeDamage(d.damage)
+					else
+						humanoid:TakeDamage(d.heavyBody)
+					end
 				end	
 
 				sound:Play()
