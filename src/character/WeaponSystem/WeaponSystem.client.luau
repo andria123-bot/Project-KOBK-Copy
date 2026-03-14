@@ -5,17 +5,38 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait() or script.Parent.Parent
 local humanoid = character:WaitForChild("Humanoid")
 
+local playerScripts = player:WaitForChild("PlayerScripts")
+
 local camera = game.Workspace.CurrentCamera
 local mouse = player:GetMouse()
+
+local RequestInventory = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestInventory")
+local SendInventory = ReplicatedStorage.Shared.Remotes:WaitForChild("SendInventory")
 
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local LoadModule = require(script.Parent.LoadModule)
 local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 local WeaponCategories = require(script.Parent.WeaponCategories)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
+local GrenadeFunc = require(script.Parent.Grenade)
+
 
 local playerWeaponSystemData = PlayerWeaponSystem
 local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
+
+SendInventory.OnClientEvent:Connect(function(savedInventory)
+    weaponSystem.inventory = weaponSystem.inventory or {}
+
+    for i = 1, #savedInventory do
+        weaponSystem.inventory[i] = savedInventory[i] or ""
+    end
+
+    print("Inventory synced:", weaponSystem.inventory)
+end)
+
+RequestInventory:FireServer()
+
+print(weaponSystem.inventory)
 
 local dof = game.Lighting.DepthOfField
 
@@ -46,6 +67,7 @@ function stopAllAnims()
 end
 
 function loadSlot(Item)
+	weaponSystem.loadSlot = loadSlot
 	if weaponSystem.state == weaponSystem.states[1] 
 	or weaponSystem.state == weaponSystem.states[3] 
 	or weaponSystem.state == weaponSystem.states[4] then
@@ -323,6 +345,30 @@ function Inspect()
 			end
 		end
 	end	
+end
+
+function grenade(grenade)
+	repeat task.wait() until weaponSystem.animations.FirstPerson[1].isPlaying == true
+
+	local grenadeThrown = false
+
+	weaponSystem.animations.FirstPerson[1]:GetMarkerReachedSignal("GremadeThrow"):Connect(function()
+
+		if not grenadeThrown then
+			camera:FindFirstChildWhichIsA("Model").Grenade.Transparency = 1
+
+			game.ReplicatedStorage.Remotes.Main.Grenade:FireServer(grenade, camera:FindFirstChildWhichIsA("Model").Grenade.Position, camera.CFrame.LookVector, weaponSystem.module.sounds[2], 1)
+			
+			grenadeThrown = true
+		end
+	end)
+
+	weaponSystem.animations.FirstPerson[1].Ended:Connect(function()
+		weaponSystem.inventory[weaponSystem.currentSlot] = "Nil"
+		weaponSystem.currentSlot = 1
+		isShooting = false
+		loadSlot(weaponSystem.inventory[weaponSystem.currentSlot])
+	end)
 end
 
 function melee(isLightStab) 

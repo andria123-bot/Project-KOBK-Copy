@@ -25,11 +25,7 @@ local data = {
 		"rbxassetid://134817048219417"; -- empty reload
 		"rbxassetid://127619339252879"; -- inspect
 		"rbxassetid://127619339252879"; -- deequip/holster
-		--"rbxassetid://6812913751"     ; -- emptyFire
-
-		attachmentSounds = {
-
-		}
+		"rbxassetid://6812913751"     ; -- emptyFire
 	};
 
 	imageIconId = "rbxassetid://81487743965976",
@@ -40,14 +36,21 @@ local data = {
 	canFullAuto = true,
 	ammo = 30,
 	maxAmmo = 30,
-	fireMode = "Full Auto",
+	fireMode = "nil",
 
 	fireRate = .08,
 
 	sprintCF = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-95/5), math.rad(95/4), math.rad(95/5));
 
+	aimCF = CFrame.new(),
+	currentSwayAMT = -0.15,
+	swayAMT = -0.25,
+	aimSwayAMT = 0.1,
+	swayCF = CFrame.new(0, 0, 0),
+	lastCameraCF = CFrame.new(0, 0, 0),
+
 	durable = 560,
-	isStackable = false,
+	isStackable = true,
 	maxStack = 5,
 
 	--Piercing
@@ -55,12 +58,7 @@ local data = {
 	maxDepth = 2.8,
 	damageFalloff = 0.7,
 
-	-- Can Add Attachments
-	canAddSight = true,
-	canAddLaser = true,
-	canAddExtendedMag = true,
-
-	damage = 33.3,
+	damage = 75.5,
 	headshot = 80,
 	debounce = 0.065,
 	reloadTime = 2.9,

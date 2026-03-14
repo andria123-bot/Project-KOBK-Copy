@@ -1,11 +1,11 @@
 local playerWeaponSystemData = {
     weaponSystem = {
         inventory = {
-            "HK416";
-            "Khrissy10R";
-            "MG42";
-            "Tomahawk";
-            "M4A1";
+            "";
+            "";
+            "";
+            "";
+            "";
             "";
             "";
             "";

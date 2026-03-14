@@ -10,7 +10,7 @@ local moduleFolder = game.ReplicatedStorage.Shared:FindFirstChild("Modules")
 local primaryModulesFolder = moduleFolder:FindFirstChild("Primary")
 local secondaryModulesFolder = moduleFolder:FindFirstChild("Secondary")
 local danebisModulesFolder = moduleFolder:FindFirstChild("Danebi")
-local throwableModulesFolder = moduleFolder:FindFirstChild("Throwable")
+local throwableModulesFolder = moduleFolder:FindFirstChild("Throwables")
 
 local weaponCategories = require(script.Parent.WeaponCategories)
 
@@ -47,8 +47,6 @@ function moduleFinder.GetModule(Item)
             for _, category in ipairs(weaponCategories.danebisCategories) do
                 local moduleCategory = danebisModulesFolder:FindFirstChild(category)
                 if moduleCategory then
-                    print(moduleCategory)
-                    print(Item)
                     moduleToClone = moduleCategory:FindFirstChild(Item)
                     if moduleToClone then break end
                 end

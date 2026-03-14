@@ -42,6 +42,17 @@ UIS.InputEnded:Connect(function(input)
     end
 end)
 
--- game.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+
+local success = false
+
+repeat
+	success = pcall(function()
+		StarterGui:SetCore("ResetButtonCallback", false)
+	end)
+	task.wait()
+until success
+
+game.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 humanoid.BreakJointsOnDeath = false
 UIS.MouseIconEnabled = false
