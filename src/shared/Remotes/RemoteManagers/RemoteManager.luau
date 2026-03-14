@@ -42,4 +42,8 @@ remoteManager.SendInventoryRemote = Instance.new("RemoteEvent")
 remoteManager.SendInventoryRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.SendInventoryRemote.Name = "SendInventory"
 
+remoteManager.InventoryUpdateRemote = Instance.new("RemoteEvent")
+remoteManager.InventoryUpdateRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.InventoryUpdateRemote.Name = "InventoryUpdate"
+
 return remoteManager

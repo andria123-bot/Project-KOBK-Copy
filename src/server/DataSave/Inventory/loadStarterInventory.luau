@@ -1,11 +1,15 @@
 local defaultInventory = {}
 
 local DataStoreService = game:GetService("DataStoreService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local inventoryStore = DataStoreService:GetDataStore("InventoryStore")
+
+local InventoryUpdate = ReplicatedStorage.Shared.Remotes:WaitForChild("InventoryUpdate")
+
 
 local starterKit = {
     "HK416";
-    "KHRISSY10R";
+    "Khrissy10R";
     "Tomahawk";
     "MK2";
 }
@@ -16,6 +20,7 @@ function defaultInventory.loadDefaultInventory(playerData)
     local inventory = playerData.weaponSystem.inventory
     local hasItems = false
     for _, item in ipairs(inventory) do
+        print("zzz", item)
         if item and item ~= "" then
             hasItems = true
             break
@@ -40,12 +45,14 @@ function defaultInventory.mergeInventory(playerData, savedInventory)
 
     local inventory = playerData.weaponSystem.inventory
     if savedInventory then
+        -- Has saved data, use it
         for i = 1, #savedInventory do
             inventory[i] = savedInventory[i] or ""
         end
         return true
     else
-        return defaultInventory.loadDefaultInventory(playerData)
+        -- NO saved data, give starter kit
+        return defaultInventory.loadDefaultInventory(playerData)  -- This gives starter items
     end
 end
 
@@ -63,6 +70,10 @@ function defaultInventory.saveInventory(player, playerData)
     pcall(function()
         inventoryStore:SetAsync(player.UserId, playerData.weaponSystem.inventory)
     end)
+end
+
+local function sendInventoryToClient(player, playerData)
+    InventoryUpdate:FireClient(player, playerData.weaponSystem.inventory)
 end
 
 return defaultInventory

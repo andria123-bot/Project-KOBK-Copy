@@ -16,6 +16,8 @@ Players.PlayerAdded:Connect(function(player)
     defaultInventory.mergeInventory(playerData, savedInventory)
 
     PlayerInventories[player] = playerData.weaponSystem.inventory
+    
+    SendInventory:FireClient(player, playerData.weaponSystem.inventory)
 end)
 
 Players.PlayerRemoving:Connect(function(player)
@@ -36,7 +38,6 @@ end)
 
 RequestInventory.OnServerEvent:Connect(function(player)
     if PlayerInventories[player] then
-        print(1111111111)
         SendInventory:FireClient(player, PlayerInventories[player])
     end
 end)

@@ -20,7 +20,6 @@ local WeaponCategories = require(script.Parent.WeaponCategories)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 local GrenadeFunc = require(script.Parent.Grenade)
 
-
 local playerWeaponSystemData = PlayerWeaponSystem
 local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
 
@@ -36,8 +35,6 @@ end)
 
 RequestInventory:FireServer()
 
-print(weaponSystem.inventory)
-
 local dof = game.Lighting.DepthOfField
 
 local bobOffset = CFrame.new()
@@ -49,8 +46,6 @@ local aimHelper = AimHelper
 local debounce = false
 
 local isEquipedWeapon = false
-
-local defaultFOV = 70
 
 function stopAllAnims()
 	for i, v in pairs(weaponSystem.animations.FirstPerson) do
@@ -366,7 +361,6 @@ function grenade(grenade)
 	weaponSystem.animations.FirstPerson[1].Ended:Connect(function()
 		weaponSystem.inventory[weaponSystem.currentSlot] = "Nil"
 		weaponSystem.currentSlot = 1
-		isShooting = false
 		loadSlot(weaponSystem.inventory[weaponSystem.currentSlot])
 	end)
 end

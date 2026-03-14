@@ -68,6 +68,7 @@ function moduleFinder.GetModule(Item)
 
 			return require(clonedModule)
 		else
+            warn(debug.traceback())
 			warn("No module found for item: " .. Item)
 			return nil
 		end
