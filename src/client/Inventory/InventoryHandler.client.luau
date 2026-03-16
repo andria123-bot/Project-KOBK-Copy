@@ -6,6 +6,8 @@ script.Parent.InventoryHandler.Parent = player.PlayerGui:WaitForChild("Toolbar")
 
 local moduleFinder = require(game:GetService("StarterPlayer").StarterCharacterScripts.WeaponSystem.LoadModule)
 
+local RequestModule = ReplicatedStorage.Shared.Remotes.RequestModuleRemote
+
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 
 local GearsSetup = require(script.Parent.GearsSetup)
@@ -20,7 +22,7 @@ local dragging = {
 	clone = nil,
 }
 
-slots = {
+slots = { -- just visual slots
 	inventory = {},
 	gear = {};
 	toolbar = {};
@@ -37,6 +39,16 @@ function InitSys()
 		for i = 5, 10 do
 			slots.inventory[i] = MainFrame:FindFirstChild("Slot" .. i, true)
 		end	
+	end
+
+	if GearsSetup.gear.Backpack ~= nil then
+		local itemModule = RequestModule:FireServer(GearsSetup.gear.Backpack)
+
+		if itemModule then
+			for i = 5, itemModule.slotCount do
+				slots.inventory[i] = MainFrame
+			end
+		end
 	end
 end
 

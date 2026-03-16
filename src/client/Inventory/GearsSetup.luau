@@ -1,6 +1,5 @@
 local GearsSetup = {
-
-    gear = {
+    gear = { -- actual value if player is equped
         Helmet = nil,
         ChestRig = nil,
         BodyArmor = nil,
