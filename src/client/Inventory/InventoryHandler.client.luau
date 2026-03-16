@@ -12,6 +12,8 @@ local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForCh
 
 local GearsSetup = require(script.Parent.GearsSetup)
 
+local templateSlot = ReplicatedStorage.GUIS:WaitForChild("Slott")
+
 local playerGui = player:WaitForChild("PlayerGui")
 local toolbar = playerGui:WaitForChild("Toolbar")
 local MainFrame = toolbar.MainFrame
@@ -32,12 +34,14 @@ function InitSys()
 	if GearsSetup.gear.TShirt ~= nil then
 		for i = 1, 5 do
 			slots.inventory[i] = MainFrame:FindFirstChild("Slot" .. i, true)
+			templateSlot.Parent = MainFrame.InventoryGui.InventoryItemsFrame.TShirtRow
 		end	
 	end
 
 	if GearsSetup.gear.Pants ~= nil then
 		for i = 5, 10 do
 			slots.inventory[i] = MainFrame:FindFirstChild("Slot" .. i, true)
+			templateSlot.Parent = MainFrame.InventoryGui.InventoryItemsFrame.PantsRow
 		end	
 	end
 
@@ -45,11 +49,30 @@ function InitSys()
 		local itemModule = RequestModule:FireServer(GearsSetup.gear.Backpack)
 
 		if itemModule then
-			for i = 5, itemModule.slotCount do
+			for i = 10, itemModule.slotCount do
 				slots.inventory[i] = MainFrame
+				templateSlot.Parent = MainFrame.InventoryGui.InventoryItemsFrame.BackpackRow
 			end
 		end
 	end
+
+	if GearsSetup.gear.ChestRig ~= nil then
+		local itemModule = RequestModule:FireServer(GearsSetup.gear.ChestRig)
+
+		if itemModule then
+			for i = 30, itemModule.slotCount do
+				slots.inventory[i] = MainFrame
+				templateSlot.Parent = MainFrame.InventoryGui.InventoryItemsFrame.BackpackRow
+			end
+		end
+	end
+end
+
+function createSlot(index, parent)
+	local newSlot = templateSlot:Clone()
+    newSlot.Name = "Slot" .. index
+    newSlot.Parent = parent
+    return newSlot
 end
 
 -- SendInventory.OnClientEvent:Connect(function(inventory)
