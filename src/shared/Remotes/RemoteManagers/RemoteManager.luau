@@ -35,15 +35,19 @@ remoteManager.KilledRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.KilledRemote.Name = "Killed"
 
 remoteManager.RequestInventoryRemote = Instance.new("RemoteEvent")
-remoteManager.RequestInventoryRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.RequestInventoryRemote.Parent = ReplicatedStorage.Shared.Remotes.InventoryEvents
 remoteManager.RequestInventoryRemote.Name = "RequestInventory"
 
 remoteManager.SendInventoryRemote = Instance.new("RemoteEvent")
-remoteManager.SendInventoryRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.SendInventoryRemote.Parent = ReplicatedStorage.Shared.Remotes.InventoryEvents
 remoteManager.SendInventoryRemote.Name = "SendInventory"
 
 remoteManager.InventoryUpdateRemote = Instance.new("RemoteEvent")
-remoteManager.InventoryUpdateRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.InventoryUpdateRemote.Parent = ReplicatedStorage.Shared.Remotes.InventoryEvents
 remoteManager.InventoryUpdateRemote.Name = "InventoryUpdate"
+
+remoteManager.MoveItemRemote = Instance.new("RemoteEvent")
+remoteManager.MoveItemRemote.Parent = ReplicatedStorage.Shared.Remotes.InventoryEvents
+remoteManager.MoveItemRemote.Name = "MoveItem"
 
 return remoteManager

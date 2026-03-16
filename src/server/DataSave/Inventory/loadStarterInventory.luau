@@ -4,8 +4,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local inventoryStore = DataStoreService:GetDataStore("InventoryStore")
 
-local InventoryUpdate = ReplicatedStorage.Shared.Remotes:WaitForChild("InventoryUpdate")
-
+local InventoryUpdate = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("InventoryUpdate")
 
 local starterKit = {
     "HK416";
@@ -20,7 +19,6 @@ function defaultInventory.loadDefaultInventory(playerData)
     local inventory = playerData.weaponSystem.inventory
     local hasItems = false
     for _, item in ipairs(inventory) do
-        print("zzz", item)
         if item and item ~= "" then
             hasItems = true
             break

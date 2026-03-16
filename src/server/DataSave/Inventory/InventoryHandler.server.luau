@@ -2,8 +2,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local StarterPlayer = game:GetService("StarterPlayer")
 
-local RequestInventory = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestInventory")
-local SendInventory = ReplicatedStorage.Shared.Remotes:WaitForChild("SendInventory")
+local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
+local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
+local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
 
 local WeaponCategories = require(StarterPlayer.StarterCharacterScripts.WeaponSystem.WeaponCategories)
 local defaultInventory = require(script.Parent:WaitForChild("loadStarterInventory"))
@@ -40,4 +41,25 @@ RequestInventory.OnServerEvent:Connect(function(player)
     if PlayerInventories[player] then
         SendInventory:FireClient(player, PlayerInventories[player])
     end
+end)
+
+MoveItem.OnServerEvent:Connect(function(player, fromSlot, toSlot)
+    local inventory = PlayerInventories[player]
+    local item = inventory[fromSlot]
+
+    if not fromSlot or not toSlot then return end
+    if not item or item == "" then return end
+    if fromSlot == toSlot then return end
+
+    if inventory[toSlot] and inventory[toSlot] ~= "" then
+        local temp = inventory[fromSlot]
+        inventory[fromSlot] = inventory[toSlot]
+        inventory[toSlot] = temp
+    else
+        inventory[toSlot] = item
+        inventory[fromSlot] = ""
+    end 
+
+    defaultInventory.saveInventory(player, {weaponSystem = {inventory = inventory}})
+    SendInventory:FireClient(player, inventory)
 end)

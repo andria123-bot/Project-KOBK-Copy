@@ -1,5 +1,5 @@
 local ItemList = {
-    -- Weapons
+  Weapons = {
     "AK74";
     "AR15";
     "HK416";
@@ -8,35 +8,41 @@ local ItemList = {
     "MG42";
     "RAM7";
     "SCARH";
+  };
 
-    -- Melees
+  Melees = {
     "Tomahawk";
+  };
 
-    -- Grenades
+  Grenades = {
     "MK2";
+  };
 
-    -- Helmets
+  Helmets = {
     "6B47";
     "Altyn";
     "FastMT";
     "M100";
     "M88";
+  };
 
-    -- Visors
-      -- Altyn
+  Visors = {
+    -- Altyn
     "Altyn Face Visor";
     "Altyn Full Visor";
 
       -- FastMT
-    "Ballistic Visor";
+    "Balli  stic Visor";
     "Fast Visor";
+  };
 
-    -- Body Armor
+  BodyArmors = {
     "6B45";
     "AVS";
     "IdZ Vest";
     "JPC";
     "LBT6094";
+  }
 }
 
 return ItemList

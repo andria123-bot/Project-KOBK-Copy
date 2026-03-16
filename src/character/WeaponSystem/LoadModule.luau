@@ -63,12 +63,21 @@ function moduleFinder.GetModule(Item)
             end
         end
 
+        if not moduleToClone then
+            for _, category in ipairs(weaponCategories.throwableCategories) do
+                local moduleCategory = throwableModulesFolder:FindFirstChild(category)
+                if moduleCategory then
+                    moduleToClone = moduleCategory:FindFirstChild(Item)
+                    if moduleToClone then break end
+                end
+            end
+        end
+
         if moduleToClone then
 			local clonedModule = moduleToClone
 
 			return require(clonedModule)
 		else
-            warn(debug.traceback())
 			warn("No module found for item: " .. Item)
 			return nil
 		end
