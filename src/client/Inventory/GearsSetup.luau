@@ -1,15 +1,14 @@
 local GearsSetup = {
-    gear = { -- actual value if player is equped
-        Helmet = nil,
-        ChestRig = nil,
-        BodyArmor = nil,
-        Leggings = nil,
-        Backpack = nil,
+    gear = {
+        Helmet   = { equipped = false, name = "" },
+        Armor    = { equipped = true,  name = "6B45" },
+        Leggings = { equipped = false, name = "" },
+        Backpack = { equipped = true, name = "Fieldpack45" },
 
-        Mask = nil,
-        TShirt = nil,
-        Pants = nil,
-    };
+        Mask     = { equipped = false, name = "" },
+        TShirt   = { equipped = true,  name = "Default" },
+        Pants    = { equipped = true,  name = "Default" },
+    }
 }
 
 return GearsSetup

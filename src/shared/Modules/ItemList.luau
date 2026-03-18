@@ -42,6 +42,10 @@ local ItemList = {
     "IdZ Vest";
     "JPC";
     "LBT6094";
+  };
+
+  Backpacks = {
+    "Fieldpack 45"
   }
 }
 

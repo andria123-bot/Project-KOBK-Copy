@@ -2,21 +2,26 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
-script.Parent.InventoryHandler.Parent = player.PlayerGui:WaitForChild("Toolbar").MainFrame
+script.Parent.Parent.Inventory.Parent = player.PlayerGui:WaitForChild("Menu").MainParent
 
-local moduleFinder = require(game:GetService("StarterPlayer").StarterCharacterScripts.WeaponSystem.LoadModule)
-
-local RequestModule = ReplicatedStorage.Shared.Remotes.RequestModuleRemote
-
-local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
-
+-- local moduleFinder = require(game:GetService("StarterPlayer").StarterCharacterScripts.WeaponSystem.LoadModule)
 local GearsSetup = require(script.Parent.GearsSetup)
 
-local templateSlot = ReplicatedStorage.GUIS:WaitForChild("Slott")
+local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
+local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
+
+local templateSlot = ReplicatedStorage.GUIS:WaitForChild("Slot")
 
 local playerGui = player:WaitForChild("PlayerGui")
-local toolbar = playerGui:WaitForChild("Toolbar")
-local MainFrame = toolbar.MainFrame
+local Menu = playerGui:WaitForChild("Menu")
+local MainParent = Menu.MainParent
+
+local Toolbar = playerGui:WaitForChild("Toolbar")
+local MainFrame = Toolbar.MainFrame
+
+local RowsParent = MainParent.InventoryParent.InventoryGui.InventoryItemsFrame.SingleRowParent
+local TemplateInvRow = ReplicatedStorage.GUIS.TemplateInvRow:Clone()
+
 
 local dragging = {
 	active = false,
@@ -24,49 +29,78 @@ local dragging = {
 	clone = nil,
 }
 
-slots = { -- just visual slots
+local sizes = {
+    UDim2.new(0, 413, 0, 100), -- 1 row
+    UDim2.new(0, 413, 0, 210), -- 2 row
+    UDim2.new(0, 413, 0, 322), -- 3 row
+    UDim2.new(0, 413, 0, 432), -- 4 row
+}
+
+local slots = { -- just visual slots
 	inventory = {},
 	gear = {};
 	toolbar = {};
 }
 
-function InitSys()
-	if GearsSetup.gear.TShirt ~= nil then
-		for i = 1, 5 do
-			slots.inventory[i] = MainFrame:FindFirstChild("Slot" .. i, true)
-			templateSlot.Parent = MainFrame.InventoryGui.InventoryItemsFrame.TShirtRow
-		end	
-	end
+local priority = {"BodyArmor", "TShirt", "Pants"}
 
-	if GearsSetup.gear.Pants ~= nil then
-		for i = 5, 10 do
-			slots.inventory[i] = MainFrame:FindFirstChild("Slot" .. i, true)
-			templateSlot.Parent = MainFrame.InventoryGui.InventoryItemsFrame.PantsRow
-		end	
-	end
-
-	if GearsSetup.gear.Backpack ~= nil then
-		local itemModule = RequestModule:FireServer(GearsSetup.gear.Backpack)
-
-		if itemModule then
-			for i = 10, itemModule.slotCount do
-				slots.inventory[i] = MainFrame
-				templateSlot.Parent = MainFrame.InventoryGui.InventoryItemsFrame.BackpackRow
-			end
-		end
-	end
-
-	if GearsSetup.gear.ChestRig ~= nil then
-		local itemModule = RequestModule:FireServer(GearsSetup.gear.ChestRig)
-
-		if itemModule then
-			for i = 30, itemModule.slotCount do
-				slots.inventory[i] = MainFrame
-				templateSlot.Parent = MainFrame.InventoryGui.InventoryItemsFrame.BackpackRow
-			end
-		end
-	end
+local function GetBackpackModule(BagName)
+	return RequestModule:FireServer(BagName)
 end
+
+local function GetPlayerSlotRows()
+	local count = 1
+
+	for i, v in pairs(GearsSetup.gear) do
+        if (i == "TShirt" or i == "Pants" or i == "Armor") and v.equipped then
+            count += 1
+        elseif i == "Backpack" and v.equipped then
+            local backpackModule = GetBackpackModule(v.name)
+
+			if backpackModule then
+				print(1)
+				--[[
+					Parent the InventorySlotParent
+					Parent the slots to InventorySlotParent
+				]]
+			end
+        end
+    end
+
+	return count
+end
+
+local function ApplyParentSize()
+	local availableSlotRows = GetPlayerSlotRows()
+	
+	local index = math.clamp(availableSlotRows, 1, #sizes)
+	RowsParent.Size = sizes[index]
+end
+
+local function ApplyRows()
+	for _, child in pairs(RowsParent:GetChildren()) do
+        if child:IsA("Frame") and child.Name ~= "EquipmentRow" then
+            child:Destroy()
+        end
+    end
+
+    for _, gearName in ipairs(priority) do
+        local equipped = GearsSetup.gear[gearName]
+        if equipped then
+            local newRow = TemplateInvRow:Clone()
+            newRow.Name = gearName.."Row"
+            newRow.Parent = RowsParent
+            newRow.RowLabel.Text = gearName
+        end
+    end
+end
+
+function InitSys()
+	ApplyParentSize()
+	ApplyRows()
+end
+
+InitSys()
 
 function createSlot(index, parent)
 	local newSlot = templateSlot:Clone()
@@ -74,6 +108,7 @@ function createSlot(index, parent)
     newSlot.Parent = parent
     return newSlot
 end
+
 
 -- SendInventory.OnClientEvent:Connect(function(inventory)
 -- 	for i = 1, 8 do
