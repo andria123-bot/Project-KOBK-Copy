@@ -12,6 +12,5 @@ end
 
 RequestModule.OnServerInvoke = function(player, Item)
     local module = LoadModule.GetModule(Item)
-    print(module)
     return require(module)
 end

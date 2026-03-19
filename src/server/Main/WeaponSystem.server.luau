@@ -137,7 +137,6 @@ ReplicatedStorage.Shared.Remotes.ItemFoley.OnServerEvent:Connect(function(player
 end)
 
 ReplicatedStorage.Shared.Remotes.Melee.OnServerEvent:Connect(function(player, lightStab, weaponSystemModule, origin, direction)
-	print("Got Fired")
 	local character = player.Character
 	
 	local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
