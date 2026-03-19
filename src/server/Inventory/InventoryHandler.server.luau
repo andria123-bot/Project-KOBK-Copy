@@ -7,7 +7,7 @@ local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitFo
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
 
-local WeaponCategories = require(StarterPlayer.StarterCharacterScripts.WeaponSystem.WeaponCategories)
+local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 local PlayerInventories = {}
 

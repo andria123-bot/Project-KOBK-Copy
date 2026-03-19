@@ -45,7 +45,7 @@ local slots = { -- just visual slots
 local priority = {"Armor", "TShirt", "Pants"}
 
 local function GetBackpackModule(backpackName)
-	return RequestModule:FireServer(backpackName)
+	-- return RequestModule:InvokeServer(backpackName)
 end
 
 local function GetPlayerSlotRows()

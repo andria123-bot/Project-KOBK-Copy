@@ -2,7 +2,7 @@ local viewmodelFinder = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local camera = game.workspace.CurrentCamera
+local RequestWeaponCategory = ReplicatedStorage.Shared.Remotes.RequestWeaponCategory
 
 local viewmodelsFolder = game.ReplicatedStorage:WaitForChild("Viewmodels")
 
@@ -11,7 +11,7 @@ local secondaryViewmodelsFolder = viewmodelsFolder:FindFirstChild("Secondary")
 local danebisViewmodelsFolder = viewmodelsFolder:FindFirstChild("Danebi")
 local throwableViewmodelsFolder = viewmodelsFolder:FindFirstChild("Throwable")
 
-local weaponCategories = require(script.Parent.WeaponCategories)
+local weaponCategories = RequestWeaponCategory:InvokeServer()
 
 function viewmodelFinder.GetViewmodel(Item)
 	if not Item then

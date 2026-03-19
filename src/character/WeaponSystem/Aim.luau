@@ -4,7 +4,6 @@ AimHelper.weaponModule = nil
 AimHelper.viewmodel = nil
 
 local PlayerWeaponSystemData = require(script.Parent.PlayerWeaponSystemData)
-local WeaponCategories = require(script.Parent.WeaponCategories)
 
 local currentAimPart = 1
 

@@ -5,18 +5,16 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait() or script.Parent.Parent
 local humanoid = character:WaitForChild("Humanoid")
 
-local playerScripts = player:WaitForChild("PlayerScripts")
-
 local camera = game.Workspace.CurrentCamera
 local mouse = player:GetMouse()
 
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
+local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
 
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
-local LoadModule = require(script.Parent.LoadModule)
+-- local LoadModule = require(script.Parent.LoadModule)
 local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
-local WeaponCategories = require(script.Parent.WeaponCategories)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 local GrenadeFunc = require(script.Parent.Grenade)
 
@@ -74,7 +72,8 @@ function loadSlot(Item)
 		weaponSystem.modifiers.IsReloading = false
 		weaponSystem.modifiers.IsShooting = false
 
-		weaponSystem.module = LoadModule.GetModule(Item)
+		print(Item)
+		weaponSystem.module = RequestModule:InvokeServer(Item)
 
 		if player.Character:FindFirstChild("IdleAnim") then 
 			weaponSystem.animations.ThirdPerson[7]:Destroy()
@@ -233,6 +232,8 @@ function loadSlot(Item)
 						end
 					end
 				end
+
+				print(weaponSystem.module)
 
 				PlayerWeaponSystemData:setState(weaponSystem.states[1])
 				aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
