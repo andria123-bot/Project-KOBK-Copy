@@ -1,3 +1,9 @@
+
+--[[
+    Loads default kit for new players from DefaultInventory
+
+]]
+
 local defaultInventory = {}
 
 local DataStoreService = game:GetService("DataStoreService")

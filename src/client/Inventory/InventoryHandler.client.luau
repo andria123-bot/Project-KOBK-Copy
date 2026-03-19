@@ -37,19 +37,20 @@ local sizes = {
 }
 
 local slots = { -- just visual slots
-	inventory = {},
+	inventory = 0,
 	gear = {};
 	toolbar = {};
 }
 
-local priority = {"BodyArmor", "TShirt", "Pants"}
+local priority = {"Armor", "TShirt", "Pants"}
 
-local function GetBackpackModule(BagName)
-	return RequestModule:FireServer(BagName)
+local function GetBackpackModule(backpackName)
+	return RequestModule:FireServer(backpackName)
 end
 
 local function GetPlayerSlotRows()
 	local count = 1
+	-- slots.inventory = 0
 
 	for i, v in pairs(GearsSetup.gear) do
         if (i == "TShirt" or i == "Pants" or i == "Armor") and v.equipped then
@@ -62,12 +63,41 @@ local function GetPlayerSlotRows()
 				--[[
 					Parent the InventorySlotParent
 					Parent the slots to InventorySlotParent
+
+					On server revice the event
 				]]
 			end
         end
     end
 
 	return count
+end
+
+local function InitSlots()
+	local globalIndex = 1
+
+	for _, row in pairs(RowsParent:GetChildren()) do
+		if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
+			
+			local container = row:FindFirstChild("RowsParent")
+			if container then
+				for _, slot in pairs(container:GetChildren()) do
+					if slot:IsA("Frame") then
+						slot.Name = "Slot" .. tostring(globalIndex)
+						globalIndex += 1
+
+						slot.ItemIcon.Image = ""
+					end
+				end
+			end
+		end
+	end
+end
+
+local function GetEverySlot()
+	local namedRows = InitSlots()
+
+	print(namedRows)
 end
 
 local function ApplyParentSize()
@@ -86,9 +116,10 @@ local function ApplyRows()
 
     for _, gearName in ipairs(priority) do
         local equipped = GearsSetup.gear[gearName]
-        if equipped then
+
+        if equipped and equipped.equipped then
             local newRow = TemplateInvRow:Clone()
-            newRow.Name = gearName.."Row"
+            newRow.Name = gearName .. "Row"
             newRow.Parent = RowsParent
             newRow.RowLabel.Text = gearName
         end
@@ -101,7 +132,7 @@ function InitSys()
 end
 
 InitSys()
-
+GetEverySlot()
 function createSlot(index, parent)
 	local newSlot = templateSlot:Clone()
     newSlot.Name = "Slot" .. index

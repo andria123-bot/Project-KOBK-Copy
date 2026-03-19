@@ -1,3 +1,4 @@
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local StarterPlayer = game:GetService("StarterPlayer")
@@ -7,7 +8,7 @@ local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForCh
 local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
 
 local WeaponCategories = require(StarterPlayer.StarterCharacterScripts.WeaponSystem.WeaponCategories)
-local defaultInventory = require(script.Parent:WaitForChild("loadStarterInventory"))
+local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 local PlayerInventories = {}
 
 Players.PlayerAdded:Connect(function(player)
