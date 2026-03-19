@@ -8,6 +8,7 @@ script.Parent.Parent.Inventory.Parent = player.PlayerGui:WaitForChild("Menu").Ma
 local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
 
 local SlotInitializer = require(script.Parent.SlotInitializer)
+local DragAndDropSys = require(script.Parent.DragAndDropSys)
 SlotInitializer:InitSys()
 SlotInitializer:ApplyParentSize()
 SlotInitializer:ApplyRows()
@@ -18,12 +19,6 @@ local templateSlot = ReplicatedStorage.GUIS:WaitForChild("Slot")
 
 local slots = SlotInitializer.slots
 
-
-local dragging = {
-	active = false,
-	fromSlot = nil,
-	clone = nil,
-}
 
 function createSlotForBackpack(index, parent)
 	local newSlot = templateSlot:Clone()

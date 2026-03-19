@@ -18,6 +18,7 @@ local TemplateInvRow = ReplicatedStorage.GUIS.TemplateInvRow:Clone()
 local GearsSetup = require(script.Parent.GearsSetup)
 
 SlotInitializer.rowsParent = RowsParent
+
 SlotInitializer.slots = {
 	inventory = {},
 	gear = {};
