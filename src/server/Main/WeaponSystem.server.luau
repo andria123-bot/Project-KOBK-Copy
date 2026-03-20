@@ -116,7 +116,7 @@ ReplicatedStorage.Shared.Remotes.Shoot.OnServerEvent:Connect(function(player, Mu
 			sound:Play()
 		end
 		
-		for i, v in pairs(ReplicatedStorage.Modules:GetDescendants()) do
+		for i, v in pairs(ReplicatedStorage.Shared.Modules:GetDescendants()) do
 			if v:IsA("ModuleScript") and v.Name == item then
 				require(v):Fire(player, player.Character, MuzzlePos, lookPos, 1000, muzzleCF)
 			end

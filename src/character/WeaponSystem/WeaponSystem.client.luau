@@ -21,6 +21,11 @@ local GrenadeFunc = require(script.Parent.Grenade)
 local playerWeaponSystemData = PlayerWeaponSystem
 local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
 
+local SpringModule = require(ReplicatedStorage.Shared.Modules.Spring)
+
+local recoilSpring = SpringModule.new(Vector3.new(0,0,0), 0.5, 50)
+recoilSpring.Damping = 5
+
 SendInventory.OnClientEvent:Connect(function(savedInventory)
     weaponSystem.inventory = weaponSystem.inventory or {}
 
@@ -232,8 +237,6 @@ function loadSlot(Item)
 						end
 					end
 				end
-
-				print(weaponSystem.module)
 
 				PlayerWeaponSystemData:setState(weaponSystem.states[1])
 				aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
@@ -715,8 +718,24 @@ while wait() do
 						v:Emit(1)
 					end
 				end
-
+				
 				game:GetService("Debris"):AddItem(muzzleFlash, 0.05)
+
+				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
+				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
+
+				if SpringModule then
+					local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
+					recoilSpring:Impulse(hugeRecoil * 2000000)
+
+					local modX, modY, modZ = weaponSystem.module.x, weaponSystem.module.y, weaponSystem.module.z
+
+					local rx = (math.random() * modX * 0.8) + (math.random() < 0.2 and -modX * 0.2 or 0) 
+					local ry = (math.random() - 0.5) * 2 * modY  -- [-modY, modY]
+					local rz = (math.random() - 0.5) * 2 * modZ  -- [-modZ, modZ]
+
+					camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(rx), math.rad(ry), math.rad(rz))
+				end
 
 				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
 				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))

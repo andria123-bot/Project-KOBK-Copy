@@ -6,7 +6,6 @@ local RunService = game:GetService("RunService")
 local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 
-
 DragAndDropSys.dragging = {
 	active = false,
 	fromSlot = nil,

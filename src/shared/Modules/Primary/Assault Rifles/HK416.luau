@@ -1,3 +1,5 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local data = {
 	name = "HK416",
 
@@ -99,7 +101,7 @@ local data = {
 	isShootgun = false,
 }
 
-local fastcast = require(game.ReplicatedStorage.Modules.FastCastRedux)
+local fastcast = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastRedux)
 local caster = fastcast.new()
 fastcast.VisualizeCasts = true
 
