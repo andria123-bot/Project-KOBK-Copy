@@ -15,7 +15,7 @@ local MainFrame = Toolbar.MainFrame
 
 local TemplateInvRow = ReplicatedStorage.GUIS.TemplateInvRow:Clone()
 
-local GearsSetup = require(script.Parent.GearsSetup)
+local RequestGear = ReplicatedStorage.Shared.Remotes.RequestGear
 
 SlotInitializer.rowsParent = RowsParent
 
@@ -94,8 +94,6 @@ function SlotInitializer:InitAllSlots()
 	local toolbarCount = self:InitToolbarSlots()
 	local utilsCount = self:InitToolbarUtils()
 	local inventoryCount = self:InitSlots()
-
-	print(toolbarCount, utilsCount, inventoryCount)
 	
 	return {
 		toolbar = toolbarCount,
@@ -113,27 +111,25 @@ end
 
 function SlotInitializer:GetPlayerSlotRows()
 	local count = 1
-    local backpackCount = 1
 
-	for i, v in pairs(GearsSetup.gear) do
+	for i, v in pairs(self.gearData) do
         if (i == "TShirt" or i == "Pants" or i == "Armor") and v.equipped then
             count += 1
         elseif i == "Backpack" and v.equipped and v.name then
             local backpackModule = GetBackpackModule(v.name)
 
 			if backpackModule then
-				backpackCount = backpackModule.slotCount
+				print("Equiped Backpack: ", v.name)
 			end
         end
     end
 
-	return count, backpackCount
+	return count
 end
 
 function SlotInitializer:ApplyParentSize()
-    local availableSlotRows = self:GetPlayerSlotRows()
-    local index = math.clamp(availableSlotRows, 1, #self.sizes)
-    self.rowsParent.Size = self.sizes[index]
+    local count = self:GetPlayerSlotRows()
+    self.rowsParent.Size = self.sizes[math.clamp(count, 1, #self.sizes)]
 end
 
 function SlotInitializer:ApplyRows()
@@ -144,7 +140,7 @@ function SlotInitializer:ApplyRows()
     end
 
     for _, gearName in ipairs(self.priority) do
-        local equipped = GearsSetup.gear[gearName]
+        local equipped = self.gearData[gearName]
         if equipped and equipped.equipped then
             local newRow = TemplateInvRow:Clone()
             newRow.Name = gearName .. "Row"
@@ -154,10 +150,16 @@ function SlotInitializer:ApplyRows()
     end
 end
 
-function SlotInitializer:InitSys()
-	self:InitAllSlots()
-    self:ApplyParentSize()
-    self:ApplyRows()
+function SlotInitializer:LoadGear()
+    self.gearData = RequestGear:InvokeServer()
 end
+
+function SlotInitializer:InitSys()
+	self:LoadGear()
+    self:ApplyRows()
+    self:ApplyParentSize()
+	self:InitAllSlots()
+end
+
 
 return SlotInitializer
