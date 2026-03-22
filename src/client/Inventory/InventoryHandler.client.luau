@@ -6,7 +6,7 @@ script.Parent.Parent.Inventory.Parent = player.PlayerGui:WaitForChild("Menu").Ma
 
 local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
 
--- local InventoryInitializer = require(script.Parent.InventoryInitializer)
+local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
 
 local SlotInitializer = require(script.Parent.SlotInitializer)
 SlotInitializer:InitSys()
@@ -19,8 +19,6 @@ local templateSlot = ReplicatedStorage.GUIS:WaitForChild("Slot")
 
 local slots = SlotInitializer.slots
 
-SendInventory.OnClientEvent:Connect(function(inventory)
-    if not inventory then return end
-
-
+MoveItem.OnServerEvent:Connect(function(player)
+    
 end)

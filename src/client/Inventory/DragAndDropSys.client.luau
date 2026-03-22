@@ -27,7 +27,6 @@ local dragging = {
 local function getSlotUnderMouse()
     for _, slot in pairs(MainParent:GetDescendants()) do
         if slot:IsA("Frame") and slot.Name:match("^Slot%d+$") then
-            -- print(slot.Name)
             local absPos = slot.AbsolutePosition
             local absSize = slot.AbsoluteSize
             local mousePos = Vector2.new(mouse.X, mouse.Y)
@@ -38,17 +37,17 @@ local function getSlotUnderMouse()
             end
         end
     end
+
     return nil
 end
 
 
 
-getSlotUnderMouse()
-
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
     if gameProcessedEvent then return end
 
     if input.KeyCode == Enum.UserInputType.MouseButton1 then
-
+        local mousePos = getSlotUnderMouse()
+        
     end
 end)
