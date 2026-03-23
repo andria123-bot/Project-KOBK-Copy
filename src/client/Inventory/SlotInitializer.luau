@@ -140,6 +140,7 @@ function SlotInitializer:ApplyRows()
     end
 
     for _, gearName in ipairs(self.priority) do
+		print(self.gearData, gearName)
         local equipped = self.gearData[gearName]
         if equipped and equipped.equipped then
             local newRow = TemplateInvRow:Clone()
@@ -156,6 +157,7 @@ end
 
 function SlotInitializer:InitSys()
 	self:LoadGear()
+	repeat wait() until self.gearData ~= nil
     self:ApplyRows()
     self:ApplyParentSize()
 	self:InitAllSlots()

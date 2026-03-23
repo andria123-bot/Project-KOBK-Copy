@@ -58,6 +58,10 @@ remoteManager.RequestModuleRemote = Instance.new("RemoteFunction")
 remoteManager.RequestModuleRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.RequestModuleRemote.Name = "RequestModule"
 
+remoteManager.RequestDragAndDropSysRemote = Instance.new("RemoteEvent")
+remoteManager.RequestDragAndDropSysRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.RequestDragAndDropSysRemote.Name = "RequestDADSYS"
+
 remoteManager.RequestWeaponCategoryRemote = Instance.new("RemoteFunction")
 remoteManager.RequestWeaponCategoryRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.RequestWeaponCategoryRemote.Name = "RequestWeaponCategory"

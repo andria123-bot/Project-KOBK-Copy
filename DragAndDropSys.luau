@@ -5,9 +5,13 @@ local DragAndDropSys = {}
 local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
+local requestDADSYS = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestDADSYS")
 
 local PlayerInventories = {}
 
+requestDADSYS.OnServerEvent:Connect(function(player, slotUnderMouse)
+    print(slotUnderMouse)
+end)
 
 MoveItem.OnServerEvent:Connect(function(player, fromSlot, toSlot)
     local inventory = PlayerInventories[player]
