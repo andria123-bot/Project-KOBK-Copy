@@ -19,6 +19,4 @@ local templateSlot = ReplicatedStorage.GUIS:WaitForChild("Slot")
 
 local slots = SlotInitializer.slots
 
-MoveItem.OnServerEvent:Connect(function(player)
-    
-end)
+MoveItem:FireServer("Slot6", "Slot7")
