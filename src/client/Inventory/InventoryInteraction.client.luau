@@ -5,14 +5,15 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+local RunService = game:GetService("RunService")
+
 local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
-local requestDADSYS = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestDADSYS")
+local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
+local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
 
 local SlotInitializer = require(script.Parent.SlotInitializer)
 SlotInitializer:InitSys()
-
-local inventory = {}
 
 local slots = SlotInitializer.slots
 
@@ -26,20 +27,9 @@ local MainFrame = Toolbar.MainFrame
 
 local GuiService = game:GetService('GuiService')
 
-local mouse = player:GetMouse()
+local playerInventoryData = {}
 
-local playerInventory = {}
-
-SendInventory.OnClientEvent:Connect(function(savedInventory)
-    playerInventory = playerInventory or {}
-    print(savedInventory)
-
-    for i = 1, #savedInventory do
-        playerInventory[i] = savedInventory[i] or ""
-    end
-
-    print("Inventory synced:", playerInventory)
-end)
+RequestInventory:FireServer()
 
 local dragging = {
 	active = false,
@@ -52,17 +42,6 @@ local function getMousePos()
 	local mousePos = UserInputService:GetMouseLocation()
 	local guiInset = GuiService:GetGuiInset()
 	return Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
-end
-
-local function getSlotUnderMouse()
-	local pos = getMousePos()
-	for index, slot in pairs(slots) do
-		local sPos, sSize = slot.AbsolutePosition, slot.AbsoluteSize
-		if pos.X >= sPos.X and pos.X <= sPos.X + sSize.X and pos.Y >= sPos.Y and pos.Y <= sPos.Y + sSize.Y then
-			return index
-		end
-	end
-	return nil
 end
 
 local function createDragClone(original)
@@ -80,25 +59,59 @@ local function createDragClone(original)
 	return clone
 end
 
-for i, slot in pairs(slots) do
-    for index, k in pairs(slot) do
-        local itemIcon = k:FindFirstChild("ItemIcon")
-        
-        itemIcon.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1  then -- add check: and playerInventory.slotIndex ~= ""
-                dragging.active = true
-                dragging.fromSlot = index
-                dragging.clone = createDragClone(itemIcon)
-            end
-        end)
-
-        itemIcon.InputEnded:Connect(function(input)
-            if dragging.active and input.UserInputType == Enum.UserInputType.MouseButton1 then
-                local targetSlot = getSlotUnderMouse()
-                -- local draggedItem = weaponSystem.inventoryy[dragging.fromSlot]
-            end
-        end)
-    end
+local function initInventoryToSlots()
+	local itemModule = RequestModule.InvokeServer()
+	for i, slot in pairs(slots) do
+		for index, k in pairs(slot) do
+			print(index, k)
+		end
+	end
 end
 
-print(playerInventory)
+local function SlotHandler()
+	-- initInventoryToSlots()
+	for i, slot in pairs(slots) do
+		print(slots.inventory)
+		for index, k in pairs(slot) do
+			local itemIcon = k:FindFirstChild("ItemIcon")
+			if playerInventoryData[index] ~= "" and playerInventoryData[index] ~= nil then
+				itemIcon.InputBegan:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						
+						dragging.active = true
+						dragging.fromSlot = index
+						dragging.clone = createDragClone(itemIcon)
+					end
+				end)
+
+				itemIcon.InputEnded:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+						dragging.active = false
+						dragging.clone:Destroy()
+					end
+				end)
+			end
+		end
+	end
+end
+
+SendInventory.OnClientEvent:Connect(function(savedInventory)
+	local index = 1
+	print(savedInventory)
+	for i, v in pairs(savedInventory) do
+		playerInventoryData[i] = v 
+	end
+
+	repeat wait() until playerInventoryData[index] ~= "" or playerInventoryData[index] ~= nil 
+
+	SlotHandler()
+end)
+
+RunService.RenderStepped:Connect(function(deltaTime)
+	if dragging.active and dragging.clone then
+		local mousePos = getMousePos()
+		local invGuiPos = InventoryParent.AbsolutePosition
+		local localPos = mousePos - invGuiPos
+		dragging.clone.Position = UDim2.new(0, localPos.X, 0, localPos.Y)
+	end
+end)

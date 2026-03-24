@@ -79,8 +79,9 @@ function SlotInitializer:InitSlots()
 					if slot:IsA("Frame") then
 						self.slots.inventory[globalIndex] = slot
 						slot.Name = "Slot" .. tostring(globalIndex)
-						globalIndex += 1
+						self.slots.inventory[globalIndex] = globalIndex
 						slot.ItemIcon.Image = ""
+						globalIndex += 1
 					end
 				end
 			end
@@ -156,12 +157,12 @@ function SlotInitializer:LoadGear()
 end
 
 function SlotInitializer:InitSys()
-	self:LoadGear()
-	repeat wait() until self.gearData ~= nil
-    self:ApplyRows()
-    self:ApplyParentSize()
 	self:InitAllSlots()
+	
+	task.spawn(function()
+		self:LoadGear()
+		self:ApplyRows()
+		self:ApplyParentSize()
+	end)
 end
-
-
 return SlotInitializer

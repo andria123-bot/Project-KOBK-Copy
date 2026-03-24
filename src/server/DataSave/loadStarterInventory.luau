@@ -17,6 +17,10 @@ local starterKit = {
     "Khrissy10R";
     "Tomahawk";
     "MK2";
+    "Empty";
+    "Empty";
+    "Empty";
+    "Empty";
 }
 
 function defaultInventory.loadDefaultInventory(playerData)

@@ -9,11 +9,9 @@ local playerWeaponSystemData = {
             "";
             "";
             "";
-            "";
         };
         
         gear = {
-            ChestRig = nil,
             Backpack = nil,
             Leggings = nil,
             TShirt = nil,
