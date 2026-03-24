@@ -13,7 +13,7 @@ local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModu
 local Toolbar = playerGui:WaitForChild("Toolbar")
 local MainFrame = Toolbar.MainFrame
 
-local TemplateInvRow = ReplicatedStorage.GUIS.TemplateInvRow:Clone()
+local TemplateInvRow = ReplicatedStorage.GUIS.TemplateInvRow
 
 local RequestGear = ReplicatedStorage.Shared.Remotes.RequestGear
 
@@ -21,16 +21,16 @@ SlotInitializer.rowsParent = RowsParent
 
 SlotInitializer.slots = {
 	inventory = {},
-	gear = {};
-	toolbar = {};
-	utils = {};
+	gear = {},
+	toolbar = {},
+	utils = {},
 }
 
 SlotInitializer.sizes = {
-    UDim2.fromOffset(413, 100),
-    UDim2.fromOffset(413, 210),
-    UDim2.fromOffset(413, 322),
-    UDim2.fromOffset(413, 432),
+	UDim2.fromOffset(413, 100),
+	UDim2.fromOffset(413, 210),
+	UDim2.fromOffset(413, 322),
+	UDim2.fromOffset(413, 432),
 }
 
 SlotInitializer.priority = {"Armor", "TShirt", "Pants"}
@@ -44,7 +44,7 @@ function SlotInitializer:InitToolbarSlots()
 			self.slots.toolbar[toolbarIndex] = slot
 			slot.Name = "ToolbarSlot" .. toolbarIndex
 			slot.ItemIcon.Image = ""
-            toolbarIndex += 1
+			toolbarIndex += 1
 		end
 	end
 
@@ -60,7 +60,7 @@ function SlotInitializer:InitToolbarUtils()
 			self.slots.utils[utilsIndex] = slot
 			slot.Name = "UtilsSlot" .. utilsIndex
 			slot.ItemIcon.Image = ""
-            utilsIndex += 1
+			utilsIndex += 1
 		end
 	end
 
@@ -73,13 +73,11 @@ function SlotInitializer:InitSlots()
 	for _, row in pairs(self.rowsParent:GetChildren()) do
 		if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
 			local container = row:FindFirstChild("RowsParent")
-
 			if container then
 				for _, slot in pairs(container:GetChildren()) do
 					if slot:IsA("Frame") then
 						self.slots.inventory[globalIndex] = slot
 						slot.Name = "Slot" .. tostring(globalIndex)
-						self.slots.inventory[globalIndex] = globalIndex
 						slot.ItemIcon.Image = ""
 						globalIndex += 1
 					end
@@ -88,14 +86,14 @@ function SlotInitializer:InitSlots()
 		end
 	end
 
-    return globalIndex - 1
+	return globalIndex - 1
 end
 
 function SlotInitializer:InitAllSlots()
 	local toolbarCount = self:InitToolbarSlots()
 	local utilsCount = self:InitToolbarUtils()
 	local inventoryCount = self:InitSlots()
-	
+
 	return {
 		toolbar = toolbarCount,
 		utils = utilsCount,
@@ -105,64 +103,65 @@ end
 
 local function GetBackpackModule(backpackName)
 	if backpackName then
-        return RequestModule:InvokeServer(backpackName)
-    end
-    return nil
+		return RequestModule:InvokeServer(backpackName)
+	end
+	return nil
 end
 
 function SlotInitializer:GetPlayerSlotRows()
 	local count = 1
 
-	for i, v in pairs(self.gearData) do
-        if (i == "TShirt" or i == "Pants" or i == "Armor") and v.equipped then
-            count += 1
-        elseif i == "Backpack" and v.equipped and v.name then
-            local backpackModule = GetBackpackModule(v.name)
-
+	for i, v in pairs(self.gearData or {}) do
+		if (i == "TShirt" or i == "Pants" or i == "Armor") and v.equipped then
+			count += 1
+		elseif i == "Backpack" and v.equipped and v.name then
+			local backpackModule = GetBackpackModule(v.name)
 			if backpackModule then
-				print("Equiped Backpack: ", v.name)
+				print("Equipped Backpack: ", v.name)
 			end
-        end
-    end
+		end
+	end
 
 	return count
 end
 
 function SlotInitializer:ApplyParentSize()
-    local count = self:GetPlayerSlotRows()
-    self.rowsParent.Size = self.sizes[math.clamp(count, 1, #self.sizes)]
+	local count = self:GetPlayerSlotRows()
+	self.rowsParent.Size = self.sizes[math.clamp(count, 1, #self.sizes)]
 end
 
 function SlotInitializer:ApplyRows()
-    for _, child in pairs(self.rowsParent:GetChildren()) do
-        if child:IsA("Frame") and child.Name ~= "EquipmentRow" then
-            child:Destroy()
-        end
-    end
+	for _, child in pairs(self.rowsParent:GetChildren()) do
+		if child:IsA("Frame") and child.Name ~= "EquipmentRow" then
+			child:Destroy()
+		end
+	end
 
-    for _, gearName in ipairs(self.priority) do
-		print(self.gearData, gearName)
-        local equipped = self.gearData[gearName]
-        if equipped and equipped.equipped then
-            local newRow = TemplateInvRow:Clone()
-            newRow.Name = gearName .. "Row"
-            newRow.Parent = self.rowsParent
-            newRow.RowLabel.Text = gearName
-        end
-    end
+	for _, gearName in ipairs(self.priority) do
+		local equipped = self.gearData and self.gearData[gearName]
+		if equipped and equipped.equipped then
+			local newRow = TemplateInvRow:Clone()
+			newRow.Name = gearName .. "Row"
+			newRow.Parent = self.rowsParent
+			newRow.RowLabel.Text = gearName
+		end
+	end
 end
 
 function SlotInitializer:LoadGear()
-    self.gearData = RequestGear:InvokeServer()
+	self.gearData = RequestGear:InvokeServer()
 end
 
 function SlotInitializer:InitSys()
-	self:InitAllSlots()
-	
+	self:InitToolbarSlots()
+	self:InitToolbarUtils()
+
 	task.spawn(function()
 		self:LoadGear()
 		self:ApplyRows()
 		self:ApplyParentSize()
+		self:InitSlots()
 	end)
 end
+
 return SlotInitializer
