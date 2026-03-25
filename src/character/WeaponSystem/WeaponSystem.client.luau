@@ -315,7 +315,7 @@ function Shoot()
 end
 
 function Inspect()
-	if weaponSystem.animations and weaponSystem.viewmodel and weaponSystem.module then
+	if weaponSystem.animations and weaponSystem.viewmodel and weaponSystem.module and not weaponSystem.modifiers.IsReloading then
 		PlayerWeaponSystemData:setState(weaponSystem.states[4])
 		weaponSystem.modifiers.IsInspecting = true
 		if weaponSystem.state == weaponSystem.states[4] and weaponSystem.modifiers.IsInspecting then 
@@ -737,9 +737,6 @@ while wait() do
 
 					camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(rx), math.rad(ry), math.rad(rz))
 				end
-
-				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
-				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
 
 				if weaponSystem.module.ammo == 0 then
 					if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 

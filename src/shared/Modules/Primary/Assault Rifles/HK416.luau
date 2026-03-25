@@ -114,6 +114,7 @@ casterBehaviour.AutoIgnoreContainer = true
 casterBehaviour.Acceleration = Vector3.new(0, -game.Workspace.Gravity, 0)
 
 function data:Fire(player, character, origin, direction, velocity, muzzleCF)
+	print(debug.traceback())
 	rayParams.FilterDescendantsInstances = {character, game.Workspace:FindFirstChild("BulletHoles")}
 	
 	if data.isShootgun then
