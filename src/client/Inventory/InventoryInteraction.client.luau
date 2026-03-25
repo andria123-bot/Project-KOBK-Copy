@@ -80,26 +80,25 @@ local function SlotHandler()
 	for _, slot in pairs(slots) do
 		for index, k in pairs(slot) do
 			local itemIcon = k:FindFirstChild("ItemIcon")
-			if playerInventoryData[index] ~= "" and playerInventoryData[index] ~= nil then
+			if playerInventoryData[index] ~= "Empty" and playerInventoryData[index] ~= nil then
 				itemIcon.InputBegan:Connect(function(input)
 					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						
 						dragging.active = true
 						dragging.fromSlot = index
 						dragging.clone = createDragClone(itemIcon)
-					end
-				end)
-
-				itemIcon.InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then 
-						dragging.active = false
-						dragging.clone:Destroy()
 					end
 				end)
 			end
 		end
 	end
 end
+
+UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active and dragging.clone then
+			dragging.active = false
+			dragging.clone:Destroy()
+		end
+	end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
 	local index = 1

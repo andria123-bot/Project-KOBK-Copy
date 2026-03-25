@@ -515,7 +515,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 	and weaponSystem.state ~= weaponSystem.states[8] then
 		if input.KeyCode == Enum.KeyCode.One then
 			if weaponSystem.currentSlot ~= 1 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[1] ~= "" then
+				if weaponSystem.inventory[1] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[1])
 					weaponSystem.currentSlot = 1
 					isEquipedWeapon = true
@@ -525,8 +525,9 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Two then
 			if weaponSystem.currentSlot ~= 2 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[2] ~= "" then
+				if weaponSystem.inventory[2] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[2])
+					print(weaponSystem.inventory)
 					weaponSystem.currentSlot = 2
 					isEquipedWeapon = true
 				end
@@ -535,7 +536,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Three then
 			if weaponSystem.currentSlot ~= 3 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[3] ~= "" then
+				if weaponSystem.inventory[3] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[3])
 					weaponSystem.currentSlot = 3
 					isEquipedWeapon = true
@@ -545,7 +546,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Four then
 			if weaponSystem.currentSlot ~= 4 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[4] ~= "" then
+				if weaponSystem.inventory[4] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[4])
 					weaponSystem.currentSlot = 4
 					isEquipedWeapon = true
@@ -555,7 +556,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Five then
 			if weaponSystem.currentSlot ~= 5 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[5] ~= "" then
+				if weaponSystem.inventory[5] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[5])
 					weaponSystem.currentSlot = 5
 					isEquipedWeapon = true
@@ -565,7 +566,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Six then
 			if weaponSystem.currentSlot ~= 6 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[6] ~= "" then
+				if weaponSystem.inventory[6] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[6])
 					weaponSystem.currentSlot = 6
 					isEquipedWeapon = true
@@ -575,7 +576,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Seven and weaponSystem.state ~= weaponSystem.states[3] then
 			if weaponSystem.currentSlot ~= 7 then
-				if weaponSystem.inventory[7] ~= "" then
+				if weaponSystem.inventory[7] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[7])
 					weaponSystem.currentSlot = 7
 					isEquipedWeapon = true
@@ -585,7 +586,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Eight then
 			if weaponSystem.currentSlot ~= 8 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[8] ~= "" then
+				if weaponSystem.inventory[8] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[8])
 					weaponSystem.currentSlot = 8
 					isEquipedWeapon = true
