@@ -17,6 +17,8 @@ SlotInitializer:InitSys()
 
 local slots = SlotInitializer.slots
 
+repeat task.wait() until #slots.inventory > 0
+
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
 local RowsParent = MainParent.InventoryParent.InventoryGui.InventoryItemsFrame.SingleRowParent
@@ -59,19 +61,23 @@ local function createDragClone(original)
 	return clone
 end
 
-local function initInventoryToSlots()
-	local itemModule = RequestModule.InvokeServer()
-	for i, slot in pairs(slots) do
-		for index, k in pairs(slot) do
-			print(index, k)
+local function RenderItems()
+	for index, itemName in pairs(playerInventoryData) do
+		if itemName ~= "Empty" then
+			local module = RequestModule:InvokeServer(itemName)
+			local slot = slots.inventory[index]
+			if slot and module then
+				local itemIcon = slot:FindFirstChild("ItemIcon")
+				if itemIcon then
+					itemIcon.Image = module.imageIconId or ""
+				end
+			end
 		end
 	end
 end
 
 local function SlotHandler()
-	-- initInventoryToSlots()
-	for i, slot in pairs(slots) do
-		print(slots.inventory)
+	for _, slot in pairs(slots) do
 		for index, k in pairs(slot) do
 			local itemIcon = k:FindFirstChild("ItemIcon")
 			if playerInventoryData[index] ~= "" and playerInventoryData[index] ~= nil then
@@ -97,13 +103,13 @@ end
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
 	local index = 1
-	print(savedInventory)
 	for i, v in pairs(savedInventory) do
 		playerInventoryData[i] = v 
 	end
 
-	repeat wait() until playerInventoryData[index] ~= "" or playerInventoryData[index] ~= nil 
+	repeat task.wait() until playerInventoryData[index] ~= nil
 
+	RenderItems()
 	SlotHandler()
 end)
 
