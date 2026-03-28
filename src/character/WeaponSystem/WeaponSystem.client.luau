@@ -718,7 +718,7 @@ while wait() do
 					if v:IsA("ParticleEmitter") then
 						v:Emit(1)
 					end
-				end
+				end -- kutu gio
 				
 				game:GetService("Debris"):AddItem(muzzleFlash, 0.05)
 
