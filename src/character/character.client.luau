@@ -29,8 +29,11 @@ end)
 UIS.InputBegan:Connect(function(input)
     if humanoid then
         if input.KeyCode == Enum.KeyCode.LeftShift then
-			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[9])
-            humanoid.WalkSpeed = 22
+
+			if PlayerWeaponSystemData.weaponSystem.state ~= PlayerWeaponSystemData.weaponSystem.states[2] then
+				PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[6])
+				humanoid.WalkSpeed = 22
+			end
         end
     end
 end)

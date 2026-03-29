@@ -597,7 +597,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		if character and weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.ammo ~= 0 and not debounce then
-			if weaponSystem.state ~= weaponSystem.states[9] then
+			if weaponSystem.state ~= weaponSystem.states[6] then
 				Shoot()
 			end
 		end
@@ -609,7 +609,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		if weaponSystem.module and weaponSystem.viewmodel then
-			if weaponSystem.state ~= weaponSystem.states[9] then
+			if weaponSystem.state ~= weaponSystem.states[6] then
 				if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
 					if not weaponSystem.modifiers.IsReloading then
 						weaponSystem.modifiers.IsAiming = true
@@ -645,7 +645,7 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.state ~= weaponSystem.states[9] then
+		if weaponSystem.state ~= weaponSystem.states[6] then
 			if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
 				weaponSystem.modifiers.IsAiming = false
 				PlayerWeaponSystemData:setState(weaponSystem.states[1])
@@ -677,7 +677,7 @@ end)
 
 mouse.Button1Up:Connect(function()
 	if weaponSystem.module and weaponSystem.viewmodel then
-		if weaponSystem.state ~= weaponSystem.states[9] then
+		if weaponSystem.state ~= weaponSystem.states[6] then
 			weaponSystem.modifiers.IsShooting = false
 
 			if weaponSystem.modifiers.IsAiming then

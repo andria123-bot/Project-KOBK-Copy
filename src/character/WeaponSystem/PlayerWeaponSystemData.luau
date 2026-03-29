@@ -64,7 +64,6 @@ local playerWeaponSystemData = {
             "Sprinting",
             "Changing",
             "Dead",
-            "Running",
         },
 
         modifiers = {
