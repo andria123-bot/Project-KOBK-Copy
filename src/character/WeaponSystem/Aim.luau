@@ -23,7 +23,10 @@ end
 function AimHelper:Aim(dt)
 	if not (self.weaponModule and self.viewmodel and self.weaponModule.canAim) then return end
 	
-	if PlayerWeaponSystemData.weaponSystem.state == PlayerWeaponSystemData.weaponSystem.states[5] and not PlayerWeaponSystemData.weaponSystem.modifiers.IsReloading and not PlayerWeaponSystemData.weaponSystem.modifiers.IsInspecting then
+	if PlayerWeaponSystemData.weaponSystem.state == PlayerWeaponSystemData.weaponSystem.states[5] and not 
+										PlayerWeaponSystemData.weaponSystem.modifiers.IsReloading and not 
+										PlayerWeaponSystemData.weaponSystem.modifiers.IsInspecting then
+											
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end
 

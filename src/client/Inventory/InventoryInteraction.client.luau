@@ -46,17 +46,23 @@ local function getMousePos()
 	return Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
 end
 
+local function getSlotUnderMouse()
+	local pos = getMousePos()
+	for index, slot in pairs(slots) do
+		local sPos, sSize = slot.AbsolutePosition, slot.AbsoluteSize
+		if pos.X >= sPos.X and pos.X <= sPos.X + sSize.X and pos.Y >= sPos.Y and pos.Y <= sPos.Y + sSize.Y then
+			return index
+		end
+	end
+	return nil
+end
+
 local function createDragClone(original)
 	local clone = original:Clone()
 	clone.Parent = InventoryParent
 	clone.ZIndex = 10
 	clone.AnchorPoint = Vector2.new(0.5, 0.5)
-	clone.Size = UDim2.new(0, original.AbsoluteSize.X, 0, original.AbsoluteSize.Y)
-
-	local mousePos = getMousePos()
-	local invGuiPos = InventoryParent.AbsolutePosition
-	local localPos = mousePos - invGuiPos
-	clone.Position = UDim2.new(0, localPos.X, 0, localPos.Y)
+	clone.Size = UDim2.fromOffset(original.AbsoluteSize.X, original.AbsoluteSize.Y)
 
 	return clone
 end
@@ -93,12 +99,12 @@ local function SlotHandler()
 	end
 end
 
-UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
+UserInputService.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active and dragging.clone then
-			dragging.active = false
-			dragging.clone:Destroy()
-		end
-	end)
+		dragging.active = false
+		dragging.clone:Destroy()
+	end
+end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
 	local index = 1

@@ -1,10 +1,10 @@
 local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
 local UIS = game:GetService("UserInputService")
-local camera = game.Workspace.Camera
 local character = script.Parent
 local humanoid = character:WaitForChild("Humanoid")
+
+local PlayerWeaponSystemData = require(script.Parent.WeaponSystem.PlayerWeaponSystemData)
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid then
@@ -29,6 +29,7 @@ end)
 UIS.InputBegan:Connect(function(input)
     if humanoid then
         if input.KeyCode == Enum.KeyCode.LeftShift then
+			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[9])
             humanoid.WalkSpeed = 22
         end
     end
@@ -37,6 +38,7 @@ end)
 UIS.InputEnded:Connect(function(input)
     if humanoid then
         if input.KeyCode == Enum.KeyCode.LeftShift then
+			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[1])
             humanoid.WalkSpeed = 16
         end
     end

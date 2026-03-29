@@ -597,7 +597,9 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		if character and weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.ammo ~= 0 and not debounce then
-			Shoot()
+			if weaponSystem.state ~= weaponSystem.states[9] then
+				Shoot()
+			end
 		end
 
 		if weaponSystem.module and weaponSystem.viewmodel and weaponSystem.module.isMelee and not weaponSystem.module.isGrenade then
@@ -607,10 +609,12 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		if weaponSystem.module and weaponSystem.viewmodel then
-			if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
-				if not weaponSystem.modifiers.IsReloading then
-					weaponSystem.modifiers.IsAiming = true
-					PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+			if weaponSystem.state ~= weaponSystem.states[9] then
+				if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
+					if not weaponSystem.modifiers.IsReloading then
+						weaponSystem.modifiers.IsAiming = true
+						PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+					end
 				end
 			end
 		end	
@@ -641,10 +645,12 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
-			weaponSystem.modifiers.IsAiming = false
-			PlayerWeaponSystemData:setState(weaponSystem.states[1])
-		end	
+		if weaponSystem.state ~= weaponSystem.states[9] then
+			if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
+				weaponSystem.modifiers.IsAiming = false
+				PlayerWeaponSystemData:setState(weaponSystem.states[1])
+			end	
+		end
     end
 end)
 
@@ -671,12 +677,14 @@ end)
 
 mouse.Button1Up:Connect(function()
 	if weaponSystem.module and weaponSystem.viewmodel then
-		weaponSystem.modifiers.IsShooting = false
+		if weaponSystem.state ~= weaponSystem.states[9] then
+			weaponSystem.modifiers.IsShooting = false
 
-		if weaponSystem.modifiers.IsAiming then
-			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
-		else
-			PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[1])
+			if weaponSystem.modifiers.IsAiming then
+				PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+			else
+				PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[1])
+			end
 		end
 	end
 end)
