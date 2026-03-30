@@ -43,7 +43,6 @@ local data = {
 	maxAmmo = 30,
 	fireMode = "Full Auto",
 
-	fireRate = 0.085, 
 
 	sprintCF = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-95/5), math.rad(95/4), math.rad(95/5));
 
@@ -78,12 +77,13 @@ local data = {
 	-- Damage
 	damage = 30.5,  
 	headshot = 70,
-	debounce = 0.07,
+	debounce = 0.1,
 	reloadTime = 2.9,  
 	jamChance = 0.0005,
 	value = 5800,
 	weight = 3.02, -- kg
 
+	fireRate = 0.085, 
 	-- Recoil
 	x = 1.8,
 	y = 0.72,

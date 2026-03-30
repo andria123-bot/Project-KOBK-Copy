@@ -1,3 +1,5 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local data = {
 	name = "Khrissy10R",
 
@@ -52,6 +54,8 @@ local data = {
 	maxAmmo = 21,
 	fireMode = "Semi Auto",
 	fireRate = 0.25,
+	
+	debounce = .15,
 
 	durable = 100,
 	isStackable = false,
@@ -70,7 +74,6 @@ local data = {
 
 	damage = 55,
 	headshot = 73,
-	debounce = .1,
 	reloadTime = 2.3,
 	jamChance = 0.005,
 	value = 3000,
@@ -112,7 +115,7 @@ for i = 1, data.maxAmmo do
 	table.insert(data.recoil, CFrame.Angles(math.rad(up), math.rad(side), 0))
 end
 
-local fastcast = require(game.ReplicatedStorage.Modules.FastCastRedux)
+local fastcast = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastRedux)
 local caster = fastcast.new()
 fastcast.VisualizeCasts = true
 

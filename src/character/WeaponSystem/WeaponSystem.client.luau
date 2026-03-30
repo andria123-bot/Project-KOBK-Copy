@@ -290,20 +290,35 @@ function Shoot()
 				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
 
 				if weaponSystem.module.ammo == 0 then
-					if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
-						task.wait(.5)
-						Reload()
-						
-						repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
-						debounce = false
-					end
+					print("If")
+					task.wait(.5)
+					Reload()
+					repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
+					debounce = false
+
 				else
+					print("Else")
 					debounce = true
-
-					wait(weaponSystem.module.debounce)
-
+					task.wait(weaponSystem.module.debounce)
 					debounce = false
 				end
+
+				-- if weaponSystem.module.ammo == 0 then
+				-- 	if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
+				-- 		task.wait(.5)
+				-- 		Reload()
+						
+				-- 		repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
+				-- 		debounce = false
+				-- 	end
+				-- else
+				-- 	print(debounce, weaponSystem.module.debounce)
+				-- 	debounce = true
+
+				-- 	task.wait(weaponSystem.module.debounce)
+
+				-- 	debounce = false
+				-- end
 			end
 
 			if weaponSystem.module.fireMode == "Full Auto" then
@@ -419,7 +434,7 @@ function Reload()
 					return
 				end
 
-				wait(0.05)
+				task.wait(0.05)
 				i = i + 0.05
 			end
 			
@@ -655,14 +670,14 @@ UIS.InputEnded:Connect(function(input)
 end)
 
 ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
-	for i, v in pairs(camera:GetDescendants()) do
+	for _, v in pairs(camera:GetDescendants()) do
 		if v:IsA("Model") then
 			v:Destroy()
 			-- weaponSystem.state = weaponSystem.states[8]
 		end
 	end
 	
-	for i, v in pairs(game.ReplicatedStorage.Shared.Modules:GetDescendants()) do
+	for _, v in pairs(game.ReplicatedStorage.Shared.Modules:GetDescendants()) do
 		if v:IsA("ModuleScript") and v.Name ~= "FastCastRedux" and v.Name ~= "ActiveSignal" and v.Name ~= "Signal" and v.Name ~= "Table" and v.Name ~= "TypeDefinitions"  and v.Name ~= "TypeMarshaller" and v.Name ~= "Misc" then
 			require(v).ammo = require(v).maxAmmo
 		end
