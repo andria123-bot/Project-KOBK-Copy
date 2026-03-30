@@ -17,7 +17,16 @@ SlotInitializer:InitSys()
 
 local slots = SlotInitializer.slots
 
-repeat task.wait() until #slots.inventory > 0
+repeat
+	task.wait()
+until #slots.inventory > 0
+
+print("Total inventory slots initialized:", #slots.inventory)
+for i = 1, #slots.inventory do
+	if slots.inventory[i] then
+		print("Slot " .. i .. " exists:", slots.inventory[i].Name)
+	end
+end
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -27,7 +36,7 @@ local InventoryParent = MainParent:WaitForChild("InventoryParent")
 local Toolbar = playerGui:WaitForChild("Toolbar")
 local MainFrame = Toolbar.MainFrame
 
-local GuiService = game:GetService('GuiService')
+local GuiService = game:GetService("GuiService")
 
 local playerInventoryData = {}
 
@@ -47,14 +56,61 @@ local function getMousePos()
 end
 
 local function getSlotUnderMouse()
-	local pos = getMousePos()
-	for index, slot in pairs(slots) do
-		local sPos, sSize = slot.AbsolutePosition, slot.AbsoluteSize
-		if pos.X >= sPos.X and pos.X <= sPos.X + sSize.X and pos.Y >= sPos.Y and pos.Y <= sPos.Y + sSize.Y then
-			return index
+	local mousePos = UserInputService:GetMouseLocation()
+	local guiInset = GuiService:GetGuiInset()
+	local adjustedMousePos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
+
+	-- Check inventory slots
+	for index, slot in pairs(slots.inventory) do
+		if slot then
+			local slotPos = slot.AbsolutePosition
+			local slotSize = slot.AbsoluteSize
+
+			if
+				adjustedMousePos.X >= slotPos.X
+				and adjustedMousePos.X <= slotPos.X + slotSize.X
+				and adjustedMousePos.Y >= slotPos.Y
+				and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
+			then
+				print("Found slot:", index, slot.Name, "at position", slotPos, "with size", slotSize)
+				return "inventory", index, slot
+			end
 		end
 	end
-	return nil
+
+	print("No slot found under mouse at position:", adjustedMousePos)
+
+	-- -- Check toolbar slots
+	-- for index, slot in pairs(slots.toolbar) do
+	--     if slot then
+	--         local slotPos = slot.AbsolutePosition
+	--         local slotSize = slot.AbsoluteSize
+
+	--         if adjustedMousePos.X >= slotPos.X
+	--             and adjustedMousePos.X <= slotPos.X + slotSize.X
+	--             and adjustedMousePos.Y >= slotPos.Y
+	--             and adjustedMousePos.Y <= slotPos.Y + slotSize.Y then
+	--             return "toolbar", index, slot
+	--         end
+	--     end
+	-- end
+
+	-- -- Check utils slots
+	-- for index, slot in pairs(slots.utils) do
+	--     if slot then
+	--         local slotPos = slot.AbsolutePosition
+	--         local slotSize = slot.AbsoluteSize
+
+	--         if adjustedMousePos.X >= slotPos.X
+	--             and adjustedMousePos.X <= slotPos.X + slotSize.X
+	--             and adjustedMousePos.Y >= slotPos.Y
+	--             and adjustedMousePos.Y <= slotPos.Y + slotSize.Y then
+	--             return "utils", index, slot
+	--         end
+	--     end
+	-- end
+
+	return nil, nil, nil
 end
 
 local function createDragClone(original)
@@ -69,13 +125,17 @@ end
 
 local function RenderItems()
 	for index, itemName in pairs(playerInventoryData) do
-		if itemName ~= "Empty" then
-			local module = RequestModule:InvokeServer(itemName)
-			local slot = slots.inventory[index]
-			if slot and module then
-				local itemIcon = slot:FindFirstChild("ItemIcon")
-				if itemIcon then
-					itemIcon.Image = module.imageIconId or ""
+		local slot = slots.inventory[index]
+		if slot then
+			local itemIcon = slot:FindFirstChild("ItemIcon")
+			if itemIcon then
+				if itemName ~= "Empty" and itemName ~= "" then
+					local module = RequestModule:InvokeServer(itemName)
+					if module then
+						itemIcon.Image = module.imageIconId or ""
+					end
+				else
+					itemIcon.Image = ""
 				end
 			end
 		end
@@ -83,36 +143,53 @@ local function RenderItems()
 end
 
 local function SlotHandler()
-	for _, slot in pairs(slots) do
-		for index, k in pairs(slot) do
-			local itemIcon = k:FindFirstChild("ItemIcon")
-			if playerInventoryData[index] ~= "Empty" and playerInventoryData[index] ~= nil then
-				itemIcon.InputBegan:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	for index, k in pairs(slots.inventory) do
+		local itemIcon = k:FindFirstChild("ItemIcon")
+		if itemIcon and not itemIcon:GetAttribute("DragHandlerAttached") then
+			itemIcon:SetAttribute("DragHandlerAttached", true)
+			itemIcon.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					if
+						playerInventoryData[index]
+						and playerInventoryData[index] ~= ""
+						and playerInventoryData[index] ~= "Empty"
+					then
 						dragging.active = true
 						dragging.fromSlot = index
 						dragging.clone = createDragClone(itemIcon)
 					end
-				end)
-			end
+				end
+			end)
 		end
 	end
 end
 
 UserInputService.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active and dragging.clone then
+		local slotGroup, slotIndex, slotFrame = getSlotUnderMouse()
+		print("Mouse released. Slot under mouse:", slotGroup, slotIndex, slotFrame)
+
+		if slotGroup and slotIndex then
+			print("Dropped on slot:", slotGroup, slotIndex)
+			MoveItem:FireServer(dragging.fromSlot, slotIndex)
+		end
+
 		dragging.active = false
-		dragging.clone:Destroy()
+		if dragging.clone then
+			dragging.clone:Destroy()
+		end
 	end
 end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
 	local index = 1
 	for i, v in pairs(savedInventory) do
-		playerInventoryData[i] = v 
+		playerInventoryData[i] = v
 	end
 
-	repeat task.wait() until playerInventoryData[index] ~= nil
+	repeat
+		task.wait()
+	until playerInventoryData[index] ~= nil
 
 	RenderItems()
 	SlotHandler()
@@ -126,3 +203,5 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		dragging.clone.Position = UDim2.new(0, localPos.X, 0, localPos.Y)
 	end
 end)
+
+print(slots)

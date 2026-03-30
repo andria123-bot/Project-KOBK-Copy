@@ -11,6 +11,8 @@ RequestWeaponCategory.OnServerInvoke = function(player)
 end
 
 RequestModule.OnServerInvoke = function(player, Item)
+    if Item == "" then return nil end
     local module = LoadModule.GetModule(Item)
+    print(Item)
     return require(module)
 end
