@@ -66,12 +66,4 @@ remoteManager.RequestWeaponCategoryRemote = Instance.new("RemoteFunction")
 remoteManager.RequestWeaponCategoryRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.RequestWeaponCategoryRemote.Name = "RequestWeaponCategory"
 
-remoteManager.EquipItemRemote = Instance.new("RemoteEvent")
-remoteManager.EquipItemRemote.Parent = ReplicatedStorage.Shared.Remotes.InventoryEvents
-remoteManager.EquipItemRemote.Name = "EquipItem"
-
-remoteManager.UnequipItemRemote = Instance.new("RemoteEvent")
-remoteManager.UnequipItemRemote.Parent = ReplicatedStorage.Shared.Remotes.InventoryEvents
-remoteManager.UnequipItemRemote.Name = "UnequipItem"
-
 return remoteManager

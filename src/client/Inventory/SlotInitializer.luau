@@ -53,21 +53,21 @@ function SlotInitializer:InitGearGUI()
     return #self.slots.gearGUI
 end
 
-function SlotInitializer:InitToolbarSlots()
-	local toolbarContainer = MainFrame.Loadout
-	local toolbarIndex = 1
+-- function SlotInitializer:InitToolbarSlots()
+-- 	local toolbarContainer = MainFrame.Loadout
+-- 	local toolbarIndex = 1
 
-	for _, slot in pairs(toolbarContainer:GetChildren()) do -- just change the icon of slot
-		if slot:IsA("Frame") and slot.Name:find("Slot") and toolbarIndex <= 3 then
-			self.slots.toolbar[toolbarIndex] = slot
-			slot.Name = "ToolbarSlot" .. toolbarIndex
-			slot.ItemIcon.Image = ""
-			toolbarIndex += 1
-		end
-	end
+-- 	for _, slot in pairs(toolbarContainer:GetChildren()) do -- just change the icon of slot
+-- 		if slot:IsA("Frame") and slot.Name:find("Slot") and toolbarIndex <= 3 then
+-- 			self.slots.toolbar[toolbarIndex] = slot
+-- 			slot.Name = "ToolbarSlot" .. toolbarIndex
+-- 			slot.ItemIcon.Image = ""
+-- 			toolbarIndex += 1
+-- 		end
+-- 	end
 
-	return toolbarIndex - 1
-end
+-- 	return toolbarIndex - 1
+-- end
 
 function SlotInitializer:InitToolbarUtils()
 	local toolbarContainer = MainFrame.Utils
@@ -108,12 +108,12 @@ function SlotInitializer:InitSlots()
 end
 
 function SlotInitializer:InitAllSlots()
-	local toolbarCount = self:InitToolbarSlots()
+	-- local toolbarCount = self:InitToolbarSlots()
 	local utilsCount = self:InitToolbarUtils()
 	local inventoryCount = self:InitSlots()
 
 	return {
-		toolbar = toolbarCount,
+		-- toolbar = toolbarCount,
 		utils = utilsCount,
 		inventory = inventoryCount
 	}
@@ -171,7 +171,7 @@ function SlotInitializer:LoadGear()
 end
 
 function SlotInitializer:InitSys()
-	self:InitToolbarSlots()
+	-- self:InitToolbarSlots()
 	self:InitToolbarUtils()
 
 	task.spawn(function()
