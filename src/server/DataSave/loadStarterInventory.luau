@@ -36,9 +36,7 @@ function defaultInventory.loadDefaultInventory(playerData)
         for i = 1, #starterKit do
             inventory[i] = starterKit[i]
         end
-        -- for i = #starterKit + 1, 8 do
-        --     inventory[i] = "Empty"
-        -- end
+        
         return true
     end
 

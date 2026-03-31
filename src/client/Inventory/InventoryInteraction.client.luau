@@ -39,6 +39,7 @@ local MainFrame = Toolbar.MainFrame
 local GuiService = game:GetService("GuiService")
 
 local playerInventoryData = {}
+local itemImageCache = {}
 
 RequestInventory:FireServer()
 
@@ -83,36 +84,6 @@ local function getSlotUnderMouse()
 
 	print("No slot found under mouse at position:", adjustedMousePos)
 
-	-- -- Check toolbar slots
-	-- for index, slot in pairs(slots.toolbar) do
-	--     if slot then
-	--         local slotPos = slot.AbsolutePosition
-	--         local slotSize = slot.AbsoluteSize
-
-	--         if adjustedMousePos.X >= slotPos.X
-	--             and adjustedMousePos.X <= slotPos.X + slotSize.X
-	--             and adjustedMousePos.Y >= slotPos.Y
-	--             and adjustedMousePos.Y <= slotPos.Y + slotSize.Y then
-	--             return "toolbar", index, slot
-	--         end
-	--     end
-	-- end
-
-	-- -- Check utils slots
-	-- for index, slot in pairs(slots.utils) do
-	--     if slot then
-	--         local slotPos = slot.AbsolutePosition
-	--         local slotSize = slot.AbsoluteSize
-
-	--         if adjustedMousePos.X >= slotPos.X
-	--             and adjustedMousePos.X <= slotPos.X + slotSize.X
-	--             and adjustedMousePos.Y >= slotPos.Y
-	--             and adjustedMousePos.Y <= slotPos.Y + slotSize.Y then
-	--             return "utils", index, slot
-	--         end
-	--     end
-	-- end
-
 	return nil, nil, nil
 end
 
@@ -126,22 +97,36 @@ local function createDragClone(original)
 	return clone
 end
 
+local function updateSlot(index)
+	local slot = slots.inventory[index]
+	if not slot then return end
+	
+	local itemIcon = slot:FindFirstChild("ItemIcon")
+	if not itemIcon then return end
+	
+	local itemName = playerInventoryData[index]
+	
+	if itemName and itemName ~= "" and itemName ~= "Empty" then
+		local cachedImage = itemImageCache[itemName]
+		if cachedImage then
+			itemIcon.Image = cachedImage
+		else
+			task.spawn(function()
+				local module = RequestModule:InvokeServer(itemName)
+				if module and module.imageIconId then
+					itemImageCache[itemName] = module.imageIconId
+					itemIcon.Image = module.imageIconId
+				end
+			end)
+		end
+	else
+		itemIcon.Image = ""
+	end
+end
+
 local function RenderItems()
 	for index, itemName in pairs(playerInventoryData) do
-		local slot = slots.inventory[index]
-		if slot then
-			local itemIcon = slot:FindFirstChild("ItemIcon")
-			if itemIcon then
-				if itemName ~= "Empty" and itemName ~= "" then
-					local module = RequestModule:InvokeServer(itemName)
-					if module then
-						itemIcon.Image = module.imageIconId or ""
-					end
-				else
-					itemIcon.Image = ""
-				end
-			end
-		end
+		updateSlot(index)
 	end
 end
 
@@ -160,6 +145,7 @@ local function SlotHandler()
 						dragging.active = true
 						dragging.fromSlot = index
 						dragging.clone = createDragClone(itemIcon)
+						itemIcon.Visible = false
 					end
 				end
 			end)
@@ -172,9 +158,27 @@ UserInputService.InputEnded:Connect(function(input)
 		local slotGroup, slotIndex, slotFrame = getSlotUnderMouse()
 		print("Mouse released. Slot under mouse:", slotGroup, slotIndex, slotFrame)
 
-		if slotGroup and slotIndex then
+		if slotGroup and slotIndex and slotIndex ~= dragging.fromSlot then
 			print("Dropped on slot:", slotGroup, slotIndex)
+			
+			local fromItem = playerInventoryData[dragging.fromSlot]
+			local toItem = playerInventoryData[slotIndex]
+			
+			playerInventoryData[slotIndex] = fromItem
+			playerInventoryData[dragging.fromSlot] = toItem or ""
+			
+			updateSlot(dragging.fromSlot)
+			updateSlot(slotIndex)
+			
 			MoveItem:FireServer(dragging.fromSlot, slotIndex)
+		end
+		
+		local originalSlot = slots.inventory[dragging.fromSlot]
+		if originalSlot then
+			local originalIcon = originalSlot:FindFirstChild("ItemIcon")
+			if originalIcon then
+				originalIcon.Visible = true
+			end
 		end
 
 		dragging.active = false
