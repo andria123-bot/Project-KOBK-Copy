@@ -21,13 +21,6 @@ repeat
 	task.wait()
 until #slots.inventory > 0
 
-print("Total inventory slots initialized:", #slots.inventory)
-for i = 1, #slots.inventory do
-	if slots.inventory[i] then
-		print("Slot " .. i .. " exists:", slots.inventory[i].Name)
-	end
-end
-
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
 local RowsParent = MainParent.InventoryParent.InventoryGui.InventoryItemsFrame.SingleRowParent
@@ -42,11 +35,6 @@ local playerInventoryData = {}
 local itemImageCache = {}
 
 RequestInventory:FireServer()
-
-
---[[        for i = #starterKit + 1, 8 do
-            inventory[i] = "Empty"
-        end]]
 
 local dragging = {
 	active = false,
@@ -76,13 +64,10 @@ local function getSlotUnderMouse()
 			   and adjustedMousePos.Y >= slotPos.Y
 			   and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
 			then
-				print("Found slot:", index, slot.Name, "at position", slotPos, "with size", slotSize)
 				return "inventory", index, slot
 			end
 		end
 	end
-
-	print("No slot found under mouse at position:", adjustedMousePos)
 
 	return nil, nil, nil
 end
@@ -156,10 +141,8 @@ end
 UserInputService.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active and dragging.clone then
 		local slotGroup, slotIndex, slotFrame = getSlotUnderMouse()
-		print("Mouse released. Slot under mouse:", slotGroup, slotIndex, slotFrame)
 
 		if slotGroup and slotIndex and slotIndex ~= dragging.fromSlot then
-			print("Dropped on slot:", slotGroup, slotIndex)
 			
 			local fromItem = playerInventoryData[dragging.fromSlot]
 			local toItem = playerInventoryData[slotIndex]
@@ -210,5 +193,3 @@ RunService.RenderStepped:Connect(function(deltaTime)
 		dragging.clone.Position = UDim2.new(0, localPos.X, 0, localPos.Y)
 	end
 end)
-
-print(slots)
