@@ -42,6 +42,11 @@ local playerInventoryData = {}
 
 RequestInventory:FireServer()
 
+
+--[[        for i = #starterKit + 1, 8 do
+            inventory[i] = "Empty"
+        end]]
+
 local dragging = {
 	active = false,
 	fromSlot = nil,
@@ -60,17 +65,15 @@ local function getSlotUnderMouse()
 	local guiInset = GuiService:GetGuiInset()
 	local adjustedMousePos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
 
-	-- Check inventory slots
 	for index, slot in pairs(slots.inventory) do
 		if slot then
 			local slotPos = slot.AbsolutePosition
 			local slotSize = slot.AbsoluteSize
 
-			if
-				adjustedMousePos.X >= slotPos.X
-				and adjustedMousePos.X <= slotPos.X + slotSize.X
-				and adjustedMousePos.Y >= slotPos.Y
-				and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
+			if adjustedMousePos.X >= slotPos.X
+			   and adjustedMousePos.X <= slotPos.X + slotSize.X
+			   and adjustedMousePos.Y >= slotPos.Y
+			   and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
 			then
 				print("Found slot:", index, slot.Name, "at position", slotPos, "with size", slotSize)
 				return "inventory", index, slot

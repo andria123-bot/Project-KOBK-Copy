@@ -17,10 +17,7 @@ local starterKit = {
     "Khrissy10R";
     "Tomahawk";
     "MK2";
-    "Empty";
-    "Empty";
-    "Empty";
-    "Empty";
+
 }
 
 function defaultInventory.loadDefaultInventory(playerData)
@@ -39,9 +36,9 @@ function defaultInventory.loadDefaultInventory(playerData)
         for i = 1, #starterKit do
             inventory[i] = starterKit[i]
         end
-        for i = #starterKit + 1, 9 do
-            inventory[i] = ""
-        end
+        -- for i = #starterKit + 1, 8 do
+        --     inventory[i] = "Empty"
+        -- end
         return true
     end
 
@@ -52,15 +49,14 @@ function defaultInventory.mergeInventory(playerData, savedInventory)
     if not playerData.weaponSystem then return false end
 
     local inventory = playerData.weaponSystem.inventory
-    if savedInventory then
-        -- Has saved data, use it
+    if savedInventory then-- Has saved data, use it
         for i = 1, #savedInventory do
             inventory[i] = savedInventory[i] or ""
         end
+
         return true
-    else
-        -- NO saved data, give starter kit
-        return defaultInventory.loadDefaultInventory(playerData)  -- This gives starter items
+    else -- NO saved data, give starter kit
+        return defaultInventory.loadDefaultInventory(playerData)
     end
 end
 
