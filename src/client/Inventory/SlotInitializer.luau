@@ -20,10 +20,9 @@ local RequestGear = ReplicatedStorage.Shared.Remotes.RequestGear
 SlotInitializer.rowsParent = RowsParent
 
 SlotInitializer.slots = {
-	inventory = {},
-	gear = {},
-	toolbar = {},
-	utils = {},
+	inventory = {}, -- slots based on player's clothes/backpack/armor
+	gear = {}, -- helmet, armor, backpack, etc.
+	utils = {}, -- slots for grenades, throwables, etc.(4-8)
 }
 
 SlotInitializer.sizes = {
@@ -35,11 +34,30 @@ SlotInitializer.sizes = {
 
 SlotInitializer.priority = {"Armor", "TShirt", "Pants"}
 
+function SlotInitializer:InitGearGUI()
+    local gearGUI = MainParent.GearParent.GearGUI
+    if not gearGUI then return end
+    
+    self.slots.gearGUI = {}
+    
+    local gearSlotNames = {"Helmet", "Mask", "ChestRig", "Backpack", "TShirt", "Pants", "Leggings", "Melee", "Slot1", "Slot2", "Slot3"}
+    
+    for _, slotName in pairs(gearSlotNames) do
+        local slot = gearGUI:FindFirstChild(slotName)
+        if slot and slot:IsA("Frame") then
+            self.slots.gearGUI[slotName] = slot
+            table.insert(self.slots.gearGUI, slot) -- store by index for easier iteration
+        end
+    end
+    
+    return #self.slots.gearGUI
+end
+
 function SlotInitializer:InitToolbarSlots()
 	local toolbarContainer = MainFrame.Loadout
 	local toolbarIndex = 1
 
-	for _, slot in pairs(toolbarContainer:GetChildren()) do
+	for _, slot in pairs(toolbarContainer:GetChildren()) do -- just change the icon of slot
 		if slot:IsA("Frame") and slot.Name:find("Slot") and toolbarIndex <= 3 then
 			self.slots.toolbar[toolbarIndex] = slot
 			slot.Name = "ToolbarSlot" .. toolbarIndex

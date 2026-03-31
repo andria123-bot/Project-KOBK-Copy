@@ -15,3 +15,8 @@ rojo serve
 ```
 
 For more help, check out [the Rojo documentation](https://rojo.space/docs).
+
+dont mind here:
+When player press X it should drop the item
+
+bug: when player equips empty inv slot it cant change anything

@@ -23,11 +23,8 @@ until #slots.inventory > 0
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
-local RowsParent = MainParent.InventoryParent.InventoryGui.InventoryItemsFrame.SingleRowParent
+local GearsGui = MainParent.GearParent.GearGUI
 local InventoryParent = MainParent:WaitForChild("InventoryParent")
-
-local Toolbar = playerGui:WaitForChild("Toolbar")
-local MainFrame = Toolbar.MainFrame
 
 local GuiService = game:GetService("GuiService")
 
