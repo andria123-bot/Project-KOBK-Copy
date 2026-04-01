@@ -50,6 +50,10 @@ remoteManager.MoveItemRemote = Instance.new("RemoteEvent")
 remoteManager.MoveItemRemote.Parent = ReplicatedStorage.Shared.Remotes.InventoryEvents
 remoteManager.MoveItemRemote.Name = "MoveItem"
 
+remoteManager.PlayerSlotsRemote = Instance.new("RemoteEvent")
+remoteManager.PlayerSlotsRemote.Parent = ReplicatedStorage.Shared.Remotes.InventoryEvents
+remoteManager.PlayerSlotsRemote.Name = "PlayerSlots"
+
 remoteManager.RequestGearRemote = Instance.new("RemoteFunction")
 remoteManager.RequestGearRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.RequestGearRemote.Name = "RequestGear"

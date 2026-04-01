@@ -11,6 +11,7 @@ local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
+local PlayerSlots = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlots")
 
 local SlotInitializer = require(script.Parent.SlotInitializer)
 SlotInitializer:InitSys()
@@ -20,6 +21,9 @@ local slots = SlotInitializer.slots
 repeat
 	task.wait()
 until #slots.inventory > 0
+
+print("Slots initialized, sending to server")
+PlayerSlots:FireServer(slots.inventory)
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -89,16 +93,29 @@ local function updateSlot(index)
 	local itemName = playerInventoryData[index]
 	
 	if itemName and itemName ~= "" and itemName ~= "Empty" then
-		local cachedImage = itemImageCache[itemName]
-		if cachedImage then
-			itemIcon.Image = cachedImage
-		else
+		if itemImageCache[itemName] then
+			itemIcon.Image = itemImageCache[itemName]
+			return
+		end
+		
+		if not itemImageCache[itemName .. "_loading"] then
+			itemImageCache[itemName .. "_loading"] = true
 			task.spawn(function()
-				local module = RequestModule:InvokeServer(itemName)
-				if module and module.imageIconId then
+				local success, module = pcall(function()
+					return RequestModule:InvokeServer(itemName)
+				end)
+				
+				if success and module and module.imageIconId then
 					itemImageCache[itemName] = module.imageIconId
-					itemIcon.Image = module.imageIconId
+					local currentSlot = slots.inventory[index]
+					if currentSlot then
+						local currentIcon = currentSlot:FindFirstChild("ItemIcon")
+						if currentIcon and playerInventoryData[index] == itemName then
+							currentIcon.Image = module.imageIconId
+						end
+					end
 				end
+				itemImageCache[itemName .. "_loading"] = nil
 			end)
 		end
 	else

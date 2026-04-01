@@ -11,13 +11,18 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local inventoryStore = DataStoreService:GetDataStore("InventoryStore")
 
 local InventoryUpdate = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("InventoryUpdate")
+local PlayerSlots = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlots")
+
+PlayerSlots.OnServerEvent:Connect(function(player, playerSlots)
+    local slots = playerSlots
+    print(slots)
+end)
 
 local starterKit = {
     "HK416";
     "Khrissy10R";
     "Tomahawk";
     "MK2";
-
 }
 
 function defaultInventory.loadDefaultInventory(playerData)
@@ -47,7 +52,8 @@ function defaultInventory.mergeInventory(playerData, savedInventory)
     if not playerData.weaponSystem then return false end
 
     local inventory = playerData.weaponSystem.inventory
-    if savedInventory then-- Has saved data, use it
+    if savedInventory then -- Has saved data, use it
+        print(savedInventory)
         for i = 1, #savedInventory do
             inventory[i] = savedInventory[i] or ""
         end
