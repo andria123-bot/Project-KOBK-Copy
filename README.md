@@ -19,4 +19,11 @@ For more help, check out [the Rojo documentation](https://rojo.space/docs).
 dont mind here:
 When player press X it should drop the item
 
-bug: when player equips empty inv slot it cant change anything
+Tons of bugs:
+when player dies he can re-equip weapon and still shoot                         | Medium
+when player dies fastcast redux manager is cooked                               | Medium
+MoveItem event is client sided so it means hackers can bypass it and dupe items | Hard
+modules are accessable by client, red flag                                      | Easy
+recoil happens on client, create seperated module for that                      | Medium
+loadslot shoul be based on weaponSlot not inventory                             | Hard
+loadslot can load any weapon by client at any time                              | Easy

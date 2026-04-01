@@ -67,7 +67,7 @@ MoveItem.OnServerEvent:Connect(function(player, fromSlot, toSlot)
 
 	local item = inventory[fromSlot]
 
-	if inventory[toSlot] and inventory[toSlot] ~= "" then -- Swap items
+	if inventory[toSlot] then -- Swap items
 		local temp = inventory[fromSlot]
 		inventory[fromSlot] = inventory[toSlot]
 		inventory[toSlot] = temp

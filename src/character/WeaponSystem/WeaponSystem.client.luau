@@ -673,7 +673,7 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 	for _, v in pairs(camera:GetDescendants()) do
 		if v:IsA("Model") then
 			v:Destroy()
-			-- weaponSystem.state = weaponSystem.states[8]
+			weaponSystem.state = weaponSystem.states[8]
 		end
 	end
 	
