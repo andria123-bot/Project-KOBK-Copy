@@ -11,7 +11,7 @@ local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
-local PlayerSlots = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlots")
+local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 
 local SlotInitializer = require(script.Parent.SlotInitializer)
 SlotInitializer:InitSys()
@@ -22,8 +22,6 @@ repeat
 	task.wait()
 until #slots.inventory > 0
 
-print("Slots initialized, sending to server")
-PlayerSlots:FireServer(slots.inventory)
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -129,6 +127,19 @@ local function RenderItems()
 	end
 end
 
+local function sendPlayerSlotData()
+	local slotData = {}
+	
+	local totalSlots = #slots.inventory
+	
+	for i = 1, totalSlots do
+		local itemName = playerInventoryData[i] or ""
+		slotData["Slot" .. i] = itemName
+	end
+	
+	PlayerSlotData:FireServer(slotData)
+end
+
 local function SlotHandler()
 	for index, k in pairs(slots.inventory) do
 		local itemIcon = k:FindFirstChild("ItemIcon")
@@ -168,6 +179,7 @@ UserInputService.InputEnded:Connect(function(input)
 			updateSlot(slotIndex)
 			
 			MoveItem:FireServer(dragging.fromSlot, slotIndex)
+			sendPlayerSlotData()
 		end
 		
 		local originalSlot = slots.inventory[dragging.fromSlot]
@@ -197,6 +209,7 @@ SendInventory.OnClientEvent:Connect(function(savedInventory)
 
 	RenderItems()
 	SlotHandler()
+	sendPlayerSlotData()
 end)
 
 RunService.RenderStepped:Connect(function(deltaTime)

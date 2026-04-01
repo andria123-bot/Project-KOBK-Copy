@@ -1,11 +1,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local StarterPlayer = game:GetService("StarterPlayer")
 
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
 local RequestGear = ReplicatedStorage.Shared.Remotes.RequestGear
+local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 
 local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
@@ -40,6 +40,10 @@ Players.PlayerRemoving:Connect(function(player)
 			warn("Failed to save inventory for", player.Name, err)
 		end
 	end
+end)
+
+PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
+	print(slotData)
 end)
 
 RequestInventory.OnServerEvent:Connect(function(player)
