@@ -22,6 +22,7 @@ SlotInitializer.rowsParent = RowsParent
 SlotInitializer.slots = {
 	inventory = {}, -- slots based on player's clothes/backpack/armor
 	gear = {}, -- helmet, armor, backpack, etc.
+	weaponSlots = {}, -- actual weapon slots on the UI (1-4)
 	utils = {}, -- slots for grenades, throwables, etc.(4-8)
 }
 
@@ -34,50 +35,41 @@ SlotInitializer.sizes = {
 
 SlotInitializer.priority = {"Armor", "TShirt", "Pants"}
 
-function SlotInitializer:InitGearGUI()
-    local gearGUI = MainParent.GearParent.GearGUI
-    if not gearGUI then return end
-    
-    self.slots.gearGUI = {}
-    
-    local gearSlotNames = {"Helmet", "Mask", "ChestRig", "Backpack", "TShirt", "Pants", "Leggings", "Melee", "Slot1", "Slot2", "Slot3"}
-    
-    for _, slotName in pairs(gearSlotNames) do
-        local slot = gearGUI:FindFirstChild(slotName)
-        if slot and slot:IsA("Frame") then
-            self.slots.gearGUI[slotName] = slot
-            table.insert(self.slots.gearGUI, slot) -- store by index for easier iteration
-        end
-    end
-    
-    return #self.slots.gearGUI
+function SlotInitializer:InitWeaponSlots()
+	local weaponContainer = MainFrame.Loadout
+	if not weaponContainer then return 0 end
+	
+	local weaponIndex = 1
+	
+	for _, slot in pairs(weaponContainer:GetChildren()) do
+		if slot:IsA("Frame") and slot.Name:find("Slot") and weaponIndex <= 4 then
+			self.slots.weaponSlots[weaponIndex] = slot
+			slot.Name = "WeaponSlot" .. weaponIndex
+			local itemIcon = slot:FindFirstChild("ItemIcon")
+			if itemIcon then
+				itemIcon.Image = ""
+			end
+			weaponIndex += 1
+		end
+	end
+	
+	return weaponIndex - 1
 end
-
--- function SlotInitializer:InitToolbarSlots()
--- 	local toolbarContainer = MainFrame.Loadout
--- 	local toolbarIndex = 1
-
--- 	for _, slot in pairs(toolbarContainer:GetChildren()) do -- just change the icon of slot
--- 		if slot:IsA("Frame") and slot.Name:find("Slot") and toolbarIndex <= 3 then
--- 			self.slots.toolbar[toolbarIndex] = slot
--- 			slot.Name = "ToolbarSlot" .. toolbarIndex
--- 			slot.ItemIcon.Image = ""
--- 			toolbarIndex += 1
--- 		end
--- 	end
-
--- 	return toolbarIndex - 1
--- end
 
 function SlotInitializer:InitToolbarUtils()
 	local toolbarContainer = MainFrame.Utils
+	if not toolbarContainer then return 0 end
+	
 	local utilsIndex = 1
 
 	for _, slot in pairs(toolbarContainer:GetChildren()) do
 		if slot:IsA("Frame") and slot.Name:find("Slot") and utilsIndex <= 5 then
 			self.slots.utils[utilsIndex] = slot
 			slot.Name = "UtilsSlot" .. utilsIndex
-			slot.ItemIcon.Image = ""
+			local itemIcon = slot:FindFirstChild("ItemIcon")
+			if itemIcon then
+				itemIcon.Image = ""
+			end
 			utilsIndex += 1
 		end
 	end
@@ -96,7 +88,10 @@ function SlotInitializer:InitSlots()
 					if slot:IsA("Frame") then
 						self.slots.inventory[globalIndex] = slot
 						slot.Name = "Slot" .. tostring(globalIndex)
-						slot.ItemIcon.Image = ""
+						local itemIcon = slot:FindFirstChild("ItemIcon")
+						if itemIcon then
+							itemIcon.Image = ""
+						end
 						globalIndex += 1
 					end
 				end
@@ -108,12 +103,12 @@ function SlotInitializer:InitSlots()
 end
 
 function SlotInitializer:InitAllSlots()
-	-- local toolbarCount = self:InitToolbarSlots()
+	local weaponCount = self:InitWeaponSlots()
 	local utilsCount = self:InitToolbarUtils()
 	local inventoryCount = self:InitSlots()
 
 	return {
-		-- toolbar = toolbarCount,
+		weaponSlots = weaponCount,
 		utils = utilsCount,
 		inventory = inventoryCount
 	}
@@ -123,6 +118,7 @@ local function GetBackpackModule(backpackName)
 	if backpackName then
 		return RequestModule:InvokeServer(backpackName)
 	end
+
 	return nil
 end
 
@@ -171,7 +167,7 @@ function SlotInitializer:LoadGear()
 end
 
 function SlotInitializer:InitSys()
-	-- self:InitToolbarSlots()
+	self:InitWeaponSlots()
 	self:InitToolbarUtils()
 
 	task.spawn(function()

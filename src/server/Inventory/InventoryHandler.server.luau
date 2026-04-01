@@ -55,19 +55,10 @@ end)
 MoveItem.OnServerEvent:Connect(function(player, fromSlot, toSlot)
 	local inventory = PlayerInventories[player]
 
-	-- Validate inputs
-	if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then
-		return
-	end
-	if fromSlot < 1 or toSlot < 1 then
-		return
-	end
-	if fromSlot == toSlot then
-		return
-	end
-	if not inventory[fromSlot] or inventory[fromSlot] == "" then
-		return
-	end
+	if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return end
+	if fromSlot < 1 or toSlot < 1 then return end
+	if fromSlot == toSlot then return end
+	if not inventory[fromSlot] or inventory[fromSlot] == "" then return end
 
 	-- Initialize toSlot if it doesn't exist
 	if not inventory[toSlot] then
@@ -76,13 +67,11 @@ MoveItem.OnServerEvent:Connect(function(player, fromSlot, toSlot)
 
 	local item = inventory[fromSlot]
 
-	if inventory[toSlot] and inventory[toSlot] ~= "" then
-		-- Swap items
+	if inventory[toSlot] and inventory[toSlot] ~= "" then -- Swap items
 		local temp = inventory[fromSlot]
 		inventory[fromSlot] = inventory[toSlot]
 		inventory[toSlot] = temp
-	else
-		-- Move item
+	else -- Move item
 		inventory[toSlot] = item
 		inventory[fromSlot] = ""
 	end

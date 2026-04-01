@@ -122,19 +122,28 @@ local function updateSlot(index)
 end
 
 local function RenderItems()
-	for index, itemName in pairs(playerInventoryData) do
+	for index, _itemName in pairs(playerInventoryData) do
 		updateSlot(index)
 	end
 end
 
 local function sendPlayerSlotData()
-	local slotData = {}
+	local slotData = {
+		slots = {};
+		weaponSlots = {};
+		utils = {};
+	}
 	
-	local totalSlots = #slots.inventory
+	for i = 1, #slots.inventory do
+		slotData.slots["Slot" .. i] = playerInventoryData[i] or ""
+	end
 	
-	for i = 1, totalSlots do
-		local itemName = playerInventoryData[i] or ""
-		slotData["Slot" .. i] = itemName
+	for i = 1, #slots.weaponSlots do
+		slotData.weaponSlots["WeaponSlot" .. i] = ""
+	end
+	
+	for i = 1, #slots.utils do
+		slotData.utils["UtilSlot" .. i] = ""
 	end
 	
 	PlayerSlotData:FireServer(slotData)
@@ -147,8 +156,7 @@ local function SlotHandler()
 			itemIcon:SetAttribute("DragHandlerAttached", true)
 			itemIcon.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					if
-						playerInventoryData[index]
+					if  playerInventoryData[index]
 						and playerInventoryData[index] ~= ""
 						and playerInventoryData[index] ~= "Empty"
 					then
