@@ -3,8 +3,10 @@ local StarterGui = game:GetService("StarterGui")
 local UIS = game:GetService("UserInputService")
 local character = script.Parent
 local humanoid = character:WaitForChild("Humanoid")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local PlayerWeaponSystemData = require(script.Parent.WeaponSystem.PlayerWeaponSystemData)
+local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
+local PlayerWeaponSystemData = RequestWeaponSystemData:InvokeServer()
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid then

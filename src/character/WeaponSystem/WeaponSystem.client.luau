@@ -12,14 +12,12 @@ local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitFo
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
-
+local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
-local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
-local GrenadeFunc = require(script.Parent.Grenade)
 
-local playerWeaponSystemData = PlayerWeaponSystem
-local weaponSystem = PlayerWeaponSystem.weaponSystem -- player module
+local weaponSystem = RequestWeaponSystemData:InvokeServer()
+print(weaponSystem)
 
 local SpringModule = require(ReplicatedStorage.Shared.Modules.Spring)
 
@@ -45,7 +43,6 @@ local dof = game.Lighting.DepthOfField
 local bobOffset = CFrame.new()
 
 local AimHelper = require(script.Parent.Aim)
-local PlayerWeaponSystemData = require(script.Parent.PlayerWeaponSystemData)
 local aimHelper = AimHelper
 
 local debounce = false
@@ -68,10 +65,11 @@ end
 
 function loadSlot(Item)
 	weaponSystem.loadSlot = loadSlot
-	if weaponSystem.state == weaponSystem.states[1] 
-	or weaponSystem.state == weaponSystem.states[3] 
-	or weaponSystem.state == weaponSystem.states[4] then
-		PlayerWeaponSystemData:setState(weaponSystem.states[7])
+	if weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[1] 
+	or weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[3] 
+	or weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[4] then
+		print(weaponSystem)
+		weaponSystem:setState(weaponSystem.weaponSystem.states[7])
 
 		weaponSystem.modifiers.IsAiming = false
 		weaponSystem.modifiers.IsInspecting = false
@@ -428,13 +426,15 @@ end)
 
 UIS.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
+	print(weaponSystem)
+	print(weaponSystem.weaponSystem)
 
-	if (weaponSystem.state == weaponSystem.states[1] 
-	or weaponSystem.state == weaponSystem.states[3] 
-	or weaponSystem.state == weaponSystem.states[4]) 
-	and weaponSystem.state ~= weaponSystem.states[8] then
+	if (weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[1] 
+	or weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[3] 
+	or weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[4]) 
+	and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[8] then
 		if input.KeyCode == Enum.KeyCode.One then
-			if weaponSystem.currentSlot ~= 1 and weaponSystem.state ~= weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 1 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
 				if weaponSystem.inventory[1] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[1])
 					weaponSystem.currentSlot = 1
@@ -444,7 +444,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Two then
-			if weaponSystem.currentSlot ~= 2 and weaponSystem.state ~= weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 2 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
 				if weaponSystem.inventory[2] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[2])
 					print(weaponSystem.inventory)
@@ -455,7 +455,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Three then
-			if weaponSystem.currentSlot ~= 3 and weaponSystem.state ~= weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 3 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
 				if weaponSystem.inventory[3] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[3])
 					weaponSystem.currentSlot = 3
@@ -465,7 +465,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Four then
-			if weaponSystem.currentSlot ~= 4 and weaponSystem.state ~= weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 4 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
 				if weaponSystem.inventory[4] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[4])
 					weaponSystem.currentSlot = 4
@@ -475,7 +475,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Five then
-			if weaponSystem.currentSlot ~= 5 and weaponSystem.state ~= weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 5 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
 				if weaponSystem.inventory[5] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[5])
 					weaponSystem.currentSlot = 5
@@ -485,7 +485,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Six then
-			if weaponSystem.currentSlot ~= 6 and weaponSystem.state ~= weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 6 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
 				if weaponSystem.inventory[6] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[6])
 					weaponSystem.currentSlot = 6
@@ -494,7 +494,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 			end
 		end
 
-		if input.KeyCode == Enum.KeyCode.Seven and weaponSystem.state ~= weaponSystem.states[3] then
+		if input.KeyCode == Enum.KeyCode.Seven and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
 			if weaponSystem.currentSlot ~= 7 then
 				if weaponSystem.inventory[7] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[7])
@@ -505,7 +505,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Eight then
-			if weaponSystem.currentSlot ~= 8 and weaponSystem.state ~= weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 8 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
 				if weaponSystem.inventory[8] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[8])
 					weaponSystem.currentSlot = 8

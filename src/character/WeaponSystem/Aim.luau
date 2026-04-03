@@ -3,7 +3,10 @@ local AimHelper = {}
 AimHelper.weaponModule = nil
 AimHelper.viewmodel = nil
 
-local PlayerWeaponSystemData = require(script.Parent.PlayerWeaponSystemData)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
+local PlayerWeaponSystemData = RequestWeaponSystemData:InvokeServer()
 
 local currentAimPart = 1
 
