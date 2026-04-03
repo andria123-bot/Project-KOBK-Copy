@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
-local RequestWeaponCategory = ReplicatedStorage.Shared.Remotes.RequestWeaponCategory
+local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
+local RequestWeaponCategory = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponCategory")
 
 local LoadModule = require(script.Parent.LoadModule)
 local WeaponCategory = require(script.Parent.WeaponCategories)

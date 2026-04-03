@@ -10,10 +10,10 @@ local mouse = player:GetMouse()
 
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
-local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
+local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
+local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
 
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
--- local LoadModule = require(script.Parent.LoadModule)
 local PlayerWeaponSystem = require(script.Parent.PlayerWeaponSystemData)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 local GrenadeFunc = require(script.Parent.Grenade)
@@ -25,6 +25,8 @@ local SpringModule = require(ReplicatedStorage.Shared.Modules.Spring)
 
 local recoilSpring = SpringModule.new(Vector3.new(0,0,0), 0.5, 50)
 recoilSpring.Damping = 5
+
+local weaponData
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
     weaponSystem.inventory = weaponSystem.inventory or {}
@@ -51,13 +53,13 @@ local debounce = false
 local isEquipedWeapon = false
 
 function stopAllAnims()
-	for i, v in pairs(weaponSystem.animations.FirstPerson) do
+	for _, v in pairs(weaponSystem.animations.FirstPerson) do
 		if v ~= nil and v.IsPlaying then
 			v:Stop()
 		end
 	end
 
-	for i, v in pairs(weaponSystem.animations.ThirdPerson) do
+	for _, v in pairs(weaponSystem.animations.ThirdPerson) do
 		if v ~= nil and v.IsPlaying then
 			v:Stop()
 		end
@@ -69,15 +71,12 @@ function loadSlot(Item)
 	if weaponSystem.state == weaponSystem.states[1] 
 	or weaponSystem.state == weaponSystem.states[3] 
 	or weaponSystem.state == weaponSystem.states[4] then
-
 		PlayerWeaponSystemData:setState(weaponSystem.states[7])
 
 		weaponSystem.modifiers.IsAiming = false
 		weaponSystem.modifiers.IsInspecting = false
 		weaponSystem.modifiers.IsReloading = false
 		weaponSystem.modifiers.IsShooting = false
-
-		weaponSystem.module = RequestModule:InvokeServer(Item)
 
 		if player.Character:FindFirstChild("IdleAnim") then 
 			weaponSystem.animations.ThirdPerson[7]:Destroy()
@@ -98,150 +97,100 @@ function loadSlot(Item)
 			end
 		end
 
-		if weaponSystem.module then
-			weaponSystem.viewmodel = LoadViewmodel.GetViewmodel(Item):Clone()
-			weaponSystem.viewmodel.Parent = camera
+		weaponSystem.viewmodel = LoadViewmodel.GetViewmodel(Item):Clone()
+		weaponSystem.viewmodel.Parent = camera
 
-			if weaponSystem.viewmodel then
-				local animator = weaponSystem.viewmodel.AnimationController.Animator
+		if weaponSystem.viewmodel then
+			local animData = RequestWeaponData:InvokeServer(Item)
+			local animator = weaponSystem.viewmodel.AnimationController.Animator
+			local characterAnimator = character.Humanoid.Animator
 
-				weaponSystem.animations.FirstPerson[1] = Instance.new("Animation")
-				weaponSystem.animations.FirstPerson[1].Parent = weaponSystem.viewmodel
-				weaponSystem.animations.FirstPerson[1].Name = "Fire"
-				weaponSystem.animations.FirstPerson[1].AnimationId = weaponSystem.module.fireAnim
-				weaponSystem.animations.FirstPerson[1] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[1])
+			ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(Item)
+			weaponData = RequestWeaponData:InvokeServer(Item)
 
-				weaponSystem.animations.FirstPerson[2] = Instance.new("Animation")
-				weaponSystem.animations.FirstPerson[2].Parent = weaponSystem.viewmodel
-				weaponSystem.animations.FirstPerson[2].Name = "Equip"
-				weaponSystem.animations.FirstPerson[2].AnimationId = weaponSystem.module.equipAnim
-				weaponSystem.animations.FirstPerson[2] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[2])
+			local firstPersonAnims = {
+				{index = 1, name = "Fire", id = animData.animations.fireAnim},
+				{index = 2, name = "Equip", id = animData.animations.equipAnim},
+				{index = 3, name = "Deequip", id = animData.animations.deequipAnim},
+				{index = 4, name = "EmptyFire", id = animData.animations.emptyFireAnim},
+				{index = 5, name = "Reload", id = animData.animations.reloadAnim},
+				{index = 6, name = "EmptyReload", id = animData.animations.emptyReloadAnim},
+				{index = 7, name = "Inspect", id = animData.animations.inspectAnim},
+				{index = 8, name = "Idle", id = animData.animations.idleAnim}
+			}
 
-				weaponSystem.animations.FirstPerson[3] = Instance.new("Animation")
-				weaponSystem.animations.FirstPerson[3].Parent = weaponSystem.viewmodel
-				weaponSystem.animations.FirstPerson[3].Name = "Deequip"
-				weaponSystem.animations.FirstPerson[3].AnimationId = weaponSystem.module.deequipAnim
-				weaponSystem.animations.FirstPerson[3] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[3])
+			local thirdPersonAnims = {
+				{index = 1, name = "ShootAnim", id = animData.animations.tpShootAnim},
+				{index = 2, name = "EquipAnim", id = animData.animations.tpEquipAnim},
+				{index = 3, name = "DeequipAnim", id = animData.animations.tpDeequipAnim},
+				{index = 4, name = "ReloadAnim", id = animData.animations.tpReloadAnim},
+				{index = 5, name = "EmptyReloadAnim", id = animData.animations.tpEmptyReloadAnim},
+				{index = 6, name = "InspectAnim", id = animData.animations.tpInspectAnim},
+				{index = 7, name = "IdleAnim", id = animData.animations.tpIdleAnim}
+			}
 
-				weaponSystem.animations.FirstPerson[4] = Instance.new("Animation")
-				weaponSystem.animations.FirstPerson[4].Parent = weaponSystem.viewmodel
-				weaponSystem.animations.FirstPerson[4].Name = "EmptyFire"
-				weaponSystem.animations.FirstPerson[4].AnimationId = weaponSystem.module.emptyFireAnim
-				weaponSystem.animations.FirstPerson[4] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[4])
-
-				weaponSystem.animations.FirstPerson[5] = Instance.new("Animation")
-				weaponSystem.animations.FirstPerson[5].Parent = weaponSystem.viewmodel
-				weaponSystem.animations.FirstPerson[5].Name = "Reload"
-				weaponSystem.animations.FirstPerson[5].AnimationId = weaponSystem.module.reloadAnim
-				weaponSystem.animations.FirstPerson[5] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[5])
-
-				weaponSystem.animations.FirstPerson[6] = Instance.new("Animation")
-				weaponSystem.animations.FirstPerson[6].Name = "EmptyReload"
-				weaponSystem.animations.FirstPerson[6].AnimationId = weaponSystem.module.emptyReloadAnim
-				weaponSystem.animations.FirstPerson[6] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[6])
-
-				weaponSystem.animations.FirstPerson[7] = Instance.new("Animation")
-				weaponSystem.animations.FirstPerson[7].Parent = weaponSystem.viewmodel
-				weaponSystem.animations.FirstPerson[7].Name = "Inspect"
-				weaponSystem.animations.FirstPerson[7].AnimationId = weaponSystem.module.inspectAnim
-				weaponSystem.animations.FirstPerson[7] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[7])
-
-				weaponSystem.animations.FirstPerson[8] = Instance.new("Animation")
-				weaponSystem.animations.FirstPerson[8].Parent = weaponSystem.viewmodel
-				weaponSystem.animations.FirstPerson[8].Name = "Idle"
-				weaponSystem.animations.FirstPerson[8].AnimationId = weaponSystem.module.idleAnim
-				weaponSystem.animations.FirstPerson[8] = animator:LoadAnimation(weaponSystem.animations.FirstPerson[8])
-
-
-				weaponSystem.animations.ThirdPerson[1] = Instance.new("Animation")
-				weaponSystem.animations.ThirdPerson[1].Parent = player.Character
-				weaponSystem.animations.ThirdPerson[1].Name = "ShootAnim"
-				weaponSystem.animations.ThirdPerson[1].AnimationId = weaponSystem.module.tpShootAnim
-				weaponSystem.animations.ThirdPerson[1] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[1])
-
-				weaponSystem.animations.ThirdPerson[2] = Instance.new("Animation")
-				weaponSystem.animations.ThirdPerson[2].Parent = player.Character
-				weaponSystem.animations.ThirdPerson[2].Name = "EquipAnim"
-				weaponSystem.animations.ThirdPerson[2].AnimationId = weaponSystem.module.tpEquipAnim
-				weaponSystem.animations.ThirdPerson[2] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[2])
-
-				weaponSystem.animations.ThirdPerson[3] = Instance.new("Animation")
-				weaponSystem.animations.ThirdPerson[3].Parent = player.Character
-				weaponSystem.animations.ThirdPerson[3].Name = "DeequipAnim"
-				weaponSystem.animations.ThirdPerson[3].AnimationId = weaponSystem.module.tpDeequipAnim
-				weaponSystem.animations.ThirdPerson[3] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[3])
-
-				weaponSystem.animations.ThirdPerson[4] = Instance.new("Animation")
-				weaponSystem.animations.ThirdPerson[4].Parent = player.Character
-				weaponSystem.animations.ThirdPerson[4].Name = "ReloadAnim"
-				weaponSystem.animations.ThirdPerson[4].AnimationId = weaponSystem.module.tpReloadAnim
-				weaponSystem.animations.ThirdPerson[4] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[4])
-
-				weaponSystem.animations.ThirdPerson[5] = Instance.new("Animation")
-				weaponSystem.animations.ThirdPerson[5].Parent = player.Character
-				weaponSystem.animations.ThirdPerson[5].Name = "EmptyReloadAnim"
-				weaponSystem.animations.ThirdPerson[5].AnimationId = weaponSystem.module.tpEmptyReloadAnim
-				weaponSystem.animations.ThirdPerson[5] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[5])
-
-				weaponSystem.animations.ThirdPerson[6] = Instance.new("Animation")
-				weaponSystem.animations.ThirdPerson[6].Parent = player.Character
-				weaponSystem.animations.ThirdPerson[6].Name = "InspectAnim"
-				weaponSystem.animations.ThirdPerson[6].AnimationId = weaponSystem.module.tpInspectAnim
-				weaponSystem.animations.ThirdPerson[6] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[6])
-
-				weaponSystem.animations.ThirdPerson[7] = Instance.new("Animation")
-				weaponSystem.animations.ThirdPerson[7].Parent = player.Character
-				weaponSystem.animations.ThirdPerson[7].Name = "IdleAnim"
-				weaponSystem.animations.ThirdPerson[7].AnimationId = weaponSystem.module.tpIdleAnim
-				weaponSystem.animations.ThirdPerson[7] = character.Humanoid.Animator:LoadAnimation(weaponSystem.animations.ThirdPerson[7])
-				weaponSystem.animations.ThirdPerson[7]:Play()
-
-				ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(Item)
-
-				if character then
-					if character.UpperTorso:FindFirstChildWhichIsA("Sound") then
-						weaponSystem.module.sounds[1] = character.UpperTorso:FindFirstChild("Equip")
-						weaponSystem.module.sounds[2] = character.UpperTorso:FindFirstChild("Shoot")
-						weaponSystem.module.sounds[3] = character.UpperTorso:FindFirstChild("Reload")
-						weaponSystem.module.sounds[4] = character.UpperTorso:FindFirstChild("EmptyReload")
-						weaponSystem.module.sounds[5] = character.UpperTorso:FindFirstChild("Inspect")
-						weaponSystem.module.sounds[6] = character.UpperTorso:FindFirstChild("Deequip")
-					end
-				end
-
-				for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
-					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
-						v.Transparency = 1
-					end
-				end
-
-				weaponSystem.animations.FirstPerson[2]:Play()
-				weaponSystem.animations.ThirdPerson[2]:Play()
-
-				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
-
-				task.wait(.1)
-
-				for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
-					if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
-						if not (v.Parent:IsA("Folder") 
-						or v.Name == "Main" 
-						or v.Name == "FakeCamera" 
-						or v.Name == "AimPart" 
-						or v.Name == "AimPart2" 
-						or v.Name == "HumanoidRootPart" 
-						or v.Name == "CasingEject" 
-						or v.Name == "Muzzle") then
-							v.Transparency = 0
-						end
-					end
-				end
-
-				PlayerWeaponSystemData:setState(weaponSystem.states[1])
-				aimHelper:Init(weaponSystem.module, weaponSystem.viewmodel)
-
-				ViewmodelRotation:Init(weaponSystem.module, weaponSystem.viewmodel)
+			for _, anim in ipairs(firstPersonAnims) do
+				local animation = Instance.new("Animation")
+				animation.Parent = weaponSystem.viewmodel
+				animation.Name = anim.name
+				animation.AnimationId = anim.id
+				weaponSystem.animations.FirstPerson[anim.index] = animator:LoadAnimation(animation)
 			end
+
+			for _, anim in ipairs(thirdPersonAnims) do
+				local animation = Instance.new("Animation")
+				animation.Parent = player.Character
+				animation.Name = anim.name
+				animation.AnimationId = anim.id
+				weaponSystem.animations.ThirdPerson[anim.index] = characterAnimator:LoadAnimation(animation)
+			end
+
+			weaponSystem.animations.ThirdPerson[7]:Play()
+			local sounds = RequestWeaponData:InvokeServer(Item).sounds
+
+			if character then
+				if character.UpperTorso:FindFirstChildWhichIsA("Sound") then
+					sounds[1] = character.UpperTorso:FindFirstChild("Equip")
+					sounds[2] = character.UpperTorso:FindFirstChild("Shoot")
+					sounds[3] = character.UpperTorso:FindFirstChild("Reload")
+					sounds[4] = character.UpperTorso:FindFirstChild("EmptyReload")
+					sounds[5] = character.UpperTorso:FindFirstChild("Inspect")
+					sounds[6] = character.UpperTorso:FindFirstChild("Deequip")
+				end
+			end
+
+			for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
+				if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
+					v.Transparency = 1
+				end
+			end
+
+			weaponSystem.animations.FirstPerson[2]:Play()
+			weaponSystem.animations.ThirdPerson[2]:Play()
+
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
+
+			task.wait(.1)
+
+			for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
+				if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
+					if not (v.Parent:IsA("Folder") 
+					or v.Name == "Main" 
+					or v.Name == "FakeCamera" 
+					or v.Name == "AimPart" 
+					or v.Name == "AimPart2" 
+					or v.Name == "HumanoidRootPart" 
+					or v.Name == "CasingEject" 
+					or v.Name == "Muzzle") then
+						v.Transparency = 0
+					end
+				end
+			end
+
+			PlayerWeaponSystemData:setState(weaponSystem.states[1])
+			aimHelper:Init(weaponData.aimData, weaponSystem.viewmodel)
+
+			ViewmodelRotation:Init(true, weaponSystem.viewmodel)
 		end
 	end
 end
@@ -455,7 +404,7 @@ end
 local hud = player.PlayerGui:WaitForChild("HUD")
 
 RunService.RenderStepped:Connect(function(dt)
-	if humanoid and weaponSystem.module and weaponSystem.viewmodel then
+	if humanoid and weaponSystem.viewmodel then
 
 		if hud then
 			if weaponSystem.viewmodel and weaponSystem.module and isEquipedWeapon then
@@ -477,46 +426,49 @@ RunService.RenderStepped:Connect(function(dt)
 		end
 			
 		-- print(weaponSystem.state) -- Debugging
+		print(weaponData) -- Debugging
 
-		local rot = camera.CFrame:ToObjectSpace(weaponSystem.module.lastCameraCF)
-		local X,Y,_ = rot:ToOrientation() 
-		weaponSystem.module.swayCF = weaponSystem.module.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponSystem.module.currentSwayAMT, math.sin(Y) * weaponSystem.module.currentSwayAMT, 0), 1-0.001^dt)
-		weaponSystem.module.lastCameraCF = camera.CFrame
+		if weaponSystem.viewmodel and weaponData then
+			local rot = camera.CFrame:ToObjectSpace(weaponData.aimData.lastCameraCF)
+			local X, Y, _ = rot:ToOrientation() 
+			weaponData.aimData.swayCF = weaponData.aimData.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponData.aimData.currentSwayAMT, math.sin(Y) * weaponData.aimData.currentSwayAMT, 0), 1 - 0.001 ^ dt)
+			weaponData.aimData.lastCameraCF = camera.CFrame
 
-		if weaponSystem.viewmodel ~= nil and weaponSystem.module ~= nil then
-			if humanoid.MoveDirection.Magnitude > 0 then
-				if humanoid.WalkSpeed == 16 then
-					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y/7, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1-0.001^dt)
-				elseif humanoid.WalkSpeed == 22 then
-					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y/3, -humanoid.CameraOffset.Z/3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * weaponSystem.module.sprintCF, 1-0.001^dt)
+			if weaponSystem.viewmodel then
+				if humanoid.MoveDirection.Magnitude > 0 then
+					if humanoid.WalkSpeed == 16 then
+						bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y / 7, -humanoid.CameraOffset.Z / 3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1 - 0.001 ^ dt)
+					elseif humanoid.WalkSpeed == 22 then
+						bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y / 3, -humanoid.CameraOffset.Z / 3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * (weaponData.aimData.sprintCF or CFrame.new()), 1 - 0.001 ^ dt)
+					end
+				else
+					bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y / 3, 0), 1 - 0.001 ^ dt)
 				end
-			else
-				bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y/3, 0), 1-0.001^dt)
 			end
-		end
 
-		local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
+			local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
 
-		for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
-			if v:IsA("Model") then
-				v:SetPrimaryPartCFrame(camera.CFrame * weaponSystem.module.swayCF * weaponSystem.module.aimCF * bobOffset * rotOffset)
-				updateCameraShake()
+			for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
+				if v:IsA("Model") then
+					v:SetPrimaryPartCFrame(camera.CFrame * weaponData.aimData.swayCF * weaponData.aimData.aimCF * bobOffset * rotOffset)
+					updateCameraShake()
 
-				if weaponSystem.module and weaponSystem.animations and weaponSystem.viewmodel then
-					if not weaponSystem.module.isMelee then
-						if not weaponSystem.animations.FirstPerson[1].IsPlaying and not weaponSystem.animations.FirstPerson[4].IsPlaying and not weaponSystem.animations.FirstPerson[2].IsPlaying and not weaponSystem.animations.FirstPerson[6].IsPlaying and not weaponSystem.animations.FirstPerson[5].IsPlaying and not weaponSystem.animations.FirstPerson[7].IsPlaying and not weaponSystem.animations.FirstPerson[3].IsPlaying then
-							if not weaponSystem.animations.FirstPerson[8].IsPlaying then
-								weaponSystem.animations.FirstPerson[8]:Play()
+					if weaponSystem.animations and weaponSystem.viewmodel then
+						if not weaponData.isMelee then
+							if not weaponSystem.animations.FirstPerson[1].IsPlaying and not weaponSystem.animations.FirstPerson[4].IsPlaying and not weaponSystem.animations.FirstPerson[2].IsPlaying and not weaponSystem.animations.FirstPerson[6].IsPlaying and not weaponSystem.animations.FirstPerson[5].IsPlaying and not weaponSystem.animations.FirstPerson[7].IsPlaying and not weaponSystem.animations.FirstPerson[3].IsPlaying then
+								if not weaponSystem.animations.FirstPerson[8].IsPlaying then
+									weaponSystem.animations.FirstPerson[8]:Play()
+								end
+							else
+								weaponSystem.animations.FirstPerson[8]:Stop()
 							end
-						else
-							weaponSystem.animations.FirstPerson[8]:Stop()
 						end
 					end
 				end
 			end
-		end
 
-		aimHelper:Aim(dt)
+			aimHelper:Aim(dt)
+		end
 	end
 end)
 

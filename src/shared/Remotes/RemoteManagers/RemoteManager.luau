@@ -55,19 +55,19 @@ remoteManager.PlayerSlotDataRemote.Parent = ReplicatedStorage.Shared.Remotes.Inv
 remoteManager.PlayerSlotDataRemote.Name = "PlayerSlotData"
 
 remoteManager.RequestGearRemote = Instance.new("RemoteFunction")
-remoteManager.RequestGearRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.RequestGearRemote.Parent = ReplicatedStorage.Shared.Remotes.Requests
 remoteManager.RequestGearRemote.Name = "RequestGear"
 
 remoteManager.RequestModuleRemote = Instance.new("RemoteFunction")
-remoteManager.RequestModuleRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.RequestModuleRemote.Parent = ReplicatedStorage.Shared.Remotes.Requests
 remoteManager.RequestModuleRemote.Name = "RequestModule"
 
-remoteManager.RequestDragAndDropSysRemote = Instance.new("RemoteEvent")
-remoteManager.RequestDragAndDropSysRemote.Parent = ReplicatedStorage.Shared.Remotes
-remoteManager.RequestDragAndDropSysRemote.Name = "RequestDADSYS"
-
 remoteManager.RequestWeaponCategoryRemote = Instance.new("RemoteFunction")
-remoteManager.RequestWeaponCategoryRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.RequestWeaponCategoryRemote.Parent = ReplicatedStorage.Shared.Remotes.Requests
 remoteManager.RequestWeaponCategoryRemote.Name = "RequestWeaponCategory"
+
+remoteManager.RequestWeaponDataRemote = Instance.new("RemoteFunction")
+remoteManager.RequestWeaponDataRemote.Parent = ReplicatedStorage.Shared.Remotes.Requests
+remoteManager.RequestWeaponDataRemote.Name = "RequestWeaponData"
 
 return remoteManager

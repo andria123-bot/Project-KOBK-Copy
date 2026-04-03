@@ -2,7 +2,7 @@ local viewmodelFinder = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local RequestWeaponCategory = ReplicatedStorage.Shared.Remotes.RequestWeaponCategory
+local RequestWeaponCategory = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponCategory")
 
 local viewmodelsFolder = game.ReplicatedStorage:WaitForChild("Viewmodels")
 

@@ -3,22 +3,24 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local data = {
 	name = "Khrissy10R",
 
-	fireAnim = 'rbxassetid://95024054063945';
-	emptyFireAnim = 'rbxassetid://102934817879819';
-	equipAnim = 'rbxassetid://75940248615882';
-	deequipAnim = 'rbxassetid://107938692974708';
-	reloadAnim = 'rbxassetid://98970778537699'; -- Aq davtove
-	emptyReloadAnim = 'rbxassetid://86389481538214';
-	inspectAnim = "rbxassetid://80262626757998";
-	idleAnim = "rbxassetid://90962731439428",
+	animations = {
+		fireAnim = 'rbxassetid://95024054063945';
+		emptyFireAnim = 'rbxassetid://102934817879819';
+		equipAnim = 'rbxassetid://75940248615882';
+		deequipAnim = 'rbxassetid://107938692974708';
+		reloadAnim = 'rbxassetid://98970778537699'; -- Aq davtove
+		emptyReloadAnim = 'rbxassetid://86389481538214';
+		inspectAnim = "rbxassetid://80262626757998";
+		idleAnim = "rbxassetid://90962731439428",
 
-	tpIdleAnim = "rbxassetid://131819337932852",
-	tpShootAnim = "rbxassetid://131819337932852",
-	tpReloadAnim = "rbxassetid://131819337932852",
-	tpInspectAnim = "rbxassetid://131819337932852",
-	tpEmptyReloadAnim = "rbxassetid://131819337932852",
-	tpEquipAnim = "rbxassetid://131819337932852",
-	tpDeequipAnim = "rbxassetid://131819337932852",
+		tpIdleAnim = "rbxassetid://131819337932852",
+		tpShootAnim = "rbxassetid://131819337932852",
+		tpReloadAnim = "rbxassetid://131819337932852",
+		tpInspectAnim = "rbxassetid://131819337932852",
+		tpEmptyReloadAnim = "rbxassetid://131819337932852",
+		tpEquipAnim = "rbxassetid://131819337932852",
+		tpDeequipAnim = "rbxassetid://131819337932852",
+	},
 
 	sounds = {
 		"rbxassetid://127619339252879"; -- equip/draw

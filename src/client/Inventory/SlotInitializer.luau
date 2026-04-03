@@ -8,14 +8,14 @@ local playerGui = player:WaitForChild("PlayerGui")
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
 local RowsParent = MainParent.InventoryParent.InventoryGui.InventoryItemsFrame.SingleRowParent
-local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
+local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
 
 local Toolbar = playerGui:WaitForChild("Toolbar")
 local MainFrame = Toolbar.MainFrame
 
 local TemplateInvRow = ReplicatedStorage.GUIS.TemplateInvRow
 
-local RequestGear = ReplicatedStorage.Shared.Remotes.RequestGear
+local RequestGear = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestGear")
 
 SlotInitializer.rowsParent = RowsParent
 

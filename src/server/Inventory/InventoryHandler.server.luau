@@ -4,7 +4,7 @@ local Players = game:GetService("Players")
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
-local RequestGear = ReplicatedStorage.Shared.Remotes.RequestGear
+local RequestGear = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestGear")
 local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 
 local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)

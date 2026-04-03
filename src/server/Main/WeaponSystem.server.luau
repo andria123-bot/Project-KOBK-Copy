@@ -1,8 +1,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local ServerScriptService = game:GetService("ServerScriptService")
+local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
+
 local remoteManagers = require(ReplicatedStorage.Shared.Remotes.RemoteManagers.RemoteManager)
 local FastCastReduxManager = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastReduxManager)
-local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
+local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
 FastCastReduxManager:changeParent()
 
 ReplicatedStorage.Localscripts.Animate.Parent = game.StarterPlayer.StarterCharacterScripts
@@ -33,13 +36,9 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 			joint.Part1 = gun.PrimaryPart
 		end
 		
-		local module
-
-		for i, v in pairs(ReplicatedStorage.Shared.Modules:GetDescendants()) do
-            if v:FindFirstChild(item) then
-                module = require(v:FindFirstChild(item))
-            end
-		end
+		print(55555555)
+		local module = require(LoadModule.GetModule(item))
+		print("Module for", item, "loaded:", module)
 
 		local function createSound(name, id, volume)
 			local sound = Instance.new("Sound")
