@@ -26,4 +26,4 @@ MoveItem event is client sided so it means hackers can bypass it and dupe items 
 modules are accessable by client, red flag                                      | Easy
 recoil happens on client, create seperated module for that                      | Medium
 loadslot shoul be based on weaponSlot not inventory                             | Hard
-loadslot can load any weapon by client at any time                              | Easy
+loadslot can load any weapon by cheater at any time                             | Easy

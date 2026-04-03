@@ -77,7 +77,6 @@ function loadSlot(Item)
 		weaponSystem.modifiers.IsReloading = false
 		weaponSystem.modifiers.IsShooting = false
 
-		print(Item)
 		weaponSystem.module = RequestModule:InvokeServer(Item)
 
 		if player.Character:FindFirstChild("IdleAnim") then 

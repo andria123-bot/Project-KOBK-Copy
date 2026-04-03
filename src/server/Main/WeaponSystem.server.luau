@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local remoteManagers = require(ReplicatedStorage.Shared.Remotes.RemoteManagers.RemoteManager)
 local FastCastReduxManager = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastReduxManager)
+local RequestModule = ReplicatedStorage.Shared.Remotes:WaitForChild("RequestModule")
 FastCastReduxManager:changeParent()
 
 ReplicatedStorage.Localscripts.Animate.Parent = game.StarterPlayer.StarterCharacterScripts
