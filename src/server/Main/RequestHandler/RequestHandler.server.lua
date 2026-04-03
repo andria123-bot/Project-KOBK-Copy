@@ -4,14 +4,14 @@ local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild
 local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 
 RequestWeaponData.OnServerInvoke = function(player, Item)
-    print(debug.traceback())
-    print("Request for", Item, "data received from", player.Name)
+    -- print(debug.traceback())
+    -- print("Request for", Item, "data received from", player.Name)
     local data = require(LoadModule.GetModule(Item))
-    print(data)
     
     return {
         animations = data.animations,
         sounds = data.sounds,
+        name = data.name,
         aimData = {
             lastCameraCF = data.lastCameraCF,
             currentSwayAMT = data.swayAMT,

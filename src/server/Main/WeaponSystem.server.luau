@@ -109,8 +109,15 @@ game.Players.PlayerAdded:Connect(function(player)
 	end)
 end)
 
-ReplicatedStorage.Shared.Remotes.Shoot.OnServerEvent:Connect(function(player, MuzzlePos, lookPos, damage, headshot, item, muzzleCF)
+ReplicatedStorage.Shared.Remotes.Shoot.OnServerEvent:Connect(function(player, MuzzlePos, lookPos, item, muzzleCF)
 	if player.Character then
+		local weaponModule = LoadModule.GetModule(item)
+		print("Retrieving weapon module for", item, ":", weaponModule)
+		if not weaponModule  then return end
+
+		local weaponData = require(weaponModule)
+		print("Weapon data for", item, "retrieved:", weaponData)
+
 		local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
 		if sound then
 			sound:Play()

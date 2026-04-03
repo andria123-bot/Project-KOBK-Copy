@@ -196,83 +196,37 @@ function loadSlot(Item)
 end
 
 function Shoot()
-	if weaponSystem.module and weaponSystem.viewmodel and character then
-		if weaponSystem.module.ammo > 0 then
-			if weaponSystem.module.fireMode == "Semi Auto" then
-				weaponSystem.animations.FirstPerson[2]:Stop()
-				weaponSystem.animations.FirstPerson[5]:Stop()
-				weaponSystem.animations.FirstPerson[6]:Stop()
-				weaponSystem.animations.FirstPerson[7]:Stop()
-				weaponSystem.animations.FirstPerson[8]:Stop()
+	if weaponSystem.viewmodel and character then
+		if weaponData.modifiers.fireMode == "Semi Auto" then
+			weaponSystem.animations.FirstPerson[2]:Stop()
+			weaponSystem.animations.FirstPerson[5]:Stop()
+			weaponSystem.animations.FirstPerson[6]:Stop()
+			weaponSystem.animations.FirstPerson[7]:Stop()
+			weaponSystem.animations.FirstPerson[8]:Stop()
 
-				weaponSystem.animations.ThirdPerson[2]:Stop()
-				weaponSystem.animations.ThirdPerson[4]:Stop()
-				weaponSystem.animations.ThirdPerson[5]:Stop()
-				weaponSystem.animations.ThirdPerson[6]:Stop()
+			weaponSystem.animations.ThirdPerson[2]:Stop()
+			weaponSystem.animations.ThirdPerson[4]:Stop()
+			weaponSystem.animations.ThirdPerson[5]:Stop()
+			weaponSystem.animations.ThirdPerson[6]:Stop()
 
-				if weaponSystem.module.ammo == 1 then
-					weaponSystem.animations.FirstPerson[1]:Stop()
-					weaponSystem.animations.FirstPerson[4]:Play()
-				else
-					weaponSystem.animations.FirstPerson[4]:Stop()
-					weaponSystem.animations.FirstPerson[1]:Play()
+			-- local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+			-- muzzleFlash.Parent = game.Workspace
+			-- muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
 
-					weaponSystem.animations.ThirdPerson[1]:Play()
-				end
+			-- for i, v in pairs(muzzleFlash:GetChildren()) do
+			-- 	if v:IsA("ParticleEmitter") then
+			-- 		v:Emit(1)
+			-- 	end
+			-- end
 
-				weaponSystem.module.ammo -= 1
+			ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
 
-				local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
-				muzzleFlash.Parent = game.Workspace
-				muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+		end
 
-				for i, v in pairs(muzzleFlash:GetChildren()) do
-					if v:IsA("ParticleEmitter") then
-						v:Emit(1)
-					end
-				end
-
-				game:GetService("Debris"):AddItem(muzzleFlash, 0.05)
-
-				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
-				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
-
-				if weaponSystem.module.ammo == 0 then
-					print("If")
-					task.wait(.5)
-					Reload()
-					repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
-					debounce = false
-
-				else
-					print("Else")
-					debounce = true
-					task.wait(weaponSystem.module.debounce)
-					debounce = false
-				end
-
-				-- if weaponSystem.module.ammo == 0 then
-				-- 	if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
-				-- 		task.wait(.5)
-				-- 		Reload()
-						
-				-- 		repeat task.wait() until weaponSystem.animations.FirstPerson[6].IsPlaying == false
-				-- 		debounce = false
-				-- 	end
-				-- else
-				-- 	print(debounce, weaponSystem.module.debounce)
-				-- 	debounce = true
-
-				-- 	task.wait(weaponSystem.module.debounce)
-
-				-- 	debounce = false
-				-- end
-			end
-
-			if weaponSystem.module.fireMode == "Full Auto" then
-				weaponSystem.modifiers.IsShooting = true
-				PlayerWeaponSystemData:setState(weaponSystem.states[2])
-			end
+		if weaponData.modifiers.fireMode == "Full Auto" then
+			weaponSystem.modifiers.IsShooting = true
+			PlayerWeaponSystemData:setState(weaponSystem.states[2])
 		end
 	end
 end
@@ -426,7 +380,7 @@ RunService.RenderStepped:Connect(function(dt)
 		end
 			
 		-- print(weaponSystem.state) -- Debugging
-		print(weaponData) -- Debugging
+		-- print(weaponData) -- Debugging
 
 		if weaponSystem.viewmodel and weaponData then
 			local rot = camera.CFrame:ToObjectSpace(weaponData.aimData.lastCameraCF)
@@ -562,7 +516,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		if character and weaponSystem.viewmodel and weaponSystem.module and weaponSystem.module.ammo ~= 0 and not debounce then
+		if character and weaponSystem.viewmodel and not debounce then
 			if weaponSystem.state ~= weaponSystem.states[6] then
 				Shoot()
 			end
@@ -642,7 +596,7 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 end)
 
 mouse.Button1Up:Connect(function()
-	if weaponSystem.module and weaponSystem.viewmodel then
+	if weaponSystem.viewmodel then
 		if weaponSystem.state ~= weaponSystem.states[6] then
 			weaponSystem.modifiers.IsShooting = false
 
@@ -656,9 +610,9 @@ mouse.Button1Up:Connect(function()
 end)
 
 while wait() do
-	if weaponSystem.module and weaponSystem.viewmodel then
+	if weaponData and weaponSystem.viewmodel then
 		if weaponSystem.state == weaponSystem.states[2] or weaponSystem.modifiers.IsShooting then
-			if weaponSystem.module and weaponSystem.module.ammo > 0 and weaponSystem.state ~= weaponSystem.states[7] then
+			if weaponSystem.state ~= weaponSystem.states[7] then
 				weaponSystem.animations.FirstPerson[2]:Stop()
 				weaponSystem.animations.FirstPerson[5]:Stop()
 				weaponSystem.animations.FirstPerson[6]:Stop()
@@ -670,56 +624,10 @@ while wait() do
 				weaponSystem.animations.ThirdPerson[5]:Stop()
 				weaponSystem.animations.ThirdPerson[6]:Stop()
 
-				if weaponSystem.module.ammo == 1 then
-					weaponSystem.animations.FirstPerson[4]:Play()
-					weaponSystem.animations.FirstPerson[1]:Stop()
-
-					weaponSystem.animations.ThirdPerson[1]:Stop()
-				else
-					weaponSystem.animations.FirstPerson[4]:Stop()
-					weaponSystem.animations.ThirdPerson[1]:Play()
-
-					weaponSystem.animations.FirstPerson[1]:Play()
-				end
-
-				weaponSystem.module.ammo -= 1
-
-				local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
-				muzzleFlash.Parent = game.Workspace
-				muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
-
-				for i, v in pairs(muzzleFlash:GetChildren()) do
-					if v:IsA("ParticleEmitter") then
-						v:Emit(1)
-					end
-				end -- kutu gio
-				
-				game:GetService("Debris"):AddItem(muzzleFlash, 0.05)
-
-				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.module.damage, weaponSystem.module.headshot, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
+				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
 				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
 
-				if SpringModule then
-					local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
-					recoilSpring:Impulse(hugeRecoil * 2000000)
-
-					local modX, modY, modZ = weaponSystem.module.x, weaponSystem.module.y, weaponSystem.module.z
-
-					local rx = (math.random() * modX * 0.8) + (math.random() < 0.2 and -modX * 0.2 or 0) 
-					local ry = (math.random() - 0.5) * 2 * modY  -- [-modY, modY]
-					local rz = (math.random() - 0.5) * 2 * modZ  -- [-modZ, modZ]
-
-					camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(rx), math.rad(ry), math.rad(rz))
-				end
-
-				if weaponSystem.module.ammo == 0 then
-					if weaponSystem.state == weaponSystem.states[1] or weaponSystem.state == weaponSystem.states[4] and weaponSystem.module.ammo < weaponSystem.module.maxAmmo then 
-						task.wait(.5)
-						Reload()
-					end
-				end
-
-				wait(weaponSystem.module.fireRate)
+				wait(.1)
 			end
 		end
 	end
