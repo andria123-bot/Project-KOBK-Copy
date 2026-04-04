@@ -15,6 +15,7 @@ local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
+local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 
@@ -348,55 +349,23 @@ function melee(isLightStab)
 end
 
 function Reload()
-	if weaponSystem.module and weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.IsShooting then 
-		if weaponSystem[1].modifiers.IsReloading then return end
-
-		if weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
-			weaponSystem[1].modifiers.IsReloading = true
-			-- PlayerWeaponSystemData:setState(weaponSystem[1].states[3])
-			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[3])
-
-			weaponSystem[1].modifiers.IsInspecting = false
-			-- camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
-
-			weaponSystem[1].animations.FirstPerson[2]:Stop()
-			weaponSystem[1].animations.FirstPerson[5]:Stop()
-			weaponSystem[1].animations.ThirdPerson[4]:Stop()
-			weaponSystem[1].animations.FirstPerson[6]:Stop()
-			weaponSystem[1].animations.FirstPerson[7]:Stop()
-			weaponSystem[1].animations.ThirdPerson[7]:Stop()
-			weaponSystem[1].animations.FirstPerson[8]:Stop()
-
-			if weaponSystem.module.ammo > 0 then
-				weaponSystem[1].animations.FirstPerson[5]:Play()
-				weaponSystem[1].animations.ThirdPerson[4]:Play()
-				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Reload"))
-			else
-				weaponSystem[1].animations.FirstPerson[6]:Play()
-				weaponSystem[1].animations.ThirdPerson[5]:Play()
-				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("EmptyReload"))
-			end
-
-			local i = 0
-
-			while i < weaponSystem.module.reloadTime do
-				if weaponSystem[1].modifiers.IsShooting then
-					weaponSystem[1].modifiers.IsReloading = false
-					-- PlayerWeaponSystemData:setState(weaponSystem[1].states[2])
-					UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[2])
-					return
-				end
-
-				task.wait(0.05)
-				i = i + 0.05
-			end
-			
-			weaponSystem.module.ammo = weaponSystem.module.maxAmmo
-			weaponSystem[1].modifiers.IsReloading = false
-			-- PlayerWeaponSystemData:setState(weaponSystem.states[1])
-			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
-		end
-	end
+    if weaponSystem[1].isReloading then return end
+    
+    local gun = weaponSystem[1].inventory[weaponSystem[1].currentSlot]
+    
+    weaponSystem[1].isReloading = true
+    weaponSystem[1].animations.FirstPerson[5]:Play()
+    repeat task.wait() until weaponSystem[1].animations.FirstPerson[5].IsPlaying == false
+    
+    local success, data = RequestReload:InvokeServer(gun)
+    if success then
+        updateHUD(true, {
+            ammoLeft = data.ammoLeft,
+            maxAmmo = data.maxAmmo
+        })
+    end
+    
+    weaponSystem[1].isReloading = false
 end
 
 local oldCamCF = CFrame.new()
@@ -406,7 +375,6 @@ function updateCameraShake()
 	camera.CFrame = camera.CFrame * newCamCF:ToObjectSpace(oldCamCF)
 	oldCamCF = newCamCF
 end
-
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem[1].viewmodel then
@@ -437,7 +405,7 @@ RunService.RenderStepped:Connect(function(dt)
 					updateCameraShake()
 
 					if weaponSystem[1].animations and weaponSystem[1].viewmodel then
-						if not weaponData.isMelee then
+						if not weaponSystem[1].modifiers.isMelee then
 							if not weaponSystem[1].animations.FirstPerson[1].IsPlaying and not weaponSystem[1].animations.FirstPerson[4].IsPlaying and not weaponSystem[1].animations.FirstPerson[2].IsPlaying and not weaponSystem[1].animations.FirstPerson[6].IsPlaying and not weaponSystem[1].animations.FirstPerson[5].IsPlaying and not weaponSystem[1].animations.FirstPerson[7].IsPlaying and not weaponSystem[1].animations.FirstPerson[3].IsPlaying then
 								if not weaponSystem[1].animations.FirstPerson[8].IsPlaying then
 									weaponSystem[1].animations.FirstPerson[8]:Play()
@@ -551,7 +519,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 			end
 		end
 
-		if weaponSystem.module and weaponSystem[1].viewmodel and weaponSystem.module.isMelee and not weaponSystem.module.isGrenade then
+		if weaponSystem.module and weaponSystem[1].viewmodel and weaponSystem[1].modifiers.isMelee and not weaponSystem[1].modifiers.isGrenade then
 			melee(true)
 		end
 	end
@@ -568,14 +536,16 @@ UIS.InputBegan:Connect(function(input, gpe)
 			end
 		end	
 
-		if weaponSystem.module and weaponSystem[1].viewmodel and weaponSystem.module.isMelee and not weaponSystem.module.isGrenade then
+		if weaponSystem.module and weaponSystem[1].viewmodel and weaponSystem[1].modifiers.isMelee and not weaponSystem[1].modifiers.isMelee then
 			melee(false)
 		end
 	end
 
 	if input.KeyCode == Enum.KeyCode.R then
-		if weaponSystem.module and weaponSystem[1].viewmodel and not weaponSystem.module.isMelee and not weaponSystem.module.isGrenade then
-			Reload()
+		if weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.isMelee and not weaponSystem[1].modifiers.isGrenade then
+			if not weaponSystem[1].modifiers.isReloading then
+				Reload()
+			end
 		end
 	end
 

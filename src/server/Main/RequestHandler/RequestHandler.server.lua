@@ -105,8 +105,22 @@ RequestShoot.OnServerInvoke = function(player, item)
 	return false
 end
 
-RequestReload.OnServerInvoke = function(player)
-
+RequestReload.OnServerInvoke = function(player, gun)
+    if not playerAmmo[player] or not playerAmmo[player][gun] then
+        return false
+    end
+    
+    local maxAmmo = playerAmmo[player][gun .. "_max"]
+    if not maxAmmo then
+        return false
+    end
+    
+    playerAmmo[player][gun] = maxAmmo
+    
+    return true, {
+        ammoLeft = playerAmmo[player][gun],
+        maxAmmo = maxAmmo
+    }
 end
 
 game.Players.PlayerRemoving:Connect(function(player)
