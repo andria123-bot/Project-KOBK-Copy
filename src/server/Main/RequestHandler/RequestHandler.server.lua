@@ -2,14 +2,19 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
+local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
 
 local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 local playerWeaponSystemData = require(script.Parent.Parent.PlayerWeaponSystemData)
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 
-RequestWeaponData.OnServerInvoke = function(player, Item)
+local SpringModule = require(script.Parent.Parent.Parent.Spring)
+
+local recoilSpring = SpringModule.new(Vector3.new(0,0,0), 0.5, 50)
+recoilSpring.Damping = 5
+
+RequestWeaponData.OnServerInvoke = function(player, Item) -- returnes weapon module's specifications data
     -- print(debug.traceback())
-    -- print("Request for", Item, "data received from", player.Name)
     local data = require(LoadModule.GetModule(Item))
     
     return {
@@ -29,11 +34,43 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
         },
 
         modifiers = {
-            canSemi = data.canSemi,
             canFullAuto = data.canFullAuto,
+            isShooting = data.isShooting,
             fireMode = data.fireMode,
+            debounce = data.debounce,
+            canSemi = data.canSemi,
         }
     }
+end
+
+RequestShoot.OnServerInvoke = function(player, item)
+	if player.Character then
+		local weaponModule = LoadModule.GetModule(item)
+		if not weaponModule  then return end
+
+		local weaponData = require(weaponModule)
+        local ammo = weaponData.ammo
+        local maxAmmo = weaponData.maxAmmo
+        local fireRate = weaponData.fireRate
+        local debounce = weaponData.debounce
+
+        local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
+
+        local rx = (math.rad((math.random() * modX * 0.8) + (math.random() < 0.2 and -modX * 0.2 or 0))) 
+        local ry = (math.rad((math.random() - 0.5) * 2 * modY))  -- [-modY, modY]
+        local rz = (math.rad((math.random() - 0.5) * 2 * modZ))  -- [-modZ, modZ]
+
+
+		local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
+		if sound then
+			sound:Play()
+		end
+
+        return true, {x = rx, y = ry, z = rz}, {
+            debounce = debounce,
+            fireRate = fireRate,
+        }
+	end
 end
 
 UpdateWeaponStateRemote.OnServerEvent:Connect(function(player, newState)
@@ -41,10 +78,15 @@ UpdateWeaponStateRemote.OnServerEvent:Connect(function(player, newState)
 end)
 
 RequestWeaponSystemData.OnServerInvoke = function(player)
-    print("Request for weapon system data received from", player.Name)
-    print(playerWeaponSystemData)
-    
     return {
         playerWeaponSystemData.weaponSystem
     }
 end
+
+--[[    modifiers = playerWeaponSystemData.weaponSystem.modifiers,
+        state = playerWeaponSystemData.weaponSystem.state,
+        states = playerWeaponSystemData.weaponSystem.states,
+        animations = playerWeaponSystemData.weaponSystem.animations,
+        sounds = playerWeaponSystemData.weaponSystem.sounds,
+        viewmodel = playerWeaponSystemData.weaponSystem.viewmodel,
+]]

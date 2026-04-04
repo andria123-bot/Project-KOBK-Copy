@@ -53,7 +53,6 @@ function defaultInventory.mergeInventory(playerData, savedInventory)
 
     local inventory = playerData.weaponSystem.inventory
     if savedInventory then -- Has saved data, use it
-        print(savedInventory)
         for i = 1, #savedInventory do
             inventory[i] = savedInventory[i] or ""
         end

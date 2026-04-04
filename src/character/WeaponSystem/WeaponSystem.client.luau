@@ -14,16 +14,11 @@ local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("Re
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
+local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 
 local weaponSystem = RequestWeaponSystemData:InvokeServer()
-print(weaponSystem)
-
-local SpringModule = require(ReplicatedStorage.Shared.Modules.Spring)
-
-local recoilSpring = SpringModule.new(Vector3.new(0,0,0), 0.5, 50)
-recoilSpring.Damping = 5
 
 local weaponData
 
@@ -96,7 +91,6 @@ function loadSlot(Item)
 			end
 		end
 
-		print(weaponSystem[1].viewmodel, weaponSystem[1].module)
 		weaponSystem[1].viewmodel = LoadViewmodel.GetViewmodel(Item):Clone()
 		weaponSystem[1].viewmodel.Parent = camera
 
@@ -192,6 +186,7 @@ function loadSlot(Item)
 			aimHelper:Init(weaponData.aimData, weaponSystem[1].viewmodel)
 
 			ViewmodelRotation:Init(true, weaponSystem[1].viewmodel)
+			-- print(weaponData)
 		end
 	end
 end
@@ -199,35 +194,44 @@ end
 function Shoot()
 	if weaponSystem[1].viewmodel and character then
 		if weaponData.modifiers.fireMode == "Semi Auto" then
-			weaponSystem[1].animations.FirstPerson[2]:Stop()
-			weaponSystem[1].animations.FirstPerson[5]:Stop()
-			weaponSystem[1].animations.FirstPerson[6]:Stop()
-			weaponSystem[1].animations.FirstPerson[7]:Stop()
-			weaponSystem[1].animations.FirstPerson[8]:Stop()
+			local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem[1].inventory[weaponSystem[1].currentSlot])
+			if success then
+				weaponSystem[1].animations.FirstPerson[2]:Stop()
+				weaponSystem[1].animations.FirstPerson[5]:Stop()
+				weaponSystem[1].animations.FirstPerson[6]:Stop()
+				weaponSystem[1].animations.FirstPerson[7]:Stop()
+				weaponSystem[1].animations.FirstPerson[8]:Stop()
 
-			weaponSystem[1].animations.ThirdPerson[2]:Stop()
-			weaponSystem[1].animations.ThirdPerson[4]:Stop()
-			weaponSystem[1].animations.ThirdPerson[5]:Stop()
-			weaponSystem[1].animations.ThirdPerson[6]:Stop()
+				weaponSystem[1].animations.ThirdPerson[2]:Stop()
+				weaponSystem[1].animations.ThirdPerson[4]:Stop()
+				weaponSystem[1].animations.ThirdPerson[5]:Stop()
+				weaponSystem[1].animations.ThirdPerson[6]:Stop()
 
-			local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
-			muzzleFlash.Parent = game.Workspace
-			muzzleFlash.CFrame = weaponSystem[1].viewmodel.Muzzle.CFrame
+				local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+				muzzleFlash.Parent = game.Workspace
+				muzzleFlash.CFrame = weaponSystem[1].viewmodel.Muzzle.CFrame
 
-			for i, v in pairs(muzzleFlash:GetChildren()) do
-				if v:IsA("ParticleEmitter") then
-					v:Emit(1)
+				for i, v in pairs(muzzleFlash:GetChildren()) do
+					if v:IsA("ParticleEmitter") then
+						v:Emit(1)
+					end
 				end
+
+				game:GetService("Debris"):AddItem(muzzleFlash, .07)
+
+				-- ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
+
+				camera.CFrame = camera.CFrame * CFrame.Angles(recoilData.x, recoilData.y, recoilData.z)
+
+				debounce = true
+				task.wait(data.debounce)
+				debounce = false
 			end
-
-			ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem[1].viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem[1].inventory[weaponSystem[1].currentSlot], weaponSystem[1].viewmodel:FindFirstChild("Muzzle").CFrame)
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
-
 		end
 
 		if weaponData.modifiers.fireMode == "Full Auto" then
+			print("Full Auto Fire")
 			weaponSystem[1].modifiers.IsShooting = true
-			-- PlayerWeaponSystemData:setState(weaponSystem[1].states[2])
 			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[2])
 		end
 	end
@@ -432,7 +436,6 @@ end)
 
 UIS.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
-	print(weaponSystem[1].state)
 
 	if (weaponSystem[1].state == weaponSystem[1].states[1] 
 	or weaponSystem[1].state == weaponSystem[1].states[3] 
@@ -520,8 +523,13 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		print(1)
+		print(debounce)
+		print(weaponSystem[1].state)
+		print(weaponSystem[1].states[6])
 		if character and weaponSystem[1].viewmodel and not debounce then
-			if weaponSystem[1].state ~= weaponSystem[1].states[6] then
+			if weaponSystem[1].state ~= weaponSystem[1].states[6]  then
+				print(debug.traceback())
 				Shoot()
 			end
 		end
@@ -537,7 +545,6 @@ UIS.InputBegan:Connect(function(input, gpe)
 				if not weaponSystem[1].module.isGrenade and not weaponSystem[1].module.isMelee then
 					if not weaponSystem[1].modifiers.IsReloading then
 						weaponSystem[1].modifiers.IsAiming = true
-						-- PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
 						UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[5])
 					end
 				end
@@ -573,7 +580,6 @@ UIS.InputEnded:Connect(function(input)
 		if weaponSystem[1].state ~= weaponSystem[1].states[6] then
 			if weaponSystem.module and weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.IsReloading then
 				weaponSystem[1].modifiers.IsAiming = false
-				-- PlayerWeaponSystemData:setState(weaponSystem.states[1])
 				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			end	
 		end
@@ -607,10 +613,8 @@ mouse.Button1Up:Connect(function()
 			weaponSystem[1].modifiers.IsShooting = false
 
 			if weaponSystem[1].modifiers.IsAiming then
-				-- PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
 				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[5])
 			else
-				-- PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[1])
 				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			end
 		end
@@ -618,24 +622,37 @@ mouse.Button1Up:Connect(function()
 end)
 
 while wait() do
-	if weaponData and weaponSystem[1].viewmodel then
+	if weaponData and weaponSystem[1].viewmodel and weaponData.modifiers.fireMode == "Full Auto" then
 		if weaponSystem[1].state == weaponSystem[1].states[2] or weaponSystem[1].modifiers.IsShooting then
 			if weaponSystem[1].state ~= weaponSystem[1].states[7] then
-				weaponSystem[1].animations.FirstPerson[2]:Stop()
-				weaponSystem[1].animations.FirstPerson[5]:Stop()
-				weaponSystem[1].animations.FirstPerson[6]:Stop()
-				weaponSystem[1].animations.FirstPerson[7]:Stop()
-				weaponSystem[1].animations.FirstPerson[8]:Stop()
+				local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem[1].inventory[weaponSystem[1].currentSlot])
+				if success then
+					weaponSystem[1].animations.FirstPerson[2]:Stop()
+					weaponSystem[1].animations.FirstPerson[5]:Stop()
+					weaponSystem[1].animations.FirstPerson[6]:Stop()
+					weaponSystem[1].animations.FirstPerson[7]:Stop()
+					weaponSystem[1].animations.FirstPerson[8]:Stop()
 
-				weaponSystem[1].animations.ThirdPerson[2]:Stop()
-				weaponSystem[1].animations.ThirdPerson[4]:Stop()
-				weaponSystem[1].animations.ThirdPerson[5]:Stop()
-				weaponSystem[1].animations.ThirdPerson[6]:Stop()
+					weaponSystem[1].animations.ThirdPerson[2]:Stop()
+					weaponSystem[1].animations.ThirdPerson[4]:Stop()
+					weaponSystem[1].animations.ThirdPerson[5]:Stop()
+					weaponSystem[1].animations.ThirdPerson[6]:Stop()
 
-				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem[1].viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem[1].inventory[weaponSystem[1].currentSlot], weaponSystem[1].viewmodel:FindFirstChild("Muzzle").CFrame)
-				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
+					local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+					muzzleFlash.Parent = game.Workspace
+					muzzleFlash.CFrame = weaponSystem[1].viewmodel.Muzzle.CFrame
 
-				wait(.1)
+					for i, v in pairs(muzzleFlash:GetChildren()) do
+						if v:IsA("ParticleEmitter") then
+							v:Emit(1)
+						end
+					end
+					game:GetService("Debris"):AddItem(muzzleFlash, .07)
+
+					camera.CFrame = camera.CFrame * CFrame.Angles(recoilData.x, recoilData.y, recoilData.z)
+					print(data.fireRate)
+					task.wait(data.fireRate)
+				end
 			end
 		end
 	end
