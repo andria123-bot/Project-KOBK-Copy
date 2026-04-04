@@ -6,6 +6,7 @@ AimHelper.viewmodel = nil
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
+local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 local PlayerWeaponSystemData = RequestWeaponSystemData:InvokeServer()
 
 local currentAimPart = 1

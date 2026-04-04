@@ -74,4 +74,8 @@ remoteManager.RequestWeaponSystemDataRemote = Instance.new("RemoteFunction")
 remoteManager.RequestWeaponSystemDataRemote.Parent = ReplicatedStorage.Shared.Remotes.Requests
 remoteManager.RequestWeaponSystemDataRemote.Name = "RequestWeaponSystemData"
 
+remoteManager.UpdateWeaponStateRemote = Instance.new("RemoteEvent")
+remoteManager.UpdateWeaponStateRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.UpdateWeaponStateRemote.Name = "UpdateWeaponState"
+
 return remoteManager

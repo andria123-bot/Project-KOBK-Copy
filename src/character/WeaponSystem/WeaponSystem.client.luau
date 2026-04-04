@@ -13,6 +13,7 @@ local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForCh
 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
+local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 
@@ -64,17 +65,18 @@ function stopAllAnims()
 end
 
 function loadSlot(Item)
+	print(weaponSystem)
 	weaponSystem.loadSlot = loadSlot
-	if weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[1] 
-	or weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[3] 
-	or weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[4] then
-		print(weaponSystem)
-		weaponSystem:setState(weaponSystem.weaponSystem.states[7])
-
-		weaponSystem.modifiers.IsAiming = false
-		weaponSystem.modifiers.IsInspecting = false
-		weaponSystem.modifiers.IsReloading = false
-		weaponSystem.modifiers.IsShooting = false
+	if weaponSystem[1].state == weaponSystem[1].states[1] 
+	or weaponSystem[1].state == weaponSystem[1].states[3] 
+	or weaponSystem[1].state == weaponSystem[1].states[4] then
+		-- weaponSystem:setState(weaponSystem[1].states[7])
+		UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[7])
+		UpdateWeaponStateRemote:FireServer(weaponSystem[1].state)
+		weaponSystem[1].IsAiming = false
+		weaponSystem[1].IsInspecting = false
+		weaponSystem[1].IsReloading = false
+		weaponSystem[1].IsShooting = false
 
 		if player.Character:FindFirstChild("IdleAnim") then 
 			weaponSystem.animations.ThirdPerson[7]:Destroy()
@@ -132,7 +134,7 @@ function loadSlot(Item)
 				animation.Parent = weaponSystem.viewmodel
 				animation.Name = anim.name
 				animation.AnimationId = anim.id
-				weaponSystem.animations.FirstPerson[anim.index] = animator:LoadAnimation(animation)
+				weaponSystem[1].animations.FirstPerson[anim.index] = animator:LoadAnimation(animation)
 			end
 
 			for _, anim in ipairs(thirdPersonAnims) do
@@ -140,10 +142,10 @@ function loadSlot(Item)
 				animation.Parent = player.Character
 				animation.Name = anim.name
 				animation.AnimationId = anim.id
-				weaponSystem.animations.ThirdPerson[anim.index] = characterAnimator:LoadAnimation(animation)
+				weaponSystem[1].animations.ThirdPerson[anim.index] = characterAnimator:LoadAnimation(animation)
 			end
 
-			weaponSystem.animations.ThirdPerson[7]:Play()
+			weaponSystem[1].animations.ThirdPerson[7]:Play()
 			local sounds = RequestWeaponData:InvokeServer(Item).sounds
 
 			if character then
@@ -163,8 +165,8 @@ function loadSlot(Item)
 				end
 			end
 
-			weaponSystem.animations.FirstPerson[2]:Play()
-			weaponSystem.animations.ThirdPerson[2]:Play()
+			weaponSystem[1].animations.FirstPerson[2]:Play()
+			weaponSystem[1].animations.ThirdPerson[2]:Play()
 
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
 
@@ -185,7 +187,8 @@ function loadSlot(Item)
 				end
 			end
 
-			PlayerWeaponSystemData:setState(weaponSystem.states[1])
+			-- PlayerWeaponSystemData:setState(weaponSystem.states[1])
+			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			aimHelper:Init(weaponData.aimData, weaponSystem.viewmodel)
 
 			ViewmodelRotation:Init(true, weaponSystem.viewmodel)
@@ -207,15 +210,15 @@ function Shoot()
 			weaponSystem.animations.ThirdPerson[5]:Stop()
 			weaponSystem.animations.ThirdPerson[6]:Stop()
 
-			-- local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
-			-- muzzleFlash.Parent = game.Workspace
-			-- muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+			local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+			muzzleFlash.Parent = game.Workspace
+			muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
 
-			-- for i, v in pairs(muzzleFlash:GetChildren()) do
-			-- 	if v:IsA("ParticleEmitter") then
-			-- 		v:Emit(1)
-			-- 	end
-			-- end
+			for i, v in pairs(muzzleFlash:GetChildren()) do
+				if v:IsA("ParticleEmitter") then
+					v:Emit(1)
+				end
+			end
 
 			ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
@@ -223,17 +226,18 @@ function Shoot()
 		end
 
 		if weaponData.modifiers.fireMode == "Full Auto" then
-			weaponSystem.modifiers.IsShooting = true
-			PlayerWeaponSystemData:setState(weaponSystem.states[2])
+			weaponSystem[1].modifiers.IsShooting = true
+			-- PlayerWeaponSystemData:setState(weaponSystem[1].states[2])
+			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[2])
 		end
 	end
 end
 
 function Inspect()
-	if weaponSystem.animations and weaponSystem.viewmodel and weaponSystem.module and not weaponSystem.modifiers.IsReloading then
-		PlayerWeaponSystemData:setState(weaponSystem.states[4])
-		weaponSystem.modifiers.IsInspecting = true
-		if weaponSystem.state == weaponSystem.states[4] and weaponSystem.modifiers.IsInspecting then 
+	if weaponSystem.animations and weaponSystem.viewmodel and weaponSystem.module and not weaponSystem[1].modifiers.IsReloading then
+		-- PlayerWeaponSystemData:setState(weaponSystem.states[4])
+		weaponSystem[1].modifiers.IsInspecting = true
+		if weaponSystem[1].state == weaponSystem[1].states[4] and weaponSystem[1].modifiers.IsInspecting then 
 			weaponSystem.animations.FirstPerson[8]:Stop()
 			weaponSystem.animations.FirstPerson[7]:Play()
 
@@ -253,9 +257,10 @@ function Inspect()
 			dof.InFocusRadius = 30
 			dof.NearIntensity = .75
 
-			if weaponSystem.state == weaponSystem.states[4] then
-				weaponSystem.modifiers.IsInspecting = false
-				PlayerWeaponSystemData:setState(weaponSystem.states[1])
+			if weaponSystem[1].state == weaponSystem[1].states[4] then
+				weaponSystem[1].modifiers.IsInspecting = false
+				-- PlayerWeaponSystemData:setState(weaponSystem[1].states[1])
+				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			end
 		end
 	end	
@@ -297,14 +302,15 @@ function melee(isLightStab)
 end
 
 function Reload()
-	if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsShooting then 
-		if weaponSystem.modifiers.IsReloading then return end
+	if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem[1].modifiers.IsShooting then 
+		if weaponSystem[1].modifiers.IsReloading then return end
 
 		if weaponSystem.module.ammo < weaponSystem.module.maxAmmo then
-			weaponSystem.modifiers.IsReloading = true
-			PlayerWeaponSystemData:setState(weaponSystem.states[3])
+			weaponSystem[1].modifiers.IsReloading = true
+			-- PlayerWeaponSystemData:setState(weaponSystem[1].states[3])
+			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[3])
 
-			weaponSystem.modifiers.IsInspecting = false
+			weaponSystem[1].modifiers.IsInspecting = false
 			-- camera.FieldOfView = camera.FieldOfView + (defaultFOV - camera.FieldOfView) * 0.1
 
 			weaponSystem.animations.FirstPerson[2]:Stop()
@@ -328,9 +334,10 @@ function Reload()
 			local i = 0
 
 			while i < weaponSystem.module.reloadTime do
-				if weaponSystem.modifiers.IsShooting then
-					weaponSystem.modifiers.IsReloading = false
-					PlayerWeaponSystemData:setState(weaponSystem.states[2])
+				if weaponSystem[1].modifiers.IsShooting then
+					weaponSystem[1].modifiers.IsReloading = false
+					-- PlayerWeaponSystemData:setState(weaponSystem[1].states[2])
+					UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[2])
 					return
 				end
 
@@ -339,8 +346,9 @@ function Reload()
 			end
 			
 			weaponSystem.module.ammo = weaponSystem.module.maxAmmo
-			weaponSystem.modifiers.IsReloading = false
-			PlayerWeaponSystemData:setState(weaponSystem.states[1])
+			weaponSystem[1].modifiers.IsReloading = false
+			-- PlayerWeaponSystemData:setState(weaponSystem.states[1])
+			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 		end
 	end
 end
@@ -419,22 +427,22 @@ RunService.RenderStepped:Connect(function(dt)
 				end
 			end
 
-			aimHelper:Aim(dt)
+			-- aimHelper:Aim(dt)
 		end
 	end
 end)
 
 UIS.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
-	print(weaponSystem)
-	print(weaponSystem.weaponSystem)
+	print(weaponSystem[1].state)
+	print(weaponSystem.state)
 
-	if (weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[1] 
-	or weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[3] 
-	or weaponSystem.weaponSystem.state == weaponSystem.weaponSystem.states[4]) 
-	and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[8] then
+	if (weaponSystem[1].state == weaponSystem[1].states[1] 
+	or weaponSystem[1].state == weaponSystem[1].states[3] 
+	or weaponSystem[1].state == weaponSystem[1].states[4]) 
+	and weaponSystem[1].state ~= weaponSystem[1].states[8] then
 		if input.KeyCode == Enum.KeyCode.One then
-			if weaponSystem.currentSlot ~= 1 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 1 and weaponSystem[1].state ~= weaponSystem[1].states[3] then
 				if weaponSystem.inventory[1] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[1])
 					weaponSystem.currentSlot = 1
@@ -444,7 +452,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Two then
-			if weaponSystem.currentSlot ~= 2 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 2 and weaponSystem[1].state ~= weaponSystem[1].states[3] then
 				if weaponSystem.inventory[2] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[2])
 					print(weaponSystem.inventory)
@@ -455,7 +463,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Three then
-			if weaponSystem.currentSlot ~= 3 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 3 and weaponSystem[1].state ~= weaponSystem[1].states[3] then
 				if weaponSystem.inventory[3] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[3])
 					weaponSystem.currentSlot = 3
@@ -465,7 +473,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Four then
-			if weaponSystem.currentSlot ~= 4 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 4 and weaponSystem[1].state ~= weaponSystem[1].states[3] then
 				if weaponSystem.inventory[4] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[4])
 					weaponSystem.currentSlot = 4
@@ -475,7 +483,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Five then
-			if weaponSystem.currentSlot ~= 5 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 5 and weaponSystem[1].state ~= weaponSystem[1].states[3] then
 				if weaponSystem.inventory[5] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[5])
 					weaponSystem.currentSlot = 5
@@ -485,7 +493,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Six then
-			if weaponSystem.currentSlot ~= 6 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 6 and weaponSystem[1].state ~= weaponSystem[1].states[3] then
 				if weaponSystem.inventory[6] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[6])
 					weaponSystem.currentSlot = 6
@@ -494,7 +502,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 			end
 		end
 
-		if input.KeyCode == Enum.KeyCode.Seven and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
+		if input.KeyCode == Enum.KeyCode.Seven and weaponSystem[1].state ~= weaponSystem[1].states[3] then
 			if weaponSystem.currentSlot ~= 7 then
 				if weaponSystem.inventory[7] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[7])
@@ -505,7 +513,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 		end
 
 		if input.KeyCode == Enum.KeyCode.Eight then
-			if weaponSystem.currentSlot ~= 8 and weaponSystem.weaponSystem.state ~= weaponSystem.weaponSystem.states[3] then
+			if weaponSystem.currentSlot ~= 8 and weaponSystem[1].state ~= weaponSystem[1].states[3] then
 				if weaponSystem.inventory[8] ~= "Empty" then
 					loadSlot(weaponSystem.inventory[8])
 					weaponSystem.currentSlot = 8
@@ -517,7 +525,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		if character and weaponSystem.viewmodel and not debounce then
-			if weaponSystem.state ~= weaponSystem.states[6] then
+			if weaponSystem[1].state ~= weaponSystem[1].states[6] then
 				Shoot()
 			end
 		end
@@ -529,11 +537,12 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		if weaponSystem.module and weaponSystem.viewmodel then
-			if weaponSystem.state ~= weaponSystem.states[6] then
+			if weaponSystem[1].state ~= weaponSystem[1].states[6] then
 				if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
-					if not weaponSystem.modifiers.IsReloading then
-						weaponSystem.modifiers.IsAiming = true
-						PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+					if not weaponSystem[1].modifiers.IsReloading then
+						weaponSystem[1].modifiers.IsAiming = true
+						-- PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+						UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[5])
 					end
 				end
 			end
@@ -565,10 +574,11 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.state ~= weaponSystem.states[6] then
-			if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
-				weaponSystem.modifiers.IsAiming = false
-				PlayerWeaponSystemData:setState(weaponSystem.states[1])
+		if weaponSystem[1].state ~= weaponSystem[1].states[6] then
+			if weaponSystem.module and weaponSystem.viewmodel and not weaponSystem[1].modifiers.IsReloading then
+				weaponSystem[1].modifiers.IsAiming = false
+				-- PlayerWeaponSystemData:setState(weaponSystem.states[1])
+				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			end	
 		end
     end
@@ -578,7 +588,7 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 	for _, v in pairs(camera:GetDescendants()) do
 		if v:IsA("Model") then
 			v:Destroy()
-			weaponSystem.state = weaponSystem.states[8]
+			weaponSystem[1].state = weaponSystem[1].states[8]
 		end
 	end
 	
@@ -597,13 +607,15 @@ end)
 
 mouse.Button1Up:Connect(function()
 	if weaponSystem.viewmodel then
-		if weaponSystem.state ~= weaponSystem.states[6] then
-			weaponSystem.modifiers.IsShooting = false
+		if weaponSystem[1].state ~= weaponSystem[1].states[6] then
+			weaponSystem[1].modifiers.IsShooting = false
 
-			if weaponSystem.modifiers.IsAiming then
-				PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+			if weaponSystem[1].modifiers.IsAiming then
+				-- PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[5])
+				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[5])
 			else
-				PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[1])
+				-- PlayerWeaponSystemData:setState(PlayerWeaponSystemData.weaponSystem.states[1])
+				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			end
 		end
 	end
@@ -611,18 +623,18 @@ end)
 
 while wait() do
 	if weaponData and weaponSystem.viewmodel then
-		if weaponSystem.state == weaponSystem.states[2] or weaponSystem.modifiers.IsShooting then
-			if weaponSystem.state ~= weaponSystem.states[7] then
-				weaponSystem.animations.FirstPerson[2]:Stop()
-				weaponSystem.animations.FirstPerson[5]:Stop()
-				weaponSystem.animations.FirstPerson[6]:Stop()
-				weaponSystem.animations.FirstPerson[7]:Stop()
-				weaponSystem.animations.FirstPerson[8]:Stop()
+		if weaponSystem[1].state == weaponSystem[1].states[2] or weaponSystem[1].modifiers.IsShooting then
+			if weaponSystem[1].state ~= weaponSystem[1].states[7] then
+				weaponSystem[1].animations.FirstPerson[2]:Stop()
+				weaponSystem[1].animations.FirstPerson[5]:Stop()
+				weaponSystem[1].animations.FirstPerson[6]:Stop()
+				weaponSystem[1].animations.FirstPerson[7]:Stop()
+				weaponSystem[1].animations.FirstPerson[8]:Stop()
 
-				weaponSystem.animations.ThirdPerson[2]:Stop()
-				weaponSystem.animations.ThirdPerson[4]:Stop()
-				weaponSystem.animations.ThirdPerson[5]:Stop()
-				weaponSystem.animations.ThirdPerson[6]:Stop()
+				weaponSystem[1].animations.ThirdPerson[2]:Stop()
+				weaponSystem[1].animations.ThirdPerson[4]:Stop()
+				weaponSystem[1].animations.ThirdPerson[5]:Stop()
+				weaponSystem[1].animations.ThirdPerson[6]:Stop()
 
 				ReplicatedStorage.Shared.Remotes.Shoot:FireServer(weaponSystem.viewmodel.Muzzle.Position, camera.CFrame.LookVector, weaponSystem.inventory[weaponSystem.currentSlot], weaponSystem.viewmodel:FindFirstChild("Muzzle").CFrame)
 				ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))

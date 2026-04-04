@@ -45,6 +45,6 @@ RequestWeaponSystemData.OnServerInvoke = function(player)
     print(playerWeaponSystemData)
     
     return {
-        playerWeaponSystemData
+        playerWeaponSystemData.weaponSystem
     }
 end
