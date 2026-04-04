@@ -3,42 +3,57 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
+local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 
 local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 local PlayerWeaponSystemData = require(script.Parent.Parent.PlayerWeaponSystemData)
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
+
 local lastShotTime = {}
-local itemData 
+local playerAmmo = {}
 
-RequestWeaponData.OnServerInvoke = function(player, Item) -- returnes weapon module's specifications data
-    -- print(debug.traceback())
-    itemData = require(LoadModule.GetModule(Item))
-    itemData.module = require(LoadModule.GetModule(Item))
-
+RequestWeaponData.OnServerInvoke = function(player, Item)
+    local weaponModule = require(LoadModule.GetModule(Item))
+    
+    if not playerAmmo[player] then
+        playerAmmo[player] = {}
+    end
+    
+    if playerAmmo[player][Item] == nil then
+        playerAmmo[player][Item] = weaponModule.ammo
+        playerAmmo[player][Item .. "_max"] = weaponModule.maxAmmo
+    end
+    
     return {
-        animations = itemData.animations,
-        sounds = itemData.sounds,
-        name = itemData.name,
-        aimData = {
-            lastCameraCF = itemData.lastCameraCF,
-            currentSwayAMT = itemData.swayAMT,
-            aimSwayAMT = itemData.aimSwayAMT,
-            aimSmooth = itemData.aimSmooth,
-            sprintCF = itemData.sprintCF,
-            swayAMT = itemData.swayAMT,
-            canAim = itemData.canAim,
-            swayCF = itemData.swayCF,
-            aimCF = itemData.aimCF,
-        },
+        animations = weaponModule.animations,
+        sounds = weaponModule.sounds,
+        name = weaponModule.name,
+        currentAmmo = playerAmmo[player][Item],
+        maxAmmo = playerAmmo[player][Item .. "_max"],
+        imageIconId = weaponModule.imageIconId,
+        fireMode = weaponModule.fireMode,
+        ammoType = weaponModule.ammoType,
 
+        aimData = {
+            lastCameraCF = weaponModule.lastCameraCF,
+            currentSwayAMT = weaponModule.swayAMT,
+            aimSwayAMT = weaponModule.aimSwayAMT,
+            aimSmooth = weaponModule.aimSmooth,
+            sprintCF = weaponModule.sprintCF,
+            swayAMT = weaponModule.swayAMT,
+            canAim = weaponModule.canAim,
+            swayCF = weaponModule.swayCF,
+            aimCF = weaponModule.aimCF,
+        },
+        
         modifiers = {
-            canFullAuto = itemData.canFullAuto,
-            isShooting = itemData.isShooting,
-            isGrenade = itemData.isGrenade,
-            fireMode = itemData.fireMode,
-            debounce = itemData.debounce,
-            isMelee = itemData.isMelee,
-            canSemi = itemData.canSemi,
+            canFullAuto = weaponModule.canFullAuto,
+            isShooting = weaponModule.isShooting,
+            isGrenade = weaponModule.isGrenade,
+            fireMode = weaponModule.fireMode,
+            debounce = weaponModule.debounce,
+            isMelee = weaponModule.isMelee,
+            canSemi = weaponModule.canSemi,
         }
     }
 end
@@ -53,16 +68,19 @@ RequestShoot.OnServerInvoke = function(player, item)
 		local now = tick()
 		local lastShot = lastShotTime[player] or 0
 		if now - lastShot < weaponData.fireRate then
-            -- player:Kick("Cheating Detected! (Too Fast Shooting). If you think this is a mistake, please contact support.") add debounce on client and then enable ts
-			return false  -- Reject shot, too fast 
+			return false
 		end
 		lastShotTime[player] = now
 		
-		if itemData.ammo <= 0 then return false end
+		if not playerAmmo[player] or not playerAmmo[player][item] then
+			return false
+		end
 		
-		itemData.ammo -= 1
-
-		local isLastBullet = (weaponData.ammo == 0)
+		if playerAmmo[player][item] <= 0 then return false end
+		
+		playerAmmo[player][item] = playerAmmo[player][item] - 1
+		
+		local isLastBullet = (playerAmmo[player][item] == 0)
 
 		local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
 
@@ -77,12 +95,24 @@ RequestShoot.OnServerInvoke = function(player, item)
 
 		return true, {rx = rx, ry = ry, rz = rz}, {
 			isLastBullet = isLastBullet,
-			ammoLeft = weaponData.ammo
+			ammoLeft = playerAmmo[player][item],
+			maxAmmo = playerAmmo[player][item .. "_max"],
+			imageIconId = weaponData.imageIconId,
+			fireMode = weaponData.fireMode,
+			ammoType = weaponData.ammoType,
 		}
 	end
-
 	return false
 end
+
+RequestReload.OnServerInvoke = function(player)
+
+end
+
+game.Players.PlayerRemoving:Connect(function(player)
+    lastShotTime[player] = nil
+    playerAmmo[player] = nil
+end)
 
 UpdateWeaponStateRemote.OnServerEvent:Connect(function(player, newState)
     PlayerWeaponSystemData:setState(newState)
@@ -93,4 +123,3 @@ RequestWeaponSystemData.OnServerInvoke = function(player)
         PlayerWeaponSystemData.weaponSystem
     }
 end
-

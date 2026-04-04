@@ -63,9 +63,37 @@ function stopAllAnims()
 	end
 end
 
+local hud = player.PlayerGui:WaitForChild("HUD")
+
+function updateHUD(state, data)
+	if hud and data then
+		if weaponSystem[1].viewmodel and weaponSystem[1].module and isEquipedWeapon then
+			if weaponSystem[1].modifiers.isMelee or weaponSystem[1].modifiers.isGrenade then
+				hud.Enabled = false
+			end
+
+			if state == true then
+				hud.MainParent.Ammo.Text = data.ammoLeft
+				hud.MainParent.MaxAmmo.Text = data.maxAmmo
+			else
+				hud.Enabled = true
+				hud.MainParent.GunName.Text = data.name
+				hud.MainParent.Ammo.Text = data.ammoLeft
+				hud.MainParent.MaxAmmo.Text = data.maxAmmo
+				hud.MainParent.GunIcon.Image = data.imageIconId
+				hud.MainParent.GunIcon.ImageColor3 =  Color3.new(0, 0, 0)
+				hud.MainParent.FireMode.Text = data.fireMode
+				hud.MainParent.AmmoType.Text = data.ammoType
+			end
+		end
+	else
+		hud.Enabled = false
+	end
+end
+
 function loadSlot(Item)
 	-- print(weaponSystem)
-	-- weaponSystem[1].loadSlot = loadSlot
+	-- weaponSystem[1].loadSlot = loadSlot idk wtf is ts
 	if weaponSystem[1].state == weaponSystem[1].states[1] 
 	or weaponSystem[1].state == weaponSystem[1].states[3] 
 	or weaponSystem[1].state == weaponSystem[1].states[4] then
@@ -100,7 +128,7 @@ function loadSlot(Item)
 
 		if weaponSystem[1].viewmodel then
 			local animData = RequestWeaponData:InvokeServer(Item)
-			print(animData)
+			local readyData = animData.animations
 			local animator = weaponSystem[1].viewmodel.AnimationController.Animator
 			local characterAnimator = character.Humanoid.Animator
 
@@ -108,14 +136,14 @@ function loadSlot(Item)
 			weaponData = RequestWeaponData:InvokeServer(Item)
 
 			local firstPersonAnims = {
-				{index = 1, name = "Fire", id = animData.animations.fireAnim},
-				{index = 2, name = "Equip", id = animData.animations.equipAnim},
-				{index = 3, name = "Deequip", id = animData.animations.deequipAnim},
-				{index = 4, name = "EmptyFire", id = animData.animations.emptyFireAnim},
-				{index = 5, name = "Reload", id = animData.animations.reloadAnim},
-				{index = 6, name = "EmptyReload", id = animData.animations.emptyReloadAnim},
-				{index = 7, name = "Inspect", id = animData.animations.inspectAnim},
-				{index = 8, name = "Idle", id = animData.animations.idleAnim}
+				{index = 1, name = "Fire", id = readyData.fireAnim},
+				{index = 2, name = "Equip", id = readyData.equipAnim},
+				{index = 3, name = "Deequip", id = readyData.deequipAnim},
+				{index = 4, name = "EmptyFire", id = readyData.emptyFireAnim},
+				{index = 5, name = "Reload", id = readyData.reloadAnim},
+				{index = 6, name = "EmptyReload", id = readyData.emptyReloadAnim},
+				{index = 7, name = "Inspect", id = readyData.inspectAnim},
+				{index = 8, name = "Idle", id = readyData.idleAnim}
 			}
 
 			local thirdPersonAnims = {
@@ -166,6 +194,17 @@ function loadSlot(Item)
 
 			weaponSystem[1].animations.FirstPerson[2]:Play()
 			weaponSystem[1].animations.ThirdPerson[2]:Play()
+
+			isEquipedWeapon = true
+
+			updateHUD(false, {
+				ammoLeft = weaponData.currentAmmo,
+				maxAmmo = weaponData.maxAmmo,
+				imageIconId = weaponData.imageIconId,
+				fireMode = weaponData.modifiers.fireMode,
+				ammoType = weaponData.ammoType,
+				name = weaponData.name,
+			})
 
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
 
@@ -368,31 +407,9 @@ function updateCameraShake()
 	oldCamCF = newCamCF
 end
 
-local hud = player.PlayerGui:WaitForChild("HUD")
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem[1].viewmodel then
-
-		if hud then
-			if weaponSystem[1].viewmodel and weaponSystem[1].module and isEquipedWeapon then
-				if weaponSystem[1].modifiers.isMelee or weaponSystem[1].modifiers.isGrenade then
-					hud.Enabled = false
-				else
-					-- hud.Enabled = true
-					-- hud.MainParent.GunName.Text = weaponSystem.inventory[weaponSystem.currentSlot]
-					-- hud.MainParent.Ammo.Text = weaponSystem.module.ammo
-					-- hud.MainParent.MaxAmmo.Text = weaponSystem.module.maxAmmo
-					-- hud.MainParent.GunIcon.Image = weaponSystem.module.imageIconId
-					-- hud.MainParent.GunIcon.ImageColor3 =  Color3.new(0, 0, 0)
-					-- hud.MainParent.FireMode.Text = weaponSystem.module.fireMode
-					-- hud.MainParent.AmmoType.Text = weaponSystem.module.ammoType
-					print(":3")
-				end
-			else
-				hud.Enabled = false
-			end
-		end
-			
 		-- print(weaponSystem.state) -- Debugging
 		-- print(weaponData) -- Debugging
 
@@ -647,6 +664,14 @@ while wait() do
 						weaponSystem[1].animations.FirstPerson[1]:Stop()
 						weaponSystem[1].animations.FirstPerson[1]:Play()
 					end
+
+					currentAmmo = data.ammoLeft
+					currentMaxAmmo = data.maxAmmo
+
+					updateHUD(true, {
+						ammoLeft = currentAmmo,
+						maxAmmo = currentMaxAmmo,
+					})
 					
 					local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
 					muzzleFlash.Parent = game.Workspace
