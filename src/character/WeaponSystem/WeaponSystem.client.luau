@@ -349,13 +349,23 @@ function melee(isLightStab)
 end
 
 function Reload()
-    if weaponSystem[1].isReloading then return end
+    if weaponSystem[1].modifiers.isReloading then return end
     
     local gun = weaponSystem[1].inventory[weaponSystem[1].currentSlot]
     
-    weaponSystem[1].isReloading = true
+    weaponSystem[1].modifiers.isReloading = true
     weaponSystem[1].animations.FirstPerson[5]:Play()
-    repeat task.wait() until weaponSystem[1].animations.FirstPerson[5].IsPlaying == false
+    
+    local i = 0
+    while i < weaponData.reloadTime do
+        if weaponSystem[1].modifiers.IsShooting then
+            weaponSystem[1].modifiers.isReloading = false
+            UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[2])
+            return
+        end
+        task.wait(0.05)
+        i = i + 0.05
+    end
     
     local success, data = RequestReload:InvokeServer(gun)
     if success then
@@ -365,7 +375,8 @@ function Reload()
         })
     end
     
-    weaponSystem[1].isReloading = false
+    UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
+    weaponSystem[1].modifiers.isReloading = false
 end
 
 local oldCamCF = CFrame.new()

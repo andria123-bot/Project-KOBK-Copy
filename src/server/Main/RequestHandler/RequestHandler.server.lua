@@ -33,6 +33,7 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
         imageIconId = weaponModule.imageIconId,
         fireMode = weaponModule.fireMode,
         ammoType = weaponModule.ammoType,
+        reloadTime = weaponModule.reloadTime,
 
         aimData = {
             lastCameraCF = weaponModule.lastCameraCF,
