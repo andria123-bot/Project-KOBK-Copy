@@ -18,8 +18,12 @@ local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("Req
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 
-local weaponSystem = RequestWeaponSystemData:InvokeServer()
+local SpringModule = require(ReplicatedStorage.Shared.Modules.Spring)
 
+local recoilSpring = SpringModule.new(Vector3.new(0,0,0), 0.5, 50)
+recoilSpring.Damping = 5
+
+local weaponSystem = RequestWeaponSystemData:InvokeServer()
 local weaponData
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
@@ -96,6 +100,7 @@ function loadSlot(Item)
 
 		if weaponSystem[1].viewmodel then
 			local animData = RequestWeaponData:InvokeServer(Item)
+			print(animData)
 			local animator = weaponSystem[1].viewmodel.AnimationController.Animator
 			local characterAnimator = character.Humanoid.Animator
 
@@ -181,7 +186,6 @@ function loadSlot(Item)
 				end
 			end
 
-			-- PlayerWeaponSystemData:setState(weaponSystem.states[1])
 			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			aimHelper:Init(weaponData.aimData, weaponSystem[1].viewmodel)
 
@@ -230,7 +234,6 @@ function Shoot()
 		end
 
 		if weaponData.modifiers.fireMode == "Full Auto" then
-			print("Full Auto Fire")
 			weaponSystem[1].modifiers.IsShooting = true
 			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[2])
 		end
@@ -372,17 +375,18 @@ RunService.RenderStepped:Connect(function(dt)
 
 		if hud then
 			if weaponSystem[1].viewmodel and weaponSystem[1].module and isEquipedWeapon then
-				if weaponSystem.module.isMelee or weaponSystem[1].module.isGrenade then
+				if weaponSystem[1].modifiers.isMelee or weaponSystem[1].modifiers.isGrenade then
 					hud.Enabled = false
 				else
-					hud.Enabled = true
-					hud.MainParent.GunName.Text = weaponSystem.inventory[weaponSystem.currentSlot]
-					hud.MainParent.Ammo.Text = weaponSystem.module.ammo
-					hud.MainParent.MaxAmmo.Text = weaponSystem.module.maxAmmo
-					hud.MainParent.GunIcon.Image = weaponSystem.module.imageIconId
-					hud.MainParent.GunIcon.ImageColor3 =  Color3.new(0, 0, 0)
-					hud.MainParent.FireMode.Text = weaponSystem.module.fireMode
-					hud.MainParent.AmmoType.Text = weaponSystem.module.ammoType
+					-- hud.Enabled = true
+					-- hud.MainParent.GunName.Text = weaponSystem.inventory[weaponSystem.currentSlot]
+					-- hud.MainParent.Ammo.Text = weaponSystem.module.ammo
+					-- hud.MainParent.MaxAmmo.Text = weaponSystem.module.maxAmmo
+					-- hud.MainParent.GunIcon.Image = weaponSystem.module.imageIconId
+					-- hud.MainParent.GunIcon.ImageColor3 =  Color3.new(0, 0, 0)
+					-- hud.MainParent.FireMode.Text = weaponSystem.module.fireMode
+					-- hud.MainParent.AmmoType.Text = weaponSystem.module.ammoType
+					print(":3")
 				end
 			else
 				hud.Enabled = false
@@ -523,10 +527,6 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		print(1)
-		print(debounce)
-		print(weaponSystem[1].state)
-		print(weaponSystem[1].states[6])
 		if character and weaponSystem[1].viewmodel and not debounce then
 			if weaponSystem[1].state ~= weaponSystem[1].states[6]  then
 				print(debug.traceback())
@@ -638,6 +638,16 @@ while wait() do
 					weaponSystem[1].animations.ThirdPerson[5]:Stop()
 					weaponSystem[1].animations.ThirdPerson[6]:Stop()
 
+					if weaponData.isLastBullet then
+						weaponSystem[1].animations.FirstPerson[2]:Play()
+
+						weaponSystem[1].animations.FirstPerson[1]:Stop()
+						weaponSystem[1].animations.ThirdPerson[1]:Stop()
+					else
+						weaponSystem[1].animations.FirstPerson[1]:Stop()
+						weaponSystem[1].animations.FirstPerson[1]:Play()
+					end
+					
 					local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
 					muzzleFlash.Parent = game.Workspace
 					muzzleFlash.CFrame = weaponSystem[1].viewmodel.Muzzle.CFrame
@@ -649,8 +659,13 @@ while wait() do
 					end
 					game:GetService("Debris"):AddItem(muzzleFlash, .07)
 
-					camera.CFrame = camera.CFrame * CFrame.Angles(recoilData.x, recoilData.y, recoilData.z)
-					print(data.fireRate)
+					if SpringModule then
+						local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
+						recoilSpring:Impulse(hugeRecoil * 2000000)
+
+						camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(recoilData.rx), math.rad(recoilData.ry), math.rad(recoilData.rz))
+					end
+
 					task.wait(data.fireRate)
 				end
 			end

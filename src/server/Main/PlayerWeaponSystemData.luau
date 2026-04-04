@@ -73,7 +73,7 @@ local playerWeaponSystemData = {
             IsReloading = false;
         },
 
-        module = nil,
+        module = {},
         viewmodel = nil,
         currentSlot = 0,
     }

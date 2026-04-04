@@ -82,4 +82,8 @@ remoteManager.RequestShootRemote = Instance.new("RemoteFunction")
 remoteManager.RequestShootRemote.Parent = ReplicatedStorage.Shared.Remotes.Requests
 remoteManager.RequestShootRemote.Name = "RequestShoot"
 
+remoteManager.RequestReloadRemote = Instance.new("RemoteFunction")
+remoteManager.RequestReloadRemote.Parent = ReplicatedStorage.Shared.Remotes.Requests
+remoteManager.RequestReloadRemote.Name = "RequestReload"
+
 return remoteManager
