@@ -36,9 +36,7 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 			joint.Part1 = gun.PrimaryPart
 		end
 		
-		print(55555555)
 		local module = require(LoadModule.GetModule(item))
-		print("Module for", item, "loaded:", module)
 
 		local function createSound(name, id, volume)
 			local sound = Instance.new("Sound")

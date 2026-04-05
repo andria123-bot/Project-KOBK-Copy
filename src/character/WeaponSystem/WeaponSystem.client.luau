@@ -281,7 +281,7 @@ function Shoot()
 end
 
 function Inspect()
-	if weaponSystem[1].animations and weaponSystem[1].viewmodel and weaponSystem.module and not weaponSystem[1].modifiers.IsReloading then
+	if weaponSystem[1].animations and weaponSystem[1].viewmodel and weaponData and not weaponSystem[1].modifiers.IsReloading then
 		-- PlayerWeaponSystemData:setState(weaponSystem.states[4])
 		weaponSystem[1].modifiers.IsInspecting = true
 		if weaponSystem[1].state == weaponSystem[1].states[4] and weaponSystem[1].modifiers.IsInspecting then 
@@ -345,7 +345,7 @@ function melee(isLightStab)
 		weaponSystem[1].animations.ThirdPerson[5]:Play()
 	end
 
-	ReplicatedStorage.Shared.Remotes.Melee:FireServer(isLightStab, weaponSystem.module, camera.CFrame.Position, camera.CFrame.LookVector)
+	-- ReplicatedStorage.Shared.Remotes.Melee:FireServer(isLightStab, weaponSystem.module, camera.CFrame.Position, camera.CFrame.LookVector)
 end
 
 function Reload()
@@ -530,7 +530,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 			end
 		end
 
-		if weaponSystem.module and weaponSystem[1].viewmodel and weaponSystem[1].modifiers.isMelee and not weaponSystem[1].modifiers.isGrenade then
+		if weaponData and weaponSystem[1].viewmodel and weaponData.modifiers.isMelee and not weaponData.modifiers.isGrenade then
 			melee(true)
 		end
 	end
@@ -547,13 +547,13 @@ UIS.InputBegan:Connect(function(input, gpe)
 			end
 		end	
 
-		if weaponSystem.module and weaponSystem[1].viewmodel and weaponSystem[1].modifiers.isMelee and not weaponSystem[1].modifiers.isMelee then
+		if weaponData and weaponSystem[1].viewmodel and weaponData.modifiers.isMelee and not weaponData.modifiers.isMelee then
 			melee(false)
 		end
 	end
 
 	if input.KeyCode == Enum.KeyCode.R then
-		if weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.isMelee and not weaponSystem[1].modifiers.isGrenade then
+		if weaponSystem[1].viewmodel and not weaponData.modifiers.isMelee and not weaponData.modifiers.isGrenade then
 			if not weaponSystem[1].modifiers.isReloading then
 				Reload()
 			end
@@ -561,13 +561,13 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.KeyCode == Enum.KeyCode.T then
-		if weaponSystem.module and weaponSystem[1].viewmodel then
+		if weaponData and weaponSystem[1].viewmodel then
 			AimHelper:switchAimpart()
 		end
 	end
 
 	if input.KeyCode == Enum.KeyCode.H then
-		if weaponSystem.module and weaponSystem[1].viewmodel then
+		if weaponData and weaponSystem[1].viewmodel then
 			Inspect()
 		end
 	end
@@ -576,7 +576,7 @@ end)
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		if weaponSystem[1].state ~= weaponSystem[1].states[6] then
-			if weaponSystem.module and weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.IsReloading then
+			if weaponData and weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.IsReloading then
 				weaponSystem[1].modifiers.IsAiming = false
 				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			end	
@@ -598,8 +598,8 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 		end
 	end
 
-	if weaponSystem[1].viewmodel and weaponSystem.module then
-		weaponSystem.module = nil
+	if weaponSystem[1].viewmodel and weaponData then
+		weaponData = nil
 		weaponSystem[1].viewmodel:Destroy()
 		hud.Enabled = false
 	end
@@ -623,7 +623,7 @@ while wait() do
 	if weaponData and weaponSystem[1].viewmodel and weaponData.modifiers.fireMode == "Full Auto" then
 		if weaponSystem[1].state == weaponSystem[1].states[2] or weaponSystem[1].modifiers.IsShooting then
 			if weaponSystem[1].state ~= weaponSystem[1].states[7] then
-				local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem[1].inventory[weaponSystem[1].currentSlot])
+				local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem[1].inventory[weaponSystem[1].currentSlot], camera.CFrame.LookVector, weaponSystem[1].viewmodel.Muzzle.Position)
 				if success then
 					weaponSystem[1].animations.FirstPerson[2]:Stop()
 					weaponSystem[1].animations.FirstPerson[5]:Stop()

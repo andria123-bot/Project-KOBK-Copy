@@ -27,3 +27,8 @@ modules are accessable by client, red flag                                      
 recoil happens on client, create seperated module for that                      | Medium | Fixed
 loadslot shoul be based on weaponSlot not inventory                             | Hard
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
+
+
+weaponSystem[1].modifiers is player's modifiers
+weaponData is weapon's data which contains aimData, animations, fireMode, modifiers and much more
+weaponData is like weaponsystem.module but server controls it

@@ -91,8 +91,7 @@ local data = {
 	y = 0.72,
 	z = 1.9;
 	
-	bulletSpeed = 320,
-	bulletDistance = 550,
+	bulletSpeed = 520,
 
 	slotType = "Loadout",
 	ammoType = "5.56x45",

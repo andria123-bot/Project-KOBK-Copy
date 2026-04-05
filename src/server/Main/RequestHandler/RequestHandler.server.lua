@@ -59,51 +59,53 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
     }
 end
 
-RequestShoot.OnServerInvoke = function(player, item)
-	if player.Character then
-		local weaponModule = LoadModule.GetModule(item)
-		if not weaponModule then return false end
+RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
+    local character = player.Character or player:WaitForChild(player.Character)
+	if not character then return end 
 
-		local weaponData = require(weaponModule)
-		
-		local now = tick()
-		local lastShot = lastShotTime[player] or 0
-		if now - lastShot < weaponData.fireRate then
-			return false
-		end
-		lastShotTime[player] = now
-		
-		if not playerAmmo[player] or not playerAmmo[player][item] then
-			return false
-		end
-		
-		if playerAmmo[player][item] <= 0 then return false end
-		
-		playerAmmo[player][item] = playerAmmo[player][item] - 1
-		
-		local isLastBullet = (playerAmmo[player][item] == 0)
+    local weaponModule = LoadModule.GetModule(item)
+    if not weaponModule then return false end
 
-		local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
+    local weaponData = require(weaponModule)
+    local direction = LookVector
+	    
+    local now = tick()
+    local lastShot = lastShotTime[player] or 0
+    if now - lastShot < weaponData.fireRate then
+        return false
+    end
+    lastShotTime[player] = now
+    
+    if not playerAmmo[player] or not playerAmmo[player][item] then
+        return false
+    end
+    
+    if playerAmmo[player][item] <= 0 then return false end
+    
+    playerAmmo[player][item] = playerAmmo[player][item] - 1
+    
+    local isLastBullet = (playerAmmo[player][item] == 0)
+    weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil)
 
-		local rx = (math.random() * modX * 0.8) + (math.random() < 0.2 and -modX * 0.2 or 0)
-		local ry = (math.random() - 0.5) * 2 * modY
-		local rz = (math.random() - 0.5) * 2 * modZ
+    local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
 
-		local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
-		if sound then
-			sound:Play()
-		end
+    local rx = (math.random() * modX * 0.8) + (math.random() < 0.2 and -modX * 0.2 or 0)
+    local ry = (math.random() - 0.5) * 2 * modY
+    local rz = (math.random() - 0.5) * 2 * modZ
 
-		return true, {rx = rx, ry = ry, rz = rz}, {
-			isLastBullet = isLastBullet,
-			ammoLeft = playerAmmo[player][item],
-			maxAmmo = playerAmmo[player][item .. "_max"],
-			imageIconId = weaponData.imageIconId,
-			fireMode = weaponData.fireMode,
-			ammoType = weaponData.ammoType,
-		}
-	end
-	return false
+    local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
+    if sound then
+        sound:Play()
+    end
+		
+	return true, {rx = rx, ry = ry, rz = rz}, {
+        isLastBullet = isLastBullet,
+        ammoLeft = playerAmmo[player][item],
+        maxAmmo = playerAmmo[player][item .. "_max"],
+        imageIconId = weaponData.imageIconId,
+        fireMode = weaponData.fireMode,
+        ammoType = weaponData.ammoType,
+    }
 end
 
 RequestReload.OnServerInvoke = function(player, gun)
