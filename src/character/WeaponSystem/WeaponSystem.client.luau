@@ -237,6 +237,9 @@ end
 
 function Shoot()
 	if weaponSystem[1].viewmodel and character then
+		if weaponSystem[1].state == weaponSystem[1].states[6] then
+			return
+		end
 		if weaponData.modifiers.fireMode == "Semi Auto" then
 			local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem[1].inventory[weaponSystem[1].currentSlot])
 			if success then
@@ -274,6 +277,9 @@ function Shoot()
 		end
 
 		if weaponData.modifiers.fireMode == "Full Auto" then
+			if weaponSystem[1].state ~= weaponSystem[1].states[6] then
+				return
+			end
 			weaponSystem[1].modifiers.IsShooting = true
 			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[2])
 		end
@@ -524,10 +530,10 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		if character and weaponSystem[1].viewmodel and not debounce then
-			if weaponSystem[1].state ~= weaponSystem[1].states[6]  then
-				print(debug.traceback())
-				Shoot()
+			if weaponSystem[1].state == weaponSystem[1].states[6] then
+				return
 			end
+			Shoot()
 		end
 
 		if weaponData and weaponSystem[1].viewmodel and weaponData.modifiers.isMelee and not weaponData.modifiers.isGrenade then
@@ -608,13 +614,15 @@ end)
 mouse.Button1Up:Connect(function()
 	if weaponSystem[1].viewmodel then
 		if weaponSystem[1].state ~= weaponSystem[1].states[6] then
-			weaponSystem[1].modifiers.IsShooting = false
+			return
+		end
 
-			if weaponSystem[1].modifiers.IsAiming then
-				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[5])
-			else
-				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
-			end
+		weaponSystem[1].modifiers.IsShooting = false
+
+		if weaponSystem[1].modifiers.IsAiming then
+			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[5])
+		else
+			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 		end
 	end
 end)
@@ -623,6 +631,10 @@ while wait() do
 	if weaponData and weaponSystem[1].viewmodel and weaponData.modifiers.fireMode == "Full Auto" then
 		if weaponSystem[1].state == weaponSystem[1].states[2] or weaponSystem[1].modifiers.IsShooting then
 			if weaponSystem[1].state ~= weaponSystem[1].states[7] then
+				if weaponSystem[1].state ~= weaponSystem[1].states[6] then
+					return 
+				end
+
 				local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem[1].inventory[weaponSystem[1].currentSlot], camera.CFrame.LookVector, weaponSystem[1].viewmodel.Muzzle.Position)
 				if success then
 					weaponSystem[1].animations.FirstPerson[2]:Stop()

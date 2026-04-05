@@ -85,7 +85,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
     playerAmmo[player][item] = playerAmmo[player][item] - 1
     
     local isLastBullet = (playerAmmo[player][item] == 0)
-    weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil)
+    weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil) -- leater change to character's weapon muzzle's position and lookvector
 
     local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
 
