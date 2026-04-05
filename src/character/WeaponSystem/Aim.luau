@@ -6,14 +6,16 @@ AimHelper.viewmodel = nil
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
-local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
-local PlayerWeaponSystemData = RequestWeaponSystemData:InvokeServer()
+-- local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
+
+local PlayerWeaponSystem = RequestWeaponSystemData:InvokeServer()
 
 local currentAimPart = 1
 
-function AimHelper:Init(weaponModule, viewmodel)
+function AimHelper:Init(weaponModule, viewmodel, weaponSys)
     self.weaponModule = weaponModule
     self.viewmodel = viewmodel
+    self.weaponSystem = weaponSys
 end
 
 function AimHelper:switchAimpart()
@@ -25,11 +27,15 @@ function AimHelper:switchAimpart()
 end
 
 function AimHelper:Aim(dt)
-	if not (self.weaponModule and self.viewmodel and self.weaponModule.canAim) then return end
-	
-	if PlayerWeaponSystemData.weaponSystem.state == PlayerWeaponSystemData.weaponSystem.states[5] and not 
-										PlayerWeaponSystemData.weaponSystem.modifiers.IsReloading and not 
-										PlayerWeaponSystemData.weaponSystem.modifiers.IsInspecting then
+    if not (self.weaponModule and self.viewmodel and self.weaponModule.canAim) then return end
+    
+    -- Check if aiming (state 5) OR if player is holding aim button during shooting
+    local isAiming = (self.weaponSystem.state == self.weaponSystem.states[5]) or 
+                     (self.weaponSystem.modifiers.IsAiming == true)
+    
+    if isAiming and not 
+        self.weaponSystem.modifiers.IsReloading and not 
+        self.weaponSystem.modifiers.IsInspecting then
 											
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end
@@ -53,7 +59,7 @@ function AimHelper:Aim(dt)
 		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
 		self.weaponModule.aimCF = self.weaponModule.aimCF:Lerp(targetOffset, alpha)
 
-	elseif PlayerWeaponSystemData.weaponSystem.state == PlayerWeaponSystemData.weaponSystem.states[1] then
+	elseif not isAiming then
 		self.weaponModule.currentSwayAMT = self.weaponModule.swayAMT
 		
 		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)

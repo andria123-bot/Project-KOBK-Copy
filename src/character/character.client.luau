@@ -8,7 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 
-local PlayerWeaponSystemData = RequestWeaponSystemData:InvokeServer()
+local PlayerWeaponSystem = RequestWeaponSystemData:InvokeServer()
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid then
@@ -33,8 +33,8 @@ end)
 UIS.InputBegan:Connect(function(input)
     if humanoid then
         if input.KeyCode == Enum.KeyCode.LeftShift then
-			if PlayerWeaponSystemData[1].state ~= PlayerWeaponSystemData[1].states[2] then
-				UpdateWeaponStateRemote:FireServer(PlayerWeaponSystemData[1].states[6])
+			if PlayerWeaponSystem[1].state ~= PlayerWeaponSystem[1].states[2] then
+				UpdateWeaponStateRemote:FireServer(PlayerWeaponSystem[1].states[6])
 				humanoid.WalkSpeed = 22
 			end
         end
@@ -44,7 +44,7 @@ end)
 UIS.InputEnded:Connect(function(input)
     if humanoid then
         if input.KeyCode == Enum.KeyCode.LeftShift then
-			UpdateWeaponStateRemote:FireServer(PlayerWeaponSystemData[1].states[1])
+			UpdateWeaponStateRemote:FireServer(PlayerWeaponSystem[1].states[1])
             humanoid.WalkSpeed = 16
         end
     end

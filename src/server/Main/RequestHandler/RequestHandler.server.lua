@@ -114,8 +114,14 @@ RequestReload.OnServerInvoke = function(player, gun)
         return false
     end
     
+    local currentAmmo = playerAmmo[player][gun]
     local maxAmmo = playerAmmo[player][gun .. "_max"]
+    
     if not maxAmmo then
+        return false
+    end
+    
+    if currentAmmo >= maxAmmo then
         return false
     end
     

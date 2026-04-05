@@ -27,6 +27,8 @@ recoilSpring.Damping = 5
 
 local weaponSystem = RequestWeaponSystemData:InvokeServer()
 local weaponData
+local currentAmmo = 0
+local currentMaxAmmo = 0
 
 UpdateClientState.OnClientEvent:Connect(function(newState)
     weaponSystem[1].state = newState
@@ -233,10 +235,9 @@ function loadSlot(Item)
 			end
 
 			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
-			aimHelper:Init(weaponData.aimData, weaponSystem[1].viewmodel)
+			aimHelper:Init(weaponData.aimData, weaponSystem[1].viewmodel, weaponSystem[1])
 
 			ViewmodelRotation:Init(true, weaponSystem[1].viewmodel)
-			-- print(weaponData)
 		end
 	end
 end
@@ -364,8 +365,14 @@ function Reload()
     
     local gun = weaponSystem[1].inventory[weaponSystem[1].currentSlot]
     
+    -- Don't reload if ammo is already full
+    if currentAmmo >= currentMaxAmmo then
+        return
+    end
+    
     weaponSystem[1].modifiers.isReloading = true
     weaponSystem[1].animations.FirstPerson[5]:Play()
+    UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[3])
     
     local i = 0
     while i < weaponData.reloadTime do
@@ -380,9 +387,11 @@ function Reload()
     
     local success, data = RequestReload:InvokeServer(gun)
     if success then
+        currentAmmo = data.ammoLeft
+        currentMaxAmmo = data.maxAmmo
         updateHUD(true, {
-            ammoLeft = data.ammoLeft,
-            maxAmmo = data.maxAmmo
+            ammoLeft = currentAmmo,
+            maxAmmo = currentMaxAmmo
         })
     end
     
@@ -401,7 +410,6 @@ end
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem[1].viewmodel then
 		print(weaponSystem[1].state) -- Debugging
-		-- print(weaponData) -- Debugging
 
 		if weaponSystem[1].viewmodel and weaponData then
 			local rot = camera.CFrame:ToObjectSpace(weaponData.aimData.lastCameraCF)
@@ -440,7 +448,7 @@ RunService.RenderStepped:Connect(function(dt)
 				end
 			end
 
-			-- aimHelper:Aim(dt)
+			aimHelper:Aim(dt)
 		end
 	end
 end)
