@@ -33,17 +33,23 @@ end)
 UIS.InputBegan:Connect(function(input)
     if humanoid then
         if input.KeyCode == Enum.KeyCode.LeftShift then
-			if PlayerWeaponSystem[1].state ~= PlayerWeaponSystem[1].states[2] then
-				UpdateWeaponStateRemote:FireServer(PlayerWeaponSystem[1].states[6])
-				humanoid.WalkSpeed = 22
-			end
+            if PlayerWeaponSystem[1].state == PlayerWeaponSystem[1].states[5] then
+                UpdateWeaponStateRemote:FireServer(PlayerWeaponSystem[1].states[1])
+            end
+            
+            if PlayerWeaponSystem[1].state ~= PlayerWeaponSystem[1].states[2] then
+                if PlayerWeaponSystem[1].state ~= PlayerWeaponSystem[1].states[5] then
+                    UpdateWeaponStateRemote:FireServer(PlayerWeaponSystem[1].states[6])
+                    humanoid.WalkSpeed = 22
+                end
+            end
         end
     end
 end)
 
 UIS.InputEnded:Connect(function(input)
     if humanoid then
-        if input.KeyCode == Enum.KeyCode.LeftShift then
+        if input.KeyCode == Enum.KeyCode.LeftShift then 
 			UpdateWeaponStateRemote:FireServer(PlayerWeaponSystem[1].states[1])
             humanoid.WalkSpeed = 16
         end
@@ -52,14 +58,14 @@ end)
 
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
 
-local success = false
+-- local success = false
 
-repeat
-	success = pcall(function()
-		StarterGui:SetCore("ResetButtonCallback", false)
-	end)
-	task.wait()
-until success
+-- repeat
+-- 	success = pcall(function()
+-- 		StarterGui:SetCore("ResetButtonCallback", false)
+-- 	end)
+-- 	task.wait()
+-- until success
 
 game.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 humanoid.BreakJointsOnDeath = false

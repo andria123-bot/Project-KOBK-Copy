@@ -6,6 +6,8 @@ local Settings = {
 	CarHitWall = "rbxassetid://79409704436353";
 	BodyDrop = "rbxassetid://133108317980771";
 
+	SwitchAimSound = "rbxassetid://129384861068765";
+
 	MeleeImpacts = {
 		"rbxassetid://132705143575375";
 		"rbxassetid://75664775281974";

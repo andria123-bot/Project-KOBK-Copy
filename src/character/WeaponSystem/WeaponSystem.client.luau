@@ -438,7 +438,7 @@ end
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem[1].viewmodel then
-		-- print(weaponSystem[1].state) -- Debugging
+		print(weaponSystem[1].state) -- Debugging
 
 		if weaponSystem[1].viewmodel and weaponData then
 			if weaponSystem[1].state == weaponSystem[1].states[5] then
@@ -632,7 +632,9 @@ end)
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		if weaponSystem[1].viewmodel then
-			if weaponSystem[1].state == weaponSystem[1].states[6] then return end
+			if weaponSystem[1].state == weaponSystem[1].states[6] then
+				return
+			end
 
 			if weaponSystem[1].state ~= weaponSystem[1].states[3] then 
 				if weaponData and weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.IsReloading then

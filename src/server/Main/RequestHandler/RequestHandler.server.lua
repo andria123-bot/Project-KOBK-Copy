@@ -68,7 +68,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
     if not weaponModule then return false end
 
     local weaponData = require(weaponModule)
-    local direction = LookVector.Unit
+    local direction = LookVector
 	    
     local now = tick()
     local lastShot = lastShotTime[player] or 0

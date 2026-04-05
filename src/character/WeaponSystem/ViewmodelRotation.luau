@@ -48,14 +48,12 @@ function ViewmodelRot:getRotation(dt, state)
 
     if self.isStrafingLeft then
         if state == "Aiming" then
-            print(1)
             self.targetRotation = -math.rad(-3.2) -- Negative for left
         else
             self.targetRotation = -math.rad(-7.5)
         end
     elseif self.isStrafingRight then
         if state == "Aiming" then
-            print(12)
             self.targetRotation = -math.rad(3.2) -- Positive for right
         else
             self.targetRotation = -math.rad(7.5)
@@ -88,7 +86,6 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
-
     if input.KeyCode == Enum.KeyCode.A then
         ViewmodelRot.isStrafingLeft = false
         ViewmodelRot.isMovingLeft = false
