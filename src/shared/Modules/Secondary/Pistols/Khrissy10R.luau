@@ -23,7 +23,7 @@ local data = {
 	},
 
 	sounds = {
-		"rbxassetid://127619339252879"; -- equip/draw
+		"rbxassetid://129384861068765"; -- equip/draw
 		"rbxassetid://93598508552874" ; -- Shoot/use
 		"rbxassetid://8740433183"     ; -- reload
 		"rbxassetid://134817048219417"; -- empty reload

@@ -23,7 +23,7 @@ local data = {
 	},
 
 	sounds = {
-		"rbxassetid://127619339252879"; -- equip/draw
+		"rbxassetid://129384861068765"; -- equip/draw
 		"rbxassetid://79126872857479" ; -- Shoot/use
 		"rbxassetid://134817048219417"; -- reload
 		"rbxassetid://134817048219417"; -- empty reload
@@ -91,7 +91,7 @@ local data = {
 	y = 0.72,
 	z = 1.9;
 	
-	bulletSpeed = 520,
+	bulletSpeed = 800,
 
 	slotType = "Loadout",
 	ammoType = "5.56x45",
@@ -142,8 +142,6 @@ end
 
 caster.RayHit:Connect(function(activeCast, result)
 	local hit = result.Instance
-	local mat = hit.Material
-	local allowedDepth = data.penetrationMaterials[mat.Name]
 	
 	if hit and hit.Parent:FindFirstChild("Humanoid") then
 		local humanoid = hit.Parent:FindFirstChild("Humanoid")
@@ -171,6 +169,9 @@ caster.RayHit:Connect(function(activeCast, result)
 		else
 			humanoid:TakeDamage(data.damage)
 		end
+	elseif hit then -- wallbang
+		local origin = result.Position
+		local direction = activeCast.UserData["Direction"].Unit
 
 		local bulletHole = game.ReplicatedStorage.Objects.BulletHole:Clone()
 		bulletHole.CFrame = CFrame.new(result.Position, result.Position + result.Normal)
@@ -185,19 +186,6 @@ caster.RayHit:Connect(function(activeCast, result)
 		bulletHole.Parent = bulletHolesFolder
 		bulletHole.Impact:Play()
 		game:GetService("Debris"):AddItem(bulletHole, 15)
-	elseif hit then -- wallbang
-		local origin = result.Position
-		local direction = activeCast.UserData["Direction"].Unit
-		local material = hit.Material.Name
-		local penetrationLimit = data.penetrationMaterials[material]
-		
-		local insideWallRayCast = workspace:Raycast(origin, direction * penetrationLimit, rayParams)
-		
-		if insideWallRayCast then
-			print("Pierced")
-		else
-			print("Not Pierced")
-		end
 	end
 end)
 

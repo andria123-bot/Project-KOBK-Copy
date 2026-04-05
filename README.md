@@ -28,6 +28,7 @@ recoil happens on client, create seperated module for that                      
 loadslot shoul be based on weaponSlot not inventory                             | Hard
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
 
+
 Add server validation when loading slot it should invoke and server should check if loaded item is in player's inventory
 
 

@@ -99,6 +99,35 @@ function updateHUD(state, data)
 	end
 end
 
+local dot = Instance.new("Frame")
+
+local function createDotCrosshair(state)
+    if state then
+		local playerGui = player:WaitForChild("PlayerGui")
+		
+		dot.Transparency = 0
+		dot.Name = "Crosshair"
+		dot.Parent = playerGui
+		dot.Size = UDim2.new(0, 4, 0, 4)
+		dot.Position = UDim2.new(0.505, -2, 0.5105, -1.7)
+		dot.BackgroundColor3 = Color3.fromRGB(93, 63, 211)  -- Your purple color
+		dot.BackgroundTransparency = 0
+		dot.BorderSizePixel = 0
+		dot.ZIndex = 1000  -- Higher ZIndex
+		dot.AnchorPoint = Vector2.new(0.5, 0.5)
+		
+		local screenGui = Instance.new("ScreenGui")
+		screenGui.Name = "CrosshairGui"
+		screenGui.Parent = playerGui
+		screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+		screenGui.IgnoreGuiInset = true  -- Ignore top bar
+		
+		dot.Parent = screenGui
+	else
+		dot.Transparency = 1
+	end
+end
+
 function loadSlot(Item)
 	-- weaponSystem[1].loadSlot = loadSlot idk wtf is ts
 	if weaponSystem[1].state == weaponSystem[1].states[1] 
@@ -212,6 +241,8 @@ function loadSlot(Item)
 				name = weaponData.name,
 			})
 
+			createDotCrosshair(true)
+
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
 
 			task.wait(.1)
@@ -288,34 +319,34 @@ function Shoot()
 end
 
 function Inspect()
-	if weaponSystem[1].animations and weaponSystem[1].viewmodel and weaponData and not weaponSystem[1].modifiers.IsReloading then
-		weaponSystem[1].modifiers.IsInspecting = true
-		if weaponSystem[1].state == weaponSystem[1].states[4] and weaponSystem[1].modifiers.IsInspecting then 
-			weaponSystem[1].animations.FirstPerson[8]:Stop()
-			weaponSystem[1].animations.FirstPerson[7]:Play()
+    if weaponSystem[1].animations and weaponSystem[1].viewmodel and weaponData and not weaponSystem[1].modifiers.IsReloading then
+        if weaponSystem[1].modifiers.IsInspecting then return end  -- Prevent double inspect
+        
+        weaponSystem[1].modifiers.IsInspecting = true
+        UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[4])
+        
+        weaponSystem[1].animations.FirstPerson[8]:Stop()
+        weaponSystem[1].animations.FirstPerson[7]:Play()
 
-			dof.FarIntensity = 1
-			dof.FocusDistance = 10.44
-			dof.InFocusRadius = 25.215
-			dof.NearIntensity = 0.183
-			weaponSystem[1].animations.FirstPerson[7]:Play()
-			weaponSystem[1].animations.ThirdPerson[6]:Play()
-			
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
-			repeat task.wait() until weaponSystem[1].animations.FirstPerson[7].IsPlaying == false
+        dof.FarIntensity = 1
+        dof.FocusDistance = 10.44
+        dof.InFocusRadius = 25.215
+        dof.NearIntensity = 0.183
+        weaponSystem[1].animations.ThirdPerson[6]:Play()
+        
+        ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Inspect"))
+        
+        repeat task.wait() until weaponSystem[1].animations.FirstPerson[7].IsPlaying == false
 
-			weaponSystem[1].animations.FirstPerson[7]:Stop()
-			dof.FarIntensity = .1
-			dof.FocusDistance = .05
-			dof.InFocusRadius = 30
-			dof.NearIntensity = .75
+        weaponSystem[1].animations.FirstPerson[7]:Stop()
+        dof.FarIntensity = .1
+        dof.FocusDistance = .05
+        dof.InFocusRadius = 30
+        dof.NearIntensity = .75
 
-			if weaponSystem[1].state == weaponSystem[1].states[4] then
-				weaponSystem[1].modifiers.IsInspecting = false
-				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
-			end
-		end
-	end	
+        weaponSystem[1].modifiers.IsInspecting = false
+        UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
+    end
 end
 
 function grenade(grenade)
@@ -410,6 +441,12 @@ RunService.RenderStepped:Connect(function(dt)
 		-- print(weaponSystem[1].state) -- Debugging
 
 		if weaponSystem[1].viewmodel and weaponData then
+			if weaponSystem[1].state == weaponSystem[1].states[5] then
+				createDotCrosshair(false)
+			else
+				createDotCrosshair(true)
+			end
+
 			local rot = camera.CFrame:ToObjectSpace(weaponData.aimData.lastCameraCF)
 			local X, Y, _ = rot:ToOrientation() 
 			weaponData.aimData.swayCF = weaponData.aimData.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponData.aimData.currentSwayAMT, math.sin(Y) * weaponData.aimData.currentSwayAMT, 0), 1 - 0.001 ^ dt)

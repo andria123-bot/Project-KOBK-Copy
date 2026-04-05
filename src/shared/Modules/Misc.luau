@@ -4,6 +4,7 @@ local Settings = {
 	BulletHitWaterSound = "rbxassetid://90457866442757";
 	CarHitPlayer = "rbxassetid://97803915972527";
 	CarHitWall = "rbxassetid://79409704436353";
+	BodyDrop = "rbxassetid://133108317980771";
 
 	MeleeImpacts = {
 		"rbxassetid://132705143575375";
