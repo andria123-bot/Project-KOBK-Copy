@@ -4,6 +4,7 @@ local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
+local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
 
 local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 local PlayerWeaponSystemData = require(script.Parent.Parent.PlayerWeaponSystemData)
@@ -132,7 +133,9 @@ game.Players.PlayerRemoving:Connect(function(player)
 end)
 
 UpdateWeaponStateRemote.OnServerEvent:Connect(function(player, newState)
+    -- print(debug.traceback()) -- debug
     PlayerWeaponSystemData:setState(newState)
+    UpdateClientState:FireClient(player, newState)
 end)
 
 RequestWeaponSystemData.OnServerInvoke = function(player)

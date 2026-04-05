@@ -16,6 +16,7 @@ local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitFo
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
+local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 
@@ -26,6 +27,11 @@ recoilSpring.Damping = 5
 
 local weaponSystem = RequestWeaponSystemData:InvokeServer()
 local weaponData
+
+UpdateClientState.OnClientEvent:Connect(function(newState)
+    weaponSystem[1].state = newState
+    print("Client state updated to:", newState)
+end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
     weaponSystem[1].inventory = weaponSystem[1].inventory or {}
@@ -277,9 +283,8 @@ function Shoot()
 		end
 
 		if weaponData.modifiers.fireMode == "Full Auto" then
-			if weaponSystem[1].state ~= weaponSystem[1].states[6] then
-				return
-			end
+			if weaponSystem[1].state == weaponSystem[1].states[6] then return end
+
 			weaponSystem[1].modifiers.IsShooting = true
 			UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[2])
 		end
@@ -395,7 +400,7 @@ end
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem[1].viewmodel then
-		-- print(weaponSystem.state) -- Debugging
+		print(weaponSystem[1].state) -- Debugging
 		-- print(weaponData) -- Debugging
 
 		if weaponSystem[1].viewmodel and weaponData then
@@ -542,8 +547,9 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem[1].module and weaponSystem[1].viewmodel then
-			if weaponSystem[1].state ~= weaponSystem[1].states[6] then
+		if weaponData and weaponSystem[1].viewmodel then
+			if weaponSystem[1].state ~= weaponSystem[1].states[6] then 
+
 				if not weaponSystem[1].module.isGrenade and not weaponSystem[1].module.isMelee then
 					if not weaponSystem[1].modifiers.IsReloading then
 						weaponSystem[1].modifiers.IsAiming = true
@@ -581,7 +587,9 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem[1].state ~= weaponSystem[1].states[6] then
+		if weaponSystem[1].viewmodel then
+			if weaponSystem[1].state == weaponSystem[1].states[6] then return end
+
 			if weaponData and weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.IsReloading then
 				weaponSystem[1].modifiers.IsAiming = false
 				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
@@ -613,9 +621,7 @@ end)
 
 mouse.Button1Up:Connect(function()
 	if weaponSystem[1].viewmodel then
-		if weaponSystem[1].state ~= weaponSystem[1].states[6] then
-			return
-		end
+		if weaponSystem[1].state == weaponSystem[1].states[6] then return end
 
 		weaponSystem[1].modifiers.IsShooting = false
 
@@ -631,9 +637,7 @@ while wait() do
 	if weaponData and weaponSystem[1].viewmodel and weaponData.modifiers.fireMode == "Full Auto" then
 		if weaponSystem[1].state == weaponSystem[1].states[2] or weaponSystem[1].modifiers.IsShooting then
 			if weaponSystem[1].state ~= weaponSystem[1].states[7] then
-				if weaponSystem[1].state ~= weaponSystem[1].states[6] then
-					return 
-				end
+				if weaponSystem[1].state == weaponSystem[1].states[6] then return end
 
 				local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem[1].inventory[weaponSystem[1].currentSlot], camera.CFrame.LookVector, weaponSystem[1].viewmodel.Muzzle.Position)
 				if success then

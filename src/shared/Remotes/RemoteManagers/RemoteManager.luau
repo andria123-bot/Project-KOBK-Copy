@@ -86,4 +86,8 @@ remoteManager.RequestReloadRemote = Instance.new("RemoteFunction")
 remoteManager.RequestReloadRemote.Parent = ReplicatedStorage.Shared.Remotes.Requests
 remoteManager.RequestReloadRemote.Name = "RequestReload"
 
+remoteManager.UpdateClientStateRemote = Instance.new("RemoteEvent")
+remoteManager.UpdateClientStateRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.UpdateClientStateRemote.Name = "UpdateClientState"
+
 return remoteManager

@@ -82,7 +82,7 @@ local playerWeaponSystemData = {
 
 function playerWeaponSystemData:setState(newState)
     print(newState) 
-    print(debug.traceback()) -- debug
+    -- print(debug.traceback()) -- debug
     playerWeaponSystemData.weaponSystem.state = newState
 end
 
