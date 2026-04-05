@@ -32,7 +32,6 @@ local currentMaxAmmo = 0
 
 UpdateClientState.OnClientEvent:Connect(function(newState)
     weaponSystem[1].state = newState
-    print("Client state updated to:", newState)
 end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
@@ -101,12 +100,10 @@ function updateHUD(state, data)
 end
 
 function loadSlot(Item)
-	-- print(weaponSystem)
 	-- weaponSystem[1].loadSlot = loadSlot idk wtf is ts
 	if weaponSystem[1].state == weaponSystem[1].states[1] 
 	or weaponSystem[1].state == weaponSystem[1].states[3] 
 	or weaponSystem[1].state == weaponSystem[1].states[4] then
-		-- weaponSystem:setState(weaponSystem[1].states[7])
 		UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[7])
 		weaponSystem[1].IsAiming = false
 		weaponSystem[1].IsInspecting = false
@@ -273,8 +270,6 @@ function Shoot()
 
 				game:GetService("Debris"):AddItem(muzzleFlash, .07)
 
-				-- ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Shoot"))
-
 				camera.CFrame = camera.CFrame * CFrame.Angles(recoilData.x, recoilData.y, recoilData.z)
 
 				debounce = true
@@ -294,7 +289,6 @@ end
 
 function Inspect()
 	if weaponSystem[1].animations and weaponSystem[1].viewmodel and weaponData and not weaponSystem[1].modifiers.IsReloading then
-		-- PlayerWeaponSystemData:setState(weaponSystem.states[4])
 		weaponSystem[1].modifiers.IsInspecting = true
 		if weaponSystem[1].state == weaponSystem[1].states[4] and weaponSystem[1].modifiers.IsInspecting then 
 			weaponSystem[1].animations.FirstPerson[8]:Stop()
@@ -318,7 +312,6 @@ function Inspect()
 
 			if weaponSystem[1].state == weaponSystem[1].states[4] then
 				weaponSystem[1].modifiers.IsInspecting = false
-				-- PlayerWeaponSystemData:setState(weaponSystem[1].states[1])
 				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
 			end
 		end
@@ -357,7 +350,7 @@ function melee(isLightStab)
 		weaponSystem[1].animations.ThirdPerson[5]:Play()
 	end
 
-	-- ReplicatedStorage.Shared.Remotes.Melee:FireServer(isLightStab, weaponSystem.module, camera.CFrame.Position, camera.CFrame.LookVector)
+	ReplicatedStorage.Shared.Remotes.Melee:FireServer(isLightStab, weaponData, camera.CFrame.Position, camera.CFrame.LookVector)
 end
 
 function Reload()
@@ -365,13 +358,18 @@ function Reload()
     
     local gun = weaponSystem[1].inventory[weaponSystem[1].currentSlot]
     
-    -- Don't reload if ammo is already full
     if currentAmmo >= currentMaxAmmo then
         return
     end
     
     weaponSystem[1].modifiers.isReloading = true
-    weaponSystem[1].animations.FirstPerson[5]:Play()
+    
+    if currentAmmo == 0 then
+        weaponSystem[1].animations.FirstPerson[6]:Play()  -- Empty reload
+    else
+        weaponSystem[1].animations.FirstPerson[5]:Play()  -- Normal reload
+    end
+    
     UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[3])
     
     local i = 0
@@ -409,7 +407,7 @@ end
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem[1].viewmodel then
-		print(weaponSystem[1].state) -- Debugging
+		-- print(weaponSystem[1].state) -- Debugging
 
 		if weaponSystem[1].viewmodel and weaponData then
 			local rot = camera.CFrame:ToObjectSpace(weaponData.aimData.lastCameraCF)
@@ -556,7 +554,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		if weaponData and weaponSystem[1].viewmodel then
-			if weaponSystem[1].state ~= weaponSystem[1].states[6] then 
+			if weaponSystem[1].state ~= weaponSystem[1].states[6] 
+			   and weaponSystem[1].state ~= weaponSystem[1].states[3] then 
 
 				if not weaponSystem[1].module.isGrenade and not weaponSystem[1].module.isMelee then
 					if not weaponSystem[1].modifiers.IsReloading then
@@ -598,10 +597,12 @@ UIS.InputEnded:Connect(function(input)
 		if weaponSystem[1].viewmodel then
 			if weaponSystem[1].state == weaponSystem[1].states[6] then return end
 
-			if weaponData and weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.IsReloading then
-				weaponSystem[1].modifiers.IsAiming = false
-				UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
-			end	
+			if weaponSystem[1].state ~= weaponSystem[1].states[3] then 
+				if weaponData and weaponSystem[1].viewmodel and not weaponSystem[1].modifiers.IsReloading then
+					weaponSystem[1].modifiers.IsAiming = false
+					UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[1])
+				end	
+			end
 		end
     end
 end)
@@ -694,6 +695,12 @@ while wait() do
 						recoilSpring:Impulse(hugeRecoil * 2000000)
 
 						camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(recoilData.rx), math.rad(recoilData.ry), math.rad(recoilData.rz))
+					end
+
+					if currentAmmo == 0 then
+						task.wait(.4)
+						UpdateWeaponStateRemote:FireServer(weaponSystem[1].states[3])
+						Reload()
 					end
 
 					task.wait(data.fireRate)

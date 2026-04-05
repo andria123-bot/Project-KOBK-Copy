@@ -68,7 +68,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
     if not weaponModule then return false end
 
     local weaponData = require(weaponModule)
-    local direction = LookVector
+    local direction = LookVector.Unit
 	    
     local now = tick()
     local lastShot = lastShotTime[player] or 0
@@ -116,6 +116,7 @@ RequestReload.OnServerInvoke = function(player, gun)
     
     local currentAmmo = playerAmmo[player][gun]
     local maxAmmo = playerAmmo[player][gun .. "_max"]
+    local isLastBullet = (playerAmmo[player][gun] == 0)
     
     if not maxAmmo then
         return false
@@ -128,6 +129,7 @@ RequestReload.OnServerInvoke = function(player, gun)
     playerAmmo[player][gun] = maxAmmo
     
     return true, {
+        isLastAmmo = isLastBullet,
         ammoLeft = playerAmmo[player][gun],
         maxAmmo = maxAmmo
     }
