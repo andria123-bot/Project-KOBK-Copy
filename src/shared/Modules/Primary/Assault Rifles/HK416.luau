@@ -87,7 +87,7 @@ local data = {
 
 	fireRate = 0.085, 
 	-- Recoil
-	x = 1.8,
+	x = 1.2,
 	y = 0.72,
 	z = 1.9;
 	

@@ -22,6 +22,10 @@ remoteManager.PlayerDiedRemote = Instance.new("RemoteEvent")
 remoteManager.PlayerDiedRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.PlayerDiedRemote.Name = "PlayerDied"
 
+remoteManager.PlayerRespawnedRemote = Instance.new("RemoteEvent")
+remoteManager.PlayerRespawnedRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.PlayerRespawnedRemote.Name = "PlayerRespawned"
+
 remoteManager.GrenadeRemote = Instance.new("RemoteEvent")
 remoteManager.GrenadeRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.GrenadeRemote.Name = "Grenade"

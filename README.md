@@ -20,20 +20,21 @@ dont mind here:
 When player press X it should drop the item
 
 Tons of bugs:
-when player dies he can re-equip weapon and still shoot                         | Easy   |
-when player dies fastcast redux manager is cooked                               | Medium |
+when player dies he can re-equip weapon and still shoot                         | Easy   | Fixed
+when player dies fastcast redux manager is cooked                               | Medium | Fixed
 MoveItem event is client sided so it means hackers can bypass it and dupe items | Hard   |
-modules are accessable by client, red flag                                      | Easy   | Fixed
+modules are accessable by client, red flag                                      | Medium | Fixed
 recoil happens on client, create seperated module for that                      | Medium | Fixed
 loadslot shoul be based on weaponSlot not inventory                             | Hard   |
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
 
 whe nammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
 remove .Unit on server                                                          | Easy   | Fixed
-fix death bug                                                                   | Medium |
+fix death bug                                                                   | Medium | Fixed
 
 Add server validation when loading slot it should invoke and server should check if loaded item is in player's inventory
 
+shooting needs to be more smooth
 
 weaponSystem[1].modifiers is player's modifiers
 weaponData is weapon's data which contains aimData, animations, fireMode, modifiers and much more

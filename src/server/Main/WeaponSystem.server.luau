@@ -4,8 +4,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 
 local remoteManagers = require(ReplicatedStorage.Shared.Remotes.RemoteManagers.RemoteManager)
-local FastCastReduxManager = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastReduxManager)
 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
+local FastCastReduxManager = require(script.Parent.Parent.FastCastReduxManager)
 FastCastReduxManager:changeParent()
 
 ReplicatedStorage.Localscripts.Animate.Parent = game.StarterPlayer.StarterCharacterScripts
@@ -98,13 +98,14 @@ game.Players.PlayerAdded:Connect(function(player)
 			ReplicatedStorage.Shared.Remotes.PlayerDied:FireClient(player)
 		end)
 
-		wait(.1)
+		wait(.5)
 
 		local forceField = character:FindFirstChild("ForceField")
 
 		if forceField then
 			forceField:Destroy()
 		end
+		ReplicatedStorage.Shared.Remotes.PlayerRespawned:FireClient(player)
 	end)
 end)
 
