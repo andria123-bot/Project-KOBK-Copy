@@ -116,7 +116,7 @@ RequestReload.OnServerInvoke = function(player, gun)
     
     local currentAmmo = playerAmmo[player][gun]
     local maxAmmo = playerAmmo[player][gun .. "_max"]
-    local isLastBullet = (playerAmmo[player][gun] == 0)
+    local isLastBullet = (playerAmmo[player][gun] == 1)
     
     if not maxAmmo then
         return false

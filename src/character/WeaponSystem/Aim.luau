@@ -8,7 +8,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 -- local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 
-local PlayerWeaponSystem = RequestWeaponSystemData:InvokeServer()
+local requiredPlayerWeaponSystem = RequestWeaponSystemData:InvokeServer()
 
 local currentAimPart = 1
 
