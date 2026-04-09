@@ -33,7 +33,7 @@ local data = {
 		}
 	};
 	
-	imageIconId = "rbxassetid://108092117001573",
+	imageIconId = "rbxassetid://79271369405227",
 	
 	canAim = true,
 	aimSmooth = .00025,

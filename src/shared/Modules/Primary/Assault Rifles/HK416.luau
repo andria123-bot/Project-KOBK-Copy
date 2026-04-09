@@ -35,7 +35,7 @@ local data = {
 		}
 	};
 
-	imageIconId = "rbxassetid://129066793868859",
+	imageIconId = "rbxassetid://103687899724625",
 
 	canAim = true,
 	aimSmooth = .00025,
@@ -115,7 +115,6 @@ casterBehaviour.AutoIgnoreContainer = true
 casterBehaviour.Acceleration = Vector3.new(0, -game.Workspace.Gravity, 0)
 
 function data:Fire(player, character, origin, direction, velocity, muzzleCF)
-	print(debug.traceback())
 	rayParams.FilterDescendantsInstances = {character, game.Workspace:FindFirstChild("BulletHoles")}
 	
 	if data.isShootgun then

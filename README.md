@@ -23,7 +23,7 @@ Tons of bugs:
 when player dies he can re-equip weapon and still shoot                         | Easy   | Fixed
 when player dies fastcast redux manager is cooked                               | Medium | Fixed
 MoveItem event is client sided so it means hackers can bypass it and dupe items | Hard   |
-modules are accessable by client, red flag                                      | Medium | Fixed
+modules are accessable by client, red flag                                      | Hard   | Fixed
 recoil happens on client, create seperated module for that                      | Medium | Fixed
 loadslot shoul be based on weaponSlot not inventory                             | Hard   |
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
@@ -31,6 +31,8 @@ loadslot can load any weapon by cheater at any time                             
 whe nammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
 remove .Unit on server                                                          | Easy   | Fixed
 fix death bug                                                                   | Medium | Fixed
+
+fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle
 
 Add server validation when loading slot it should invoke and server should check if loaded item is in player's inventory
 

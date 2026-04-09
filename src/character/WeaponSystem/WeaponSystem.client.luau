@@ -352,7 +352,7 @@ function Inspect()
 
         weaponSystem.modifiers.IsInspecting = false
         
-        -- ONLY set to Idle if we're not reloading or shooting
+        -- ONLY set to Idle if we're not reloading or shootingww
         if not weaponSystem.modifiers.isReloading and not weaponSystem.modifiers.IsShooting then
             UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
         end
@@ -396,39 +396,26 @@ end
 
 function Reload()
 	if currentAmmo >= currentMaxAmmo then
-        weaponSystem.modifiers.isReloading = false
-        UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
         return
     end
 
-	UpdateWeaponStateRemote:FireServer(weaponSystem.states[3])
     weaponSystem.modifiers.isReloading = true
+	UpdateWeaponStateRemote:FireServer(weaponSystem.states[3])
 
     if weaponSystem.modifiers.IsInspecting then
         if weaponSystem.animations.FirstPerson[7] then
-    		UpdateWeaponStateRemote:FireServer(weaponSystem.states[3])
             weaponSystem.animations.FirstPerson[7]:Stop()
         end
         weaponSystem.modifiers.IsInspecting = false
     end
     
     local gun = weaponSystem.inventory[weaponSystem.currentSlot]
-    
-    if currentAmmo == 0 then
+
+	if currentAmmo == 0 then
         weaponSystem.animations.FirstPerson[6]:Play()
+		wait(weaponData.reloadTime)
     else
         weaponSystem.animations.FirstPerson[5]:Play()
-    end
-    
-    local i = 0
-    while i < weaponData.reloadTime do
-        if weaponSystem.modifiers.IsShooting then
-            weaponSystem.modifiers.isReloading = false
-            UpdateWeaponStateRemote:FireServer(weaponSystem.states[2])
-            return
-        end
-        task.wait(0.05)
-        i = i + 0.05
     end
     
     local success, data = RequestReload:InvokeServer(gun)
@@ -439,10 +426,12 @@ function Reload()
             ammoLeft = currentAmmo,
             maxAmmo = currentMaxAmmo
         })
+
+		UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
     end
     
     weaponSystem.modifiers.isReloading = false
-    UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
+	UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
 end
 
 local oldCamCF = CFrame.new()
@@ -600,8 +589,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		if character and weaponSystem.viewmodel and not debounce 
-		and weaponSystem.state ~= weaponSystem.states[3] then
-			
+		and weaponSystem.state ~= weaponSystem.states[3] and not weaponSystem.modifiers.isReloading then
 			Shoot()
 		end
 
@@ -666,7 +654,7 @@ UIS.InputEnded:Connect(function(input)
 			 	and weaponSystem.state ~= weaponSystem.states[8] then 
 				if weaponData and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
 					weaponSystem.modifiers.IsAiming = false
-					UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
+					-- UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
 				end	
 			end
 		end
@@ -725,12 +713,13 @@ mouse.Button1Up:Connect(function()
 		if weaponSystem.state == weaponSystem.states[6] then return end
 		if weaponSystem.state ~= weaponSystem.states[8]
 			and weaponSystem.state ~= weaponSystem.states[3] then 
+			 
 			weaponSystem.modifiers.IsShooting = false
 
 			if weaponSystem.modifiers.IsAiming then
 				UpdateWeaponStateRemote:FireServer(weaponSystem.states[5])
-			else
-				UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
+			-- else
+				-- UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
 			end
 		end
 	end
@@ -738,7 +727,6 @@ end)
 
 while wait() do
 	if weaponData and weaponSystem.viewmodel and weaponData.modifiers.fireMode == "Full Auto" then
-
 		if weaponSystem.state == weaponSystem.states[2] and weaponSystem.modifiers.IsShooting then
 			local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.inventory[weaponSystem.currentSlot], camera.CFrame.LookVector, weaponSystem.viewmodel.Muzzle.Position)
 
@@ -753,35 +741,52 @@ while wait() do
 				weaponSystem.animations.ThirdPerson[5]:Stop()
 				weaponSystem.animations.ThirdPerson[6]:Stop()
 
-				print(success, data)
+				local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+				muzzleFlash.Parent = game.Workspace
+				muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+				for i, v in pairs(muzzleFlash:GetChildren()) do
+					if v:IsA("ParticleEmitter") then
+						v:Emit(1)
+					end
+				end
+				game:GetService("Debris"):AddItem(muzzleFlash, .07)
+
+				viewmodelKickOffset = CFrame.new(0, 0, 0.3)
+				kickReturnTime = tick() + 0.08
+				task.spawn(function()
+					task.wait(0.08)
+					viewmodelKickOffset = CFrame.new()
+				end)
+
+				if SpringModule then
+					local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
+					recoilSpring:Impulse(hugeRecoil * 2000000)
+					camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(recoilData.rx), math.rad(recoilData.ry), math.rad(recoilData.rz))
+				end
 
 				currentAmmo = data.ammoLeft
 				currentMaxAmmo = data.maxAmmo
-				print(currentAmmo)
-				print(currentMaxAmmo)
-
 				updateHUD(true, {
 					ammoLeft = currentAmmo,
 					maxAmmo = currentMaxAmmo,
 				})
-				
+
 				if data.isLastBullet then
 					weaponSystem.animations.FirstPerson[1]:Stop()
 					weaponSystem.animations.ThirdPerson[1]:Stop()
-
 					weaponSystem.animations.FirstPerson[4]:Play()
-				elseif data.ammoLeft > 0 then
-
-					weaponSystem.animations.FirstPerson[1]:Stop()
-
-					weaponSystem.animations.FirstPerson[1]:Play()
 				else
-					print("Reloading", currentAmmo, data.ammoLeft)
+					weaponSystem.animations.FirstPerson[1]:Stop()
+					weaponSystem.animations.FirstPerson[1]:Play()
+					weaponSystem.animations.ThirdPerson[1]:Play()
 				end
 
+				if data.ammoLeft == 0 then
+					wait(.4)
+					Reload()
+				end
 
-
-
+				wait(data.fireRate)
 			end
 		end
 	end

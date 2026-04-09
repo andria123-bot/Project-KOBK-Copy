@@ -42,7 +42,7 @@ local data = {
 		}
 	},
 
-	imageIconId = "rbxassetid://129066793868859",
+	imageIconId = "rbxassetid://91662687299133",
 
 	-- Weapon behavior
 	canAim = true,
