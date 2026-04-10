@@ -1,7 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait() or script.Parent.Parent
 local humanoid = character:WaitForChild("Humanoid")
@@ -20,6 +19,7 @@ local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateC
 local PlayerRespawned = ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerRespawned")
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
+local Scope = require(script.Parent.Scope)
 
 local SpringModule = require(ReplicatedStorage.Shared.Modules.Spring)
 
@@ -105,33 +105,6 @@ function updateHUD(state, data)
 end
 
 local dot = Instance.new("Frame")
-
-local function createDotCrosshair(state)
-    if state then
-		local playerGui = player:WaitForChild("PlayerGui")
-		
-		dot.Transparency = 0
-		dot.Name = "Crosshair"
-		dot.Parent = playerGui
-		dot.Size = UDim2.new(0, 4, 0, 4)
-		dot.Position = UDim2.new(0.505, -2, 0.5105, -1.7)
-		dot.BackgroundColor3 = Color3.fromRGB(93, 63, 211)  -- Your purple color
-		dot.BackgroundTransparency = 0
-		dot.BorderSizePixel = 0
-		dot.ZIndex = 1000  -- Higher ZIndex
-		dot.AnchorPoint = Vector2.new(0.5, 0.5)
-		
-		local screenGui = Instance.new("ScreenGui")
-		screenGui.Name = "CrosshairGui"
-		screenGui.Parent = playerGui
-		screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-		screenGui.IgnoreGuiInset = true  -- Ignore top bar
-		
-		dot.Parent = screenGui
-	else
-		dot.Transparency = 1
-	end
-end
 
 function loadSlot(Item)
 	-- weaponSystem.loadSlot = loadSlot idk wtf is ts
@@ -246,8 +219,6 @@ function loadSlot(Item)
 				name = weaponData.name,
 			})
 
-			createDotCrosshair(true)
-
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
 
 			task.wait(.1)
@@ -268,9 +239,9 @@ function loadSlot(Item)
 			end
 
 			UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
-			aimHelper:Init(weaponData.aimData, weaponSystem.viewmodel, weaponSystem)
-
+			aimHelper:Init(weaponData, weaponSystem.viewmodel, weaponSystem)
 			ViewmodelRotation:Init(true, weaponSystem.viewmodel)
+			Scope:Init(weaponData, weaponSystem)
 		end
 	end
 end
@@ -352,34 +323,11 @@ function Inspect()
 
         weaponSystem.modifiers.IsInspecting = false
         
-        -- ONLY set to Idle if we're not reloading or shootingww
+        -- ONLY set to Idle if we're not reloading or shooting
         if not weaponSystem.modifiers.isReloading and not weaponSystem.modifiers.IsShooting then
             UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
         end
     end
-end
-
-function grenade(grenade)
-	repeat task.wait() until weaponSystem.animations.FirstPerson[1].isPlaying == true
-
-	local grenadeThrown = false
-
-	weaponSystem.animations.FirstPerson[1]:GetMarkerReachedSignal("GremadeThrow"):Connect(function()
-
-		if not grenadeThrown then
-			camera:FindFirstChildWhichIsA("Model").Grenade.Transparency = 1
-
-			game.ReplicatedStorage.Remotes.Main.Grenade:FireServer(grenade, camera:FindFirstChildWhichIsA("Model").Grenade.Position, camera.CFrame.LookVector, weaponSystem.module.sounds[2], 1)
-			
-			grenadeThrown = true
-		end
-	end)
-
-	weaponSystem.animations.FirstPerson[1].Ended:Connect(function()
-		weaponSystem.inventory[weaponSystem.currentSlot] = "Nil"
-		weaponSystem.currentSlot = 1
-		loadSlot(weaponSystem.inventory[weaponSystem.currentSlot])
-	end)
 end
 
 function melee(isLightStab) 
@@ -442,22 +390,15 @@ function updateCameraShake()
 	oldCamCF = newCamCF
 end
 
-
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem.viewmodel then
-		-- print(weaponSystem.state) -- Debugging
+		print(weaponSystem.state) -- Debugging
 
 		if tick() > kickReturnTime and viewmodelKickOffset ~= CFrame.new() then
 			viewmodelKickOffset = CFrame.new()
 		end
 
 		if weaponSystem.viewmodel and weaponData then
-			if weaponSystem.state == weaponSystem.states[5] then
-				createDotCrosshair(false)
-			else
-				createDotCrosshair(true)
-			end
-
 			local rot = camera.CFrame:ToObjectSpace(weaponData.aimData.lastCameraCF)
 			local X, Y, _ = rot:ToOrientation() 
 			weaponData.aimData.swayCF = weaponData.aimData.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponData.aimData.currentSwayAMT, math.sin(Y) * weaponData.aimData.currentSwayAMT, 0), 1 - 0.001 ^ dt)
@@ -602,8 +543,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 		if weaponData and weaponSystem.viewmodel then
 			if weaponSystem.state ~= weaponSystem.states[6] 
 			   	and weaponSystem.state ~= weaponSystem.states[3] 
-			    and weaponSystem.state ~= weaponSystem.states[8] then 
-
+			    and weaponSystem.state ~= weaponSystem.states[8]
+				and weaponSystem.state ~= weaponSystem.states[4] then 
 				if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
 					if not weaponSystem.modifiers.IsReloading then
 						weaponSystem.modifiers.IsAiming = true
@@ -654,7 +595,7 @@ UIS.InputEnded:Connect(function(input)
 			 	and weaponSystem.state ~= weaponSystem.states[8] then 
 				if weaponData and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
 					weaponSystem.modifiers.IsAiming = false
-					-- UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
+					UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
 				end	
 			end
 		end

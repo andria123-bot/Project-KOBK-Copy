@@ -3,15 +3,16 @@ local AimHelper = {}
 AimHelper.weaponModule = nil
 AimHelper.viewmodel = nil
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Scope = require(script.Parent.Scope)
 
-local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
--- local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
+local camera = workspace.CurrentCamera
 
-local requiredPlayerWeaponSystem = RequestWeaponSystemData:InvokeServer()
+local defaultFOV = 70
+local scopedFOV
 
 local currentAimPart = 1
-
+local currentFOV = defaultFOV
+	
 function AimHelper:Init(weaponModule, viewmodel, weaponSys)
     self.weaponModule = weaponModule
     self.viewmodel = viewmodel
@@ -27,15 +28,18 @@ function AimHelper:switchAimpart()
 end
 
 function AimHelper:Aim(dt)
-    if not (self.weaponModule and self.viewmodel and self.weaponModule.canAim) then return end
+	print(self.weaponModule)
+    if not (self.weaponModule and self.viewmodel and self.weaponModule.aimData.canAim) then return end
     
-    -- Check if aiming (state 5) OR if player is holding aim button during shooting
     local isAiming = (self.weaponSystem.state == self.weaponSystem.states[5]) or 
                      (self.weaponSystem.modifiers.IsAiming == true)
     
     if isAiming and not 
         self.weaponSystem.modifiers.IsReloading and not 
         self.weaponSystem.modifiers.IsInspecting then
+			Scope:Init(self.weaponModule, self.weaponSystem)
+		Scope:GetScopeData()
+		-- scopedFOV = require(Scope)
 											
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end
@@ -51,19 +55,25 @@ function AimHelper:Aim(dt)
 
 		if targetPart then
 			targetOffset = targetPart.CFrame:ToObjectSpace(primary.CFrame)
-			self.weaponModule.currentSwayAMT = self.weaponModule.aimSwayAMT
+			self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.aimSwayAMT
 		else
-			self.weaponModule.currentSwayAMT = self.weaponModule.swayAMT
+			self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.swayAMT
 		end
 
-		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
-		self.weaponModule.aimCF = self.weaponModule.aimCF:Lerp(targetOffset, alpha)
+		local alpha = math.clamp(1 - self.weaponModule.aimData.aimSmooth ^ dt, 0, 1)
+		self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(targetOffset, alpha)
+		
+		currentFOV = currentFOV + (scopedFOV - currentFOV) * alpha
+		camera.FieldOfView = currentFOV
 
 	elseif not isAiming then
-		self.weaponModule.currentSwayAMT = self.weaponModule.swayAMT
+		self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.swayAMT
 		
-		local alpha = math.clamp(1 - self.weaponModule.aimSmooth ^ dt, 0, 1)
-		self.weaponModule.aimCF = self.weaponModule.aimCF:Lerp(CFrame.new(), alpha)
+		local alpha = math.clamp(1 - self.weaponModule.aimData.aimSmooth ^ dt, 0, 1)
+		self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(CFrame.new(), alpha)
+		
+		currentFOV = currentFOV + (defaultFOV - currentFOV) * alpha
+		camera.FieldOfView = currentFOV
 	end
 end
 

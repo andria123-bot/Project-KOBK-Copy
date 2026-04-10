@@ -28,11 +28,11 @@ recoil happens on client, create seperated module for that                      
 loadslot shoul be based on weaponSlot not inventory                             | Hard   |
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
 
-whe nammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
+when ammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
 remove .Unit on server                                                          | Easy   | Fixed
 fix death bug                                                                   | Medium | Fixed
 
-fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle
+fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle | Medium | Fixed
 
 Add server validation when loading slot it should invoke and server should check if loaded item is in player's inventory
 

@@ -31,8 +31,22 @@ local data = {
 		"rbxassetid://127619339252879"; -- deequip/holster
 
 		attachmentSounds = {
-			"rbxassetid://17589930440" -- Suppressor
-		}
+			"rbxassetid://17589930440"; -- Suppressor
+		};
+	};
+
+	scopeData = {
+		currentScope = "",
+
+		defaultScope = "IronSights",
+
+		allowedScopes = {
+			IronSights = true,
+			RedDot = true,
+			Holo = true,
+			ACOG = true,
+			Scope4x = true,
+		};
 	};
 
 	imageIconId = "rbxassetid://103687899724625",
@@ -44,7 +58,6 @@ local data = {
 	ammo = 30,        
 	maxAmmo = 30,
 	fireMode = "Full Auto",
-
 
 	sprintCF = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-95/5), math.rad(95/4), math.rad(95/5));
 
@@ -62,15 +75,6 @@ local data = {
 	canPenetrate = true,
 	maxDepth = 2.6,
 	damageFalloff = 0.75,
-
-	penetrationMaterials = {
-		["Wood"] = 0.9,
-		["Plastic"] = 1,
-		["Glass"] = 1,
-		["Metal"] = 0.4,
-		["Concrete"] = 0.5,
-		["Brick"] = 0.55,
-	},
 
 	canAddSight = true,
 	canAddLaser = true,

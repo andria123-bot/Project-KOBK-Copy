@@ -26,15 +26,16 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
     end
     
     return {
-        animations = weaponModule.animations,
-        sounds = weaponModule.sounds,
-        name = weaponModule.name,
-        currentAmmo = playerAmmo[player][Item],
         maxAmmo = playerAmmo[player][Item .. "_max"],
+        currentAmmo = playerAmmo[player][Item],
         imageIconId = weaponModule.imageIconId,
+        reloadTime = weaponModule.reloadTime,
+        animations = weaponModule.animations,
+        scopeData = weaponModule.scopeData;
         fireMode = weaponModule.fireMode,
         ammoType = weaponModule.ammoType,
-        reloadTime = weaponModule.reloadTime,
+        sounds = weaponModule.sounds,
+        name = weaponModule.name,
 
         aimData = {
             lastCameraCF = weaponModule.lastCameraCF,
