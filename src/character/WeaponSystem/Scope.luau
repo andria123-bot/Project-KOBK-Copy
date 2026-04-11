@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
+local ScopeConfigs = require(ReplicatedStorage.Shared.Modules.ScopeConfig.ScopeConfigs)
 
 local Scope = {}
 
@@ -9,9 +10,16 @@ function Scope:Init(weaponModule, weaponSys)
 end
 
 function Scope:GetScopeData()
-    local isDefaultScope = (self.weaponModule.scopeData.defaultScope) == ""
+    local scopeData = self.weaponModule.scopeData
 
-    print(isDefaultScope)
+    if scopeData.currentScope == "Empty" then
+        scopeData.currentScope = scopeData.defaultScope
+    end
+
+    local currentScopeName = scopeData.currentScope
+    local currentScope = ScopeConfigs[currentScopeName]
+
+    return currentScope
 end
 
 

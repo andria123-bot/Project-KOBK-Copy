@@ -392,7 +392,7 @@ end
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem.viewmodel then
-		print(weaponSystem.state) -- Debugging
+		-- print(weaponSystem.state) -- Debugging
 
 		if tick() > kickReturnTime and viewmodelKickOffset ~= CFrame.new() then
 			viewmodelKickOffset = CFrame.new()

@@ -18,6 +18,14 @@ local ItemList = {
     "MK2";
   };
 
+  Scopes = {
+    "IronSights";
+    "Holo";
+    "ACOG"; --4x
+    "PulsarThermion2";
+    "ReapIR";
+  };
+
   Helmets = {
     "6B47";
     "Altyn";
@@ -31,8 +39,8 @@ local ItemList = {
     "Altyn Face Visor";
     "Altyn Full Visor";
 
-      -- FastMT
-    "Balli  stic Visor";
+    -- FastMT
+    "Ballistic Visor";
     "Fast Visor";
   };
 

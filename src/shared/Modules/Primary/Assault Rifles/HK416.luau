@@ -36,16 +36,15 @@ local data = {
 	};
 
 	scopeData = {
-		currentScope = "",
+		currentScope = "Empty",
 
-		defaultScope = "IronSights",
+		defaultScope = "Holo",
 
 		allowedScopes = {
-			IronSights = true,
 			RedDot = true,
 			Holo = true,
 			ACOG = true,
-			Scope4x = true,
+			PulsarThermion2 = true,
 		};
 	};
 

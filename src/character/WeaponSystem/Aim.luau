@@ -28,7 +28,7 @@ function AimHelper:switchAimpart()
 end
 
 function AimHelper:Aim(dt)
-	print(self.weaponModule)
+	-- print(self.weaponModule)
     if not (self.weaponModule and self.viewmodel and self.weaponModule.aimData.canAim) then return end
     
     local isAiming = (self.weaponSystem.state == self.weaponSystem.states[5]) or 
@@ -37,9 +37,10 @@ function AimHelper:Aim(dt)
     if isAiming and not 
         self.weaponSystem.modifiers.IsReloading and not 
         self.weaponSystem.modifiers.IsInspecting then
-			Scope:Init(self.weaponModule, self.weaponSystem)
-		Scope:GetScopeData()
-		-- scopedFOV = require(Scope)
+
+		Scope:Init(self.weaponModule, self.weaponSystem)
+		scopedFOV = Scope:GetScopeData()
+		print(scopedFOV)
 											
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end
@@ -63,7 +64,7 @@ function AimHelper:Aim(dt)
 		local alpha = math.clamp(1 - self.weaponModule.aimData.aimSmooth ^ dt, 0, 1)
 		self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(targetOffset, alpha)
 		
-		currentFOV = currentFOV + (scopedFOV - currentFOV) * alpha
+		currentFOV = currentFOV + (scopedFOV.aimFOV - currentFOV) * alpha
 		camera.FieldOfView = currentFOV
 
 	elseif not isAiming then
