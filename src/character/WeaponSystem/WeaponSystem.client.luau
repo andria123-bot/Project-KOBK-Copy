@@ -659,8 +659,8 @@ mouse.Button1Up:Connect(function()
 
 			if weaponSystem.modifiers.IsAiming then
 				UpdateWeaponStateRemote:FireServer(weaponSystem.states[5])
-			-- else
-				-- UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
+			else
+				UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
 			end
 		end
 	end
