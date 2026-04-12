@@ -5,13 +5,16 @@ local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitFo
 local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
+local ShootEvent = ReplicatedStorage.Shared.Remotes:WaitForChild("Shoot")
+local UpdateWeaponStats = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponStats")
 
 local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 local PlayerWeaponSystemData = require(script.Parent.Parent.PlayerWeaponSystemData)
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 
-local lastShotTime = {}
+local playerCooldown = {}
 local playerAmmo = {}
+local lastShotTime = {}
 
 RequestWeaponData.OnServerInvoke = function(player, Item)
     local weaponModule = require(LoadModule.GetModule(Item))
@@ -110,6 +113,62 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
     }
 end
 
+-- ShootEvent.OnServerEvent:Connect(function(player, Item)
+--      local character = player.Character or player.CharacterAdded:Wait()
+--     if not character then return end
+
+--     local weaponModule = LoadModule.GetModule(Item)
+--     if not weaponModule then return false end
+
+--     local weaponData = require(weaponModule)
+--     local muzzlePos = character:WaitForChild(Item).Muzzle.Position
+--     local direction = character:WaitForChild("HumanoidRootPart").CFrame.LookVector
+
+--     local lastShotTime = playerCooldown[player] or 0
+--     if tick() - lastShotTime < weaponData.fireRate then
+--         return
+--     end
+--     playerCooldown[player] = tick()
+    
+--     if not playerAmmo[player] or not playerAmmo[player][Item] then
+--         return false
+--     end
+    
+--     if playerAmmo[player][Item] <= 0 then return false end
+
+--     local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
+--     if sound then
+--         sound:Play()
+--     end
+
+--     playerAmmo[player][Item] = playerAmmo[player][Item] - 1
+
+--     weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil)
+    
+--     local isLastBullet = (playerAmmo[player][Item] == 0)
+    
+--     local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
+
+--     local rx = (math.random() * modX * 0.8) + (math.random() < 0.2 and -modX * 0.2 or 0)
+--     local ry = (math.random() - 0.5) * 2 * modY
+--     local rz = (math.random() - 0.5) * 2 * modZ
+
+--     local data = {
+--         weaponData = {
+--             maxAmmo = playerAmmo[player][Item .. "_max"],
+--             imageIconId = weaponData.imageIconId,
+--             ammoLeft = playerAmmo[player][Item],
+--             fireMode = weaponData.fireMode,
+--             ammoType = weaponData.ammoType,
+--             isLastBullet = isLastBullet,
+--         };
+
+--         recoilData = { rx = rx, ry = ry, rz = rz }
+--     }
+
+--     UpdateWeaponStats:FireClient(player, data)
+-- end)
+
 RequestReload.OnServerInvoke = function(player, gun)
     if not playerAmmo[player] or not playerAmmo[player][gun] then
         return false
@@ -137,7 +196,6 @@ RequestReload.OnServerInvoke = function(player, gun)
 end
 
 game.Players.PlayerRemoving:Connect(function(player)
-    lastShotTime[player] = nil
     playerAmmo[player] = nil
 end)
 

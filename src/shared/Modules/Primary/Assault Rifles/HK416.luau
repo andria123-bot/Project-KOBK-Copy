@@ -172,9 +172,6 @@ caster.RayHit:Connect(function(activeCast, result)
 			humanoid:TakeDamage(data.damage)
 		end
 	elseif hit then -- wallbang
-		local origin = result.Position
-		local direction = activeCast.UserData["Direction"].Unit
-
 		local bulletHole = game.ReplicatedStorage.Objects.BulletHole:Clone()
 		bulletHole.CFrame = CFrame.new(result.Position, result.Position + result.Normal)
 
@@ -187,7 +184,7 @@ caster.RayHit:Connect(function(activeCast, result)
 
 		bulletHole.Parent = bulletHolesFolder
 		bulletHole.Impact:Play()
-		game:GetService("Debris"):AddItem(bulletHole, 15)
+		game:GetService("Debris"):AddItem(bulletHole, 5)
 	end
 end)
 

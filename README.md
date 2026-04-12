@@ -31,6 +31,8 @@ loadslot can load any weapon by cheater at any time                             
 when ammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
 remove .Unit on server                                                          | Easy   | Fixed
 fix death bug                                                                   | Medium | Fixed
+when died it doesnt reset ammo                                                  | Medium | 
+InvokeServer is delaying the shoot function                                     | Medium | 
 
 fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle | Medium | Fixed
 

@@ -3,8 +3,12 @@ local remoteManager = {}
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 
 remoteManager.ShootRemote = Instance.new("RemoteEvent")
-remoteManager.ShootRemote.Parent = ReplicatedStorage:WaitForChild("Shared").Remotes
+remoteManager.ShootRemote.Parent = ReplicatedStorage.Shared.Remotes
 remoteManager.ShootRemote.Name = "Shoot"
+
+remoteManager.UpdateWeaponStatsRemote = Instance.new("RemoteEvent")
+remoteManager.UpdateWeaponStatsRemote.Parent = ReplicatedStorage.Shared.Remotes
+remoteManager.UpdateWeaponStatsRemote.Name = "UpdateWeaponStats"
 
 remoteManager.LoadSlotRemote = Instance.new("RemoteEvent")
 remoteManager.LoadSlotRemote.Parent = ReplicatedStorage.Shared.Remotes

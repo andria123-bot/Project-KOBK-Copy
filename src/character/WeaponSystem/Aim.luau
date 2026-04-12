@@ -40,7 +40,7 @@ function AimHelper:Aim(dt)
 
 		Scope:Init(self.weaponModule, self.weaponSystem)
 		scopedFOV = Scope:GetScopeData()
-		print(scopedFOV)
+		-- print(scopedFOV)
 											
 		local primary = self.viewmodel.PrimaryPart
 		if not primary then return end

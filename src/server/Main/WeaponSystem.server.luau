@@ -37,7 +37,6 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 		end
 		
 		local module = require(LoadModule.GetModule(item))
-		print(module.sounds[1])
 
 		local function createSound(name, id, volume)
 			local sound = Instance.new("Sound")
