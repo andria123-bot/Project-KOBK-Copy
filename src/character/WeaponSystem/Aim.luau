@@ -30,6 +30,17 @@ end
 function AimHelper:Aim(dt)
     if not (self.weaponModule and self.viewmodel and self.weaponModule.aimData.canAim) then return end
     
+    -- Force reset aim if reloading
+    if self.weaponSystem.modifiers.IsReloading then
+        -- Reset aim CF
+        self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(CFrame.new(), 0.3)
+        -- Reset FOV
+        currentFOV = currentFOV + (defaultFOV - currentFOV) * 0.3
+        camera.FieldOfView = currentFOV
+        self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.swayAMT
+        return
+    end
+    
     local isAiming = (self.weaponSystem.state == self.weaponSystem.states[5]) or 
                      (self.weaponSystem.modifiers.IsAiming == true)
     
@@ -37,44 +48,43 @@ function AimHelper:Aim(dt)
         self.weaponSystem.modifiers.IsReloading and not 
         self.weaponSystem.modifiers.IsInspecting then
 
-		Scope:Init(self.weaponModule, self.weaponSystem)
-		scopedFOV = Scope:GetScopeData()
-		-- print(scopedFOV)
-											
-		local primary = self.viewmodel.PrimaryPart
-		if not primary then return end
+        Scope:Init(self.weaponModule, self.weaponSystem)
+        local scopeData = Scope:GetScopeData()
+        local aimFOV = scopeData and scopeData.aimFOV or 45
+                                            
+        local primary = self.viewmodel.PrimaryPart
+        if not primary then return end
 
-		local targetPart
-		if currentAimPart == 1 then
-			targetPart = self.viewmodel:FindFirstChild("AimPart", true)
-		else
-			targetPart = self.viewmodel:FindFirstChild("AimPart2", true)
-		end
+        local targetPart
+        if currentAimPart == 1 then
+            targetPart = self.viewmodel:FindFirstChild("AimPart", true)
+        else
+            targetPart = self.viewmodel:FindFirstChild("AimPart2", true)
+        end
 
-		local targetOffset = CFrame.new()
+        local targetOffset = CFrame.new()
 
-		if targetPart then
-			targetOffset = targetPart.CFrame:ToObjectSpace(primary.CFrame)
-			self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.aimSwayAMT
-		else
-			self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.swayAMT
-		end
+        if targetPart then
+            targetOffset = targetPart.CFrame:ToObjectSpace(primary.CFrame)
+            self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.aimSwayAMT
+        else
+            self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.swayAMT
+        end
 
-		local alpha = math.clamp(1 - self.weaponModule.aimData.aimSmooth ^ dt, 0, 1)
-		self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(targetOffset, alpha)
-		
-		currentFOV = currentFOV + (scopedFOV.aimFOV - currentFOV) * alpha
-		camera.FieldOfView = currentFOV
-
-	elseif not isAiming then
-		self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.swayAMT
-		
-		local alpha = math.clamp(1 - self.weaponModule.aimData.aimSmooth ^ dt, 0, 1)
-		self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(CFrame.new(), alpha)
-		
-		currentFOV = currentFOV + (defaultFOV - currentFOV) * alpha
-		camera.FieldOfView = currentFOV
-	end
+        local alpha = math.clamp(1 - self.weaponModule.aimData.aimSmooth ^ dt, 0, 1)
+        self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(targetOffset, alpha)
+        
+        currentFOV = currentFOV + (aimFOV - currentFOV) * alpha
+        camera.FieldOfView = currentFOV
+    elseif not isAiming then
+        self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.swayAMT
+        
+        local alpha = math.clamp(1 - self.weaponModule.aimData.aimSmooth ^ dt, 0, 1)
+        self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(CFrame.new(), alpha)
+        
+        currentFOV = currentFOV + (defaultFOV - currentFOV) * alpha
+        camera.FieldOfView = currentFOV
+    end
 end
 
 return AimHelper

@@ -343,12 +343,21 @@ function melee(isLightStab)
 end
 
 function Reload()
-	if currentAmmo >= currentMaxAmmo then
+    if currentAmmo >= currentMaxAmmo then
         return
     end
 
+    if weaponSystem.modifiers.IsAiming then
+        weaponSystem.modifiers.IsAiming = false
+        UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
+        camera.FieldOfView = 70
+        if weaponData and weaponData.aimData then
+            weaponData.aimData.aimCF = CFrame.new()
+        end
+    end
+
     weaponSystem.modifiers.isReloading = true
-	UpdateWeaponStateRemote:FireServer(weaponSystem.states[3])
+    UpdateWeaponStateRemote:FireServer(weaponSystem.states[3])
 
     if weaponSystem.modifiers.IsInspecting then
         if weaponSystem.animations.FirstPerson[7] then
@@ -359,11 +368,12 @@ function Reload()
     
     local gun = weaponSystem.inventory[weaponSystem.currentSlot]
 
-	if currentAmmo == 0 then
+    if currentAmmo == 0 then
         weaponSystem.animations.FirstPerson[6]:Play()
-		wait(weaponData.reloadTime)
+        wait(weaponData.reloadTime)
     else
         weaponSystem.animations.FirstPerson[5]:Play()
+        wait(weaponData.reloadTime)
     end
     
     local success, data = RequestReload:InvokeServer(gun)
@@ -374,12 +384,10 @@ function Reload()
             ammoLeft = currentAmmo,
             maxAmmo = currentMaxAmmo
         })
-
-		UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
     end
     
     weaponSystem.modifiers.isReloading = false
-	UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
+    UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
 end
 
 local oldCamCF = CFrame.new()
@@ -542,18 +550,21 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 	if input.UserInputType == Enum.UserInputType.MouseButton2 then
 		if weaponData and weaponSystem.viewmodel then
+			if weaponSystem.modifiers.isReloading then return end
 			if weaponSystem.state ~= weaponSystem.states[6] 
-			   	and weaponSystem.state ~= weaponSystem.states[3] 
-			    and weaponSystem.state ~= weaponSystem.states[8]
+				and weaponSystem.state ~= weaponSystem.states[3] 
+				and weaponSystem.state ~= weaponSystem.states[8]
 				and weaponSystem.state ~= weaponSystem.states[4] then 
 				if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
 					if not weaponSystem.modifiers.IsReloading then
 						weaponSystem.modifiers.IsAiming = true
-						UpdateWeaponStateRemote:FireServer(weaponSystem.states[5])
+						if not weaponSystem.modifiers.IsShooting then
+							UpdateWeaponStateRemote:FireServer(weaponSystem.states[5])
+						end
 					end
 				end
 			end
-		end	
+		end   
 
 		if weaponData and weaponSystem.viewmodel and weaponData.modifiers.isMelee and not weaponData.modifiers.isMelee then
 			melee(false)
@@ -587,19 +598,19 @@ end)
 
 UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
-		if weaponSystem.viewmodel then
-			if weaponSystem.state == weaponSystem.states[6] then
-				return
-			end
-
-			if weaponSystem.state ~= weaponSystem.states[3]
-			 	and weaponSystem.state ~= weaponSystem.states[8] then 
-				if weaponData and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
-					weaponSystem.modifiers.IsAiming = false
-					UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
-				end	
-			end
-		end
+        if weaponSystem.viewmodel then
+            if weaponSystem.state == weaponSystem.states[6] then return end
+            if weaponSystem.state ~= weaponSystem.states[3]
+                and weaponSystem.state ~= weaponSystem.states[8] then 
+                if weaponData and weaponSystem.viewmodel and not weaponSystem.modifiers.IsReloading then
+                    weaponSystem.modifiers.IsAiming = false
+                    
+	                    if not weaponSystem.modifiers.IsShooting then
+                        UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
+                    end
+                end   
+            end
+        end
     end
 end)
 
@@ -651,20 +662,20 @@ PlayerRespawned.OnClientEvent:Connect(function()
 end)
 
 mouse.Button1Up:Connect(function()
-	if weaponSystem.viewmodel and weaponData then
-		if weaponSystem.state == weaponSystem.states[6] then return end
-		if weaponSystem.state ~= weaponSystem.states[8]
-			and weaponSystem.state ~= weaponSystem.states[3] then 
-			 
-			weaponSystem.modifiers.IsShooting = false
+    if weaponSystem.viewmodel and weaponData then
+        if weaponSystem.state == weaponSystem.states[6] then return end
+        if weaponSystem.state ~= weaponSystem.states[8]
+            and weaponSystem.state ~= weaponSystem.states[3] then 
+             
+            weaponSystem.modifiers.IsShooting = false
 
-			if weaponSystem.modifiers.IsAiming then
-				UpdateWeaponStateRemote:FireServer(weaponSystem.states[5])
-			else
-				UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])	
-			end
-		end
-	end
+            if weaponSystem.modifiers.IsAiming then
+                UpdateWeaponStateRemote:FireServer(weaponSystem.states[5])
+            else
+                UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])   
+            end
+        end
+    end
 end)
 
 while wait() do
