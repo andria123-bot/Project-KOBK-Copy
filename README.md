@@ -32,13 +32,14 @@ when ammo is 0 it reloads but never sets ammo's value                           
 remove .Unit on server                                                          | Easy   | Fixed
 fix death bug                                                                   | Medium | Fixed
 when died it doesnt reset ammo                                                  | Medium | 
-InvokeServer is delaying the shoot function                                     | Medium | 
+Full auto is delayed                                                            | Medium | Fixed
+shooting needs to be more smooth                                                | Medium | Fixed Kinda
+Add Anti-cheat for speed, position area                                         | Medium |
 
 fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle | Medium | Fixed
 
 Add server validation when loading slot it should invoke and server should check if loaded item is in player's inventory
 
-shooting needs to be more smooth
 
 weaponSystem[1].modifiers is player's modifiers
 weaponData is weapon's data which contains aimData, animations, fireMode, modifiers and much more

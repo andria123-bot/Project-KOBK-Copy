@@ -28,7 +28,6 @@ function AimHelper:switchAimpart()
 end
 
 function AimHelper:Aim(dt)
-	-- print(self.weaponModule)
     if not (self.weaponModule and self.viewmodel and self.weaponModule.aimData.canAim) then return end
     
     local isAiming = (self.weaponSystem.state == self.weaponSystem.states[5]) or 
