@@ -654,7 +654,7 @@ PlayerRespawned.OnClientEvent:Connect(function()
     currentAmmo = 0
     currentMaxAmmo = 0
     
-    RequestInventory:FireServer()
+    PlayerRespawned:FireServer()
     
     if hud then
         hud.Enabled = false
@@ -679,7 +679,7 @@ mouse.Button1Up:Connect(function()
 end)
 
 while wait() do
-	if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting and weaponSystem.state == weaponSystem.states[2] then
+	if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
 		local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.inventory[weaponSystem.currentSlot], camera.CFrame.LookVector, weaponSystem.viewmodel.Muzzle.Position)
 		
 		if success and recoilData and data then
@@ -734,6 +734,7 @@ while wait() do
 			end
 
 			if data.ammoLeft == 0 then
+				weaponSystem.modifiers.IsShooting = false
 				wait(.4)
 				Reload()
 			end

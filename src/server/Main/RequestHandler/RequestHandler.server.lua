@@ -6,6 +6,7 @@ local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("Req
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
 local PlayerRespawned = ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerRespawned")
+print(PlayerRespawned.Parent)
 
 local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 local PlayerWeaponSystemData = require(script.Parent.Parent.PlayerWeaponSystemData)

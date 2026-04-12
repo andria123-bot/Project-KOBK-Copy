@@ -18,6 +18,7 @@ For more help, check out [the Rojo documentation](https://rojo.space/docs).
 
 dont mind here:
 When player press X it should drop the item
+Add player jump cooldown
 
 Tons of bugs:
 when player dies he can re-equip weapon and still shoot                         | Easy   | Fixed
@@ -31,10 +32,10 @@ loadslot can load any weapon by cheater at any time                             
 when ammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
 remove .Unit on server                                                          | Easy   | Fixed
 fix death bug                                                                   | Medium | Fixed
-when died it doesnt reset ammo                                                  | Medium | 
+when died it doesnt reset ammo                                                  | Medium | Fixed
 Full auto is delayed                                                            | Medium | Fixed
 shooting needs to be more smooth                                                | Medium | Fixed Kinda
-Add Anti-cheat for speed, position area                                         | Medium |
+Add Anti-cheat for speed, position area, inventory                              | Hard   |
 
 fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle | Medium | Fixed
 

@@ -8,11 +8,10 @@ local Scope = require(script.Parent.Scope)
 local camera = workspace.CurrentCamera
 
 local defaultFOV = 70
-local scopedFOV
 
 local currentAimPart = 1
 local currentFOV = defaultFOV
-	
+
 function AimHelper:Init(weaponModule, viewmodel, weaponSys)
     self.weaponModule = weaponModule
     self.viewmodel = viewmodel
@@ -21,20 +20,17 @@ end
 
 function AimHelper:switchAimpart()
     if currentAimPart == 1 then
-		currentAimPart = 2
-	else
-		currentAimPart = 1
-	end
+        currentAimPart = 2
+    else
+        currentAimPart = 1
+    end
+    Scope:switchAimpart()
 end
 
 function AimHelper:Aim(dt)
     if not (self.weaponModule and self.viewmodel and self.weaponModule.aimData.canAim) then return end
-    
-    -- Force reset aim if reloading
     if self.weaponSystem.modifiers.IsReloading then
-        -- Reset aim CF
         self.weaponModule.aimData.aimCF = self.weaponModule.aimData.aimCF:Lerp(CFrame.new(), 0.3)
-        -- Reset FOV
         currentFOV = currentFOV + (defaultFOV - currentFOV) * 0.3
         camera.FieldOfView = currentFOV
         self.weaponModule.aimData.currentSwayAMT = self.weaponModule.aimData.swayAMT
@@ -43,14 +39,14 @@ function AimHelper:Aim(dt)
     
     local isAiming = (self.weaponSystem.state == self.weaponSystem.states[5]) or 
                      (self.weaponSystem.modifiers.IsAiming == true)
-    
     if isAiming and not 
         self.weaponSystem.modifiers.IsReloading and not 
         self.weaponSystem.modifiers.IsInspecting then
 
         Scope:Init(self.weaponModule, self.weaponSystem)
         local scopeData = Scope:GetScopeData()
-        local aimFOV = scopeData and scopeData.aimFOV or 45
+        
+        local aimFOV = scopeData.aimFOV
                                             
         local primary = self.viewmodel.PrimaryPart
         if not primary then return end
