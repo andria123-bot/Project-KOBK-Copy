@@ -3,16 +3,18 @@ local Players = game:GetService("Players")
 
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
-local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
+local MoveItem = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("MoveItem")
 local RequestGear = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestGear")
 local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 
 local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 local PlayerInventories = {}
+local playerSlots = {}
+local lastMoveTime = {}
 
 local GearModule = require(script.Parent.GearsSetup)
-local inventories = {}
+local gearSlots = {}
 
 Players.PlayerAdded:Connect(function(player)
 	local savedInventory = defaultInventory.loadSavedInventory(player)
@@ -23,7 +25,7 @@ Players.PlayerAdded:Connect(function(player)
 
 	SendInventory:FireClient(player, playerData.weaponSystem.inventory)
 
-	inventories[player] = GearModule.new()
+	gearSlots[player] = GearModule.new()
 end)
 
 Players.PlayerRemoving:Connect(function(player)
@@ -43,7 +45,7 @@ Players.PlayerRemoving:Connect(function(player)
 end)
 
 PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
-	print(slotData)
+	playerSlots[player] = slotData
 end)
 
 RequestInventory.OnServerEvent:Connect(function(player)
@@ -52,34 +54,53 @@ RequestInventory.OnServerEvent:Connect(function(player)
 	end
 end)
 
-MoveItem.OnServerEvent:Connect(function(player, fromSlot, toSlot)
+MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
 	local inventory = PlayerInventories[player]
-
-	if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return end
-	if fromSlot < 1 or toSlot < 1 then return end
-	if fromSlot == toSlot then return end
-	if not inventory[fromSlot] or inventory[fromSlot] == "" then return end
-
-	-- Initialize toSlot if it doesn't exist
+	
+	-- Validate
+	if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
+	if fromSlot < 1 or toSlot < 1 then return false end
+	if fromSlot == toSlot then return false end
+	if not inventory[fromSlot] or inventory[fromSlot] == "" then return false end
+	
+	if playerSlots[player] and playerSlots[player].slots then
+		local slotKey = "Slot" .. fromSlot
+		if playerSlots[player].slots[slotKey] ~= inventory[fromSlot] then
+			print(player.Name, "item mismatch!")
+			player:Kick("Cheating detected")
+			return false
+		end
+	end
+	
+	local now = tick()
+	if lastMoveTime[player] and now - lastMoveTime[player] < 0.1 then
+		return false
+	end
+	lastMoveTime[player] = now
+	
 	if not inventory[toSlot] then
 		inventory[toSlot] = ""
 	end
 
-	local item = inventory[fromSlot]
+	local fromItem = inventory[fromSlot]
+	local toItem = inventory[toSlot]
 
-	if inventory[toSlot] then -- Swap items
-		local temp = inventory[fromSlot]
-		inventory[fromSlot] = inventory[toSlot]
-		inventory[toSlot] = temp
-	else -- Move item
-		inventory[toSlot] = item
+	if toItem ~= "" then
+		-- Swap
+		inventory[fromSlot] = toItem
+		inventory[toSlot] = fromItem
+	else
+		-- Move
+		inventory[toSlot] = fromItem
 		inventory[fromSlot] = ""
 	end
 
 	defaultInventory.saveInventory(player, { weaponSystem = { inventory = inventory } })
 	SendInventory:FireClient(player, inventory)
-end)
+	
+	return true
+end
 
 RequestGear.OnServerInvoke = function(player)
-	return inventories[player]
+	return gearSlots[player]
 end

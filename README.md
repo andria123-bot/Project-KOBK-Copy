@@ -41,7 +41,5 @@ fix after holding on mousebtn1 and when it auto reloads it should not set state 
 
 Add server validation when loading slot it should invoke and server should check if loaded item is in player's inventory
 
-
-weaponSystem[1].modifiers is player's modifiers
 weaponData is weapon's data which contains aimData, animations, fireMode, modifiers and much more
 weaponData is like weaponsystem.module but server controls it

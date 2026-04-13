@@ -7,34 +7,34 @@ local InventoryFolder = RemotesFolder.InventoryEvents
 local RequestsFolder = RemotesFolder.Requests
 
 local remoteEvents = {
-	"LoadSlot",
-	"ItemFoley",
+	"UpdateWeaponState",
+	"UpdateClientState",
 	"PlayerRespawned",
 	"PlayerAdded",
 	"PlayerDied",
+	"ItemFoley",
+	"LoadSlot",
 	"Grenade",
-	"Melee",
 	"Killed",
-	"UpdateWeaponState",
-	"UpdateClientState"
+	"Melee",
 }
 
 local inventoryRemotes = {
 	"RequestInventory",
-	"SendInventory",
 	"InventoryUpdate",
-	"MoveItem",
-	"PlayerSlotData"
+	"PlayerSlotData",
+	"SendInventory",
 }
 
 local remoteFunctions = {
-	"RequestGear",
-	"RequestModule",
+	"RequestWeaponSystemData",
 	"RequestWeaponCategory",
 	"RequestWeaponData",
-	"RequestWeaponSystemData",
+	"RequestReload",
+	"RequestModule",
 	"RequestShoot",
-	"RequestReload"
+	"RequestGear",
+	"MoveItem",
 }
 
 for _, name in ipairs(remoteEvents) do

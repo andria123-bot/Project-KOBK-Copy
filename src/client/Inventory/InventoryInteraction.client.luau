@@ -7,7 +7,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 local RunService = game:GetService("RunService")
 
-local MoveItem = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("MoveItem")
+local MoveItem = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("MoveItem")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
@@ -21,7 +21,6 @@ local slots = SlotInitializer.slots
 repeat
 	task.wait()
 until #slots.inventory > 0
-
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -174,9 +173,8 @@ end
 UserInputService.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active and dragging.clone then
 		local slotGroup, slotIndex, slotFrame = getSlotUnderMouse()
-
+		
 		if slotGroup and slotIndex and slotIndex ~= dragging.fromSlot then
-			
 			local fromItem = playerInventoryData[dragging.fromSlot]
 			local toItem = playerInventoryData[slotIndex]
 			
@@ -186,7 +184,16 @@ UserInputService.InputEnded:Connect(function(input)
 			updateSlot(dragging.fromSlot)
 			updateSlot(slotIndex)
 			
-			MoveItem:FireServer(dragging.fromSlot, slotIndex)
+			local success = MoveItem:InvokeServer(dragging.fromSlot, slotIndex)
+			
+			if not success then
+				playerInventoryData[dragging.fromSlot] = fromItem
+				playerInventoryData[slotIndex] = toItem
+				updateSlot(dragging.fromSlot)
+				updateSlot(slotIndex)
+				print("Server rejected move - reverting")
+			end
+			
 			sendPlayerSlotData()
 		end
 		

@@ -346,7 +346,6 @@ function Reload()
     if currentAmmo >= currentMaxAmmo then
         return
     end
-
     if weaponSystem.modifiers.IsAiming then
         weaponSystem.modifiers.IsAiming = false
         UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
@@ -696,12 +695,17 @@ while wait() do
 			local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
 			muzzleFlash.Parent = game.Workspace
 			muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
-			for i, v in pairs(muzzleFlash:GetChildren()) do
+			for i, v in pairs(muzzleFlash:GetDescendants()) do
 				if v:IsA("ParticleEmitter") then
 					v:Emit(1)
+				elseif v:IsA("Light") then
+					v.Enabled = true
+					task.delay(0.07, function()
+						v.Enabled = false
+					end)
 				end
 			end
-			game:GetService("Debris"):AddItem(muzzleFlash, .07)
+			game:GetService("Debris"):AddItem(muzzleFlash, 1)
 
 			viewmodelKickOffset = CFrame.new(0, 0, 0.2)
 			kickReturnTime = tick() + 0.08
