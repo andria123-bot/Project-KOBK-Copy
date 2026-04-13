@@ -67,6 +67,8 @@ local data = {
 	swayCF = CFrame.new(0, 0, 0),
 	lastCameraCF = CFrame.new(0, 0, 0),
 
+	tracerColor = Color3.fromRGB(254, 255, 172);
+
 	durable = 600,    
 	isStackable = false,
 	maxStack = 1,
@@ -95,6 +97,7 @@ local data = {
 	z = 1.9;
 	
 	bulletSpeed = 1200,
+	maxDistanceTravel = 1500;
 
 	slotType = "Loadout",
 	ammoType = "5.56x45",

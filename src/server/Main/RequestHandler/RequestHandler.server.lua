@@ -71,6 +71,9 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
     if not weaponModule then return false end
 
     local weaponData = require(weaponModule)
+    local muzzle = character:WaitForChild(item):WaitForChild("Muzzle")
+
+    local origin = muzzle.Position
     local direction = LookVector
 	    
     local now = tick()
@@ -109,6 +112,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
         imageIconId = weaponData.imageIconId,
         fireMode = weaponData.fireMode,
         ammoType = weaponData.ammoType,
+        tracerColor = weaponData.tracerColor
     }
 end
 

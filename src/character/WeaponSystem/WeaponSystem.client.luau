@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
+
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait() or script.Parent.Parent
 local humanoid = character:WaitForChild("Humanoid")
@@ -41,12 +42,11 @@ end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
     weaponSystem.inventory = weaponSystem.inventory or {}
-
     for i = 1, #savedInventory do
         weaponSystem.inventory[i] = savedInventory[i] or ""
     end
 
-    -- print("Inventory synced:", weaponSystem.inventory)
+    print("Inventory synced:", weaponSystem.inventory)
 end)
 
 RequestInventory:FireServer()
@@ -251,39 +251,39 @@ function Shoot()
 			return
 		end
 		print(weaponData.name)
-		-- if weaponData.modifiers.fireMode == "Semi Auto" then
-		-- 	local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.inventory[weaponSystem.currentSlot])
-		-- 	if success then
-		-- 		weaponSystem.animations.FirstPerson[2]:Stop()
-		-- 		weaponSystem.animations.FirstPerson[5]:Stop()
-		-- 		weaponSystem.animations.FirstPerson[6]:Stop()
-		-- 		weaponSystem.animations.FirstPerson[7]:Stop()
-		-- 		weaponSystem.animations.FirstPerson[8]:Stop()
+		if weaponData.modifiers.fireMode == "Semi Auto" then
+			local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.inventory[weaponSystem.currentSlot])
+			if success then
+				weaponSystem.animations.FirstPerson[2]:Stop()
+				weaponSystem.animations.FirstPerson[5]:Stop()
+				weaponSystem.animations.FirstPerson[6]:Stop()
+				weaponSystem.animations.FirstPerson[7]:Stop()
+				weaponSystem.animations.FirstPerson[8]:Stop()
 
-		-- 		weaponSystem.animations.ThirdPerson[2]:Stop()
-		-- 		weaponSystem.animations.ThirdPerson[4]:Stop()
-		-- 		weaponSystem.animations.ThirdPerson[5]:Stop()
-		-- 		weaponSystem.animations.ThirdPerson[6]:Stop()
+				weaponSystem.animations.ThirdPerson[2]:Stop()
+				weaponSystem.animations.ThirdPerson[4]:Stop()
+				weaponSystem.animations.ThirdPerson[5]:Stop()
+				weaponSystem.animations.ThirdPerson[6]:Stop()
 
-		-- 		local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
-		-- 		muzzleFlash.Parent = game.Workspace
-		-- 		muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+				local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+				muzzleFlash.Parent = game.Workspace
+				muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
 
-		-- 		for i, v in pairs(muzzleFlash:GetChildren()) do
-		-- 			if v:IsA("ParticleEmitter") then
-		-- 				v:Emit(1)
-		-- 			end
-		-- 		end
+				for i, v in pairs(muzzleFlash:GetChildren()) do
+					if v:IsA("ParticleEmitter") then
+						v:Emit(1)
+					end
+				end
 
-		-- 		game:GetService("Debris"):AddItem(muzzleFlash, .07)
+				game:GetService("Debris"):AddItem(muzzleFlash, .07)
 
-		-- 		camera.CFrame = camera.CFrame * CFrame.Angles(recoilData.x, recoilData.y, recoilData.z)
+				camera.CFrame = camera.CFrame * CFrame.Angles(recoilData.x, recoilData.y, recoilData.z)
 
-		-- 		debounce = true
-		-- 		wait(data.debounce)
-		-- 		debounce = false
-		-- 	end
-		-- end
+				debounce = true
+				wait(data.debounce)
+				debounce = false
+			end
+		end
 
 		if weaponData.modifiers.fireMode == "Full Auto" then
 			if weaponSystem.state == weaponSystem.states[6] then return end
@@ -635,7 +635,6 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 	end
 end)
 
-
 PlayerRespawned.OnClientEvent:Connect(function()
     UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
     weaponSystem.modifiers.IsAiming = false
@@ -695,9 +694,10 @@ while wait() do
 			local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
 			muzzleFlash.Parent = game.Workspace
 			muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+
 			for i, v in pairs(muzzleFlash:GetDescendants()) do
 				if v:IsA("ParticleEmitter") then
-					v:Emit(1)
+					v:Emit(math.random(1,3))
 				elseif v:IsA("Light") then
 					v.Enabled = true
 					task.delay(0.07, function()
@@ -705,6 +705,7 @@ while wait() do
 					end)
 				end
 			end
+
 			game:GetService("Debris"):AddItem(muzzleFlash, 1)
 
 			viewmodelKickOffset = CFrame.new(0, 0, 0.2)

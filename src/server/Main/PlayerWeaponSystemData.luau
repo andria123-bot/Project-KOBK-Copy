@@ -53,6 +53,9 @@ local playerWeaponSystemData = {
             nil; -- deequip/holster
         };
 
+        lastShotTime = 0;
+        bulletId = 0;
+
         state = "",
 
         states = {

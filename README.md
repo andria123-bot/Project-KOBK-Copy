@@ -19,6 +19,7 @@ For more help, check out [the Rojo documentation](https://rojo.space/docs).
 dont mind here:
 When player press X it should drop the item
 Add player jump cooldown
+Add visual projectiles
 
 Tons of bugs:
 when player dies he can re-equip weapon and still shoot                         | Easy   | Fixed
