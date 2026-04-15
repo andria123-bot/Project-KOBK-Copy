@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RemotesFolder = ReplicatedStorage.Shared.Remotes
 local InventoryFolder = RemotesFolder.InventoryEvents
 local RequestsFolder = RemotesFolder.Requests
+local BindablesFolder = RemotesFolder.Bindables
 
 local remoteEvents = {
 	"CreateServerVisuals",
@@ -40,6 +41,10 @@ local remoteFunctions = {
 	"MoveItem",
 }
 
+local bindableEvents = {
+	"SyncProjectileBindable",
+}
+
 for _, name in ipairs(remoteEvents) do
 	local remote = Instance.new("RemoteEvent")
 	remote.Name = name
@@ -59,6 +64,13 @@ for _, name in ipairs(remoteFunctions) do
 	remote.Name = name
 	remote.Parent = RequestsFolder
 	remoteManager[name .. "Remote"] = remote
+end
+
+for _, name in ipairs(bindableEvents) do
+	local remote = Instance.new("BindableEvent")
+	remote.Name = name
+	remote.Parent = BindablesFolder
+	remoteManager[name .. "Bindable"] = remote
 end
 
 return remoteManager

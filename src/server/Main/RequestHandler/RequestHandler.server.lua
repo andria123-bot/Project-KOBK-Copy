@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
+local SyncProjectileBindable = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("SyncProjectileBindable")
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 local CreateServerVisuals = ReplicatedStorage.Shared.Remotes:FindFirstChild("CreateServerVisuals")
@@ -66,7 +67,7 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
 end
 
 RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything from here should go to BulletHandler.lua
-    local character = player.Character or player:WaitForChild(player.Character)
+    local character = player.Character or player.CharacterAdded:Wait()
 	if not character then return end 
 
     local weaponModule = LoadModule.GetModule(item)
@@ -75,7 +76,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything f
     local weaponData = require(weaponModule)
 
     local direction = LookVector
-    local muzzlePos = player:WaitForChild("Character"):FindFirstChild(item).Muzzle
+    local muzzlePos = character:FindFirstChild(item).Muzzle.Position
 	    
     local now = tick()
     local lastShot = lastShotTime[player] or 0
@@ -94,8 +95,8 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything f
     
     local isLastBullet = (playerAmmo[player][item] == 0)
 
-    -- weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil)
-    CreateServerVisuals:FireServer(muzzlePos, direction, weaponData.bulletSpeed)
+    -- weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil) -- default fastcast
+    SyncProjectileBindable:Fire(player, muzzlePos, direction, weaponData.bulletSpeed) -- custom projectile
 
     local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
 

@@ -11,7 +11,7 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed)
     if not AmmoTracer then return end
 
     local tracer = AmmoTracer:Clone()
-    tracer.Parent = workspace
+    tracer.Parent = workspace.BulletTracers
     tracer.Position = origin
     tracer.Anchored = true
     tracer.CanCollide = false
@@ -31,7 +31,7 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed)
     task.spawn(function()
         local lastPos = origin
         local startTime = tick()
-        local duration = .1 -- Tracer lifetime
+        local duration = 2 -- Tracer lifetime
 
         local gravity = 196.2  -- roblox gravity
 
