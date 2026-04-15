@@ -1,6 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SyncProjectileBindable = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("SyncProjectileBindable")
-local CreateServerVisuals = ReplicatedStorage.Shared.Remotes:FindFirstChild("CreateServerVisuals")
 local SnycTracerToOthers = ReplicatedStorage.Shared.Remotes:FindFirstChild("SnycTracerToOthers")
 
 local BulletHandler = {}
@@ -27,15 +26,9 @@ function BulletHandler:ValidateBulletHit(origin, direction, maxDistance, owner, 
     end
 end
 
-SyncProjectileBindable.Event:Connect(function(player, origin, direction, speed)
-    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-        if otherPlayer ~= player then
-            SnycTracerToOthers:FireClient(otherPlayer, origin, direction, speed, player)
-        end
-    end
-end)
 
-CreateServerVisuals.OnServerEvent:Connect(function(player, origin, direction, speed)
+
+SyncProjectileBindable.Event:Connect(function(player, origin, direction, speed)
     for _, otherPlayer in pairs(game.Players:GetPlayers()) do
         if otherPlayer ~= player then
             SnycTracerToOthers:FireClient(otherPlayer, origin, direction, speed, player)

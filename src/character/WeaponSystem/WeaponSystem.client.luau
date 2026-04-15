@@ -44,9 +44,9 @@ UpdateClientState.OnClientEvent:Connect(function(newState)
 end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
-    weaponSystem.inventory = weaponSystem.inventory or {}
+    weaponSystem.inventory.PlayerInventory = weaponSystem.inventory.PlayerInventory or {}
     for i = 1, #savedInventory do
-        weaponSystem.inventory[i] = savedInventory[i] or ""
+        weaponSystem.inventory.PlayerInventory[i] = savedInventory[i] or ""
     end
 
     print("Inventory synced:", weaponSystem.inventory)
@@ -677,7 +677,6 @@ mouse.Button1Up:Connect(function()
         end
     end
 end)
-local CreateServerVisuals = ReplicatedStorage.Shared.Remotes:FindFirstChild("CreateServerVisuals")
 
 SnycTracerToOthers.OnClientEvent:Connect(function(origin, direction, speed, shooter)
 	if shooter == player then return end
@@ -702,7 +701,6 @@ while wait() do
 			local origin = weaponSystem.viewmodel.Muzzle.Position
     		local direction = camera.CFrame.LookVector
 
-    		-- CreateServerVisuals:FireServer(origin, direction, data.bulletSpeed)
 			BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed)
 
 			local muzzleFlash = game.ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()

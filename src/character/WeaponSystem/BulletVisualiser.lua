@@ -1,5 +1,4 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CreateServerVisuals = ReplicatedStorage.Shared.Remotes:FindFirstChild("CreateServerVisuals")
 local AmmoTracer = ReplicatedStorage.VFX.Tracers:FindFirstChild("TracerAmmo")
 local RunService = game:GetService("RunService")
 

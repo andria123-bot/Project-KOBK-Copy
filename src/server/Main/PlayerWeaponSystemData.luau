@@ -4,6 +4,32 @@ local playerWeaponSystemData = {
             PlayerInventory = {};
 
             StorageInventory = {};
+
+            equipment = {
+                Clothing = {
+                    Mask     = { equipped = false,  name = "" },
+                    Gloves   = { equipped = false, name = ""},
+                    TShirt   = { equipped = true,  name = "Default" },
+                    Pants    = { equipped = true,  name = "Default" },
+                    Backpack = { equipped = false, name = "Fieldpack45" },
+                    Leggings = { equipped = false, name = "" },
+                    Helmet   = { equipped = false, name = "" },
+                    Armor    = { equipped = true, name = "6B45" },
+                },
+                Utils = {
+                    Melee    = { equipped = true, name = {}}, -- name should be moduleScriptData of the item
+                    GPS      = { equipped = false, name = {}},
+                    Map      = { equipped = false, name = {}},
+                    Compass  = { equipped = false, name = {}},
+                },
+                Weapons = {
+                    Slot1    = { equipped = false, item = {}},
+                    Slot2    = { equipped = false, item = {}},
+                    Slot3    = { equipped = false, item = {}},
+                },
+            };
+
+            SlotCount = 0;
         };
         
         gear = {
@@ -46,12 +72,6 @@ local playerWeaponSystemData = {
             nil; -- empty reload
             nil; -- inspect
             nil; -- deequip/holster
-        };
-
-        equipment = {
-            Clothing = {},
-            Uthils = {},
-            Weapons = {},
         };
 
         lastShotTime = 0;

@@ -4,7 +4,6 @@ local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitFo
 local SyncProjectileBindable = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("SyncProjectileBindable")
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
-local CreateServerVisuals = ReplicatedStorage.Shared.Remotes:FindFirstChild("CreateServerVisuals")
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
 local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")

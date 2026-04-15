@@ -11,12 +11,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local inventoryStore = DataStoreService:GetDataStore("InventoryStore")
 
 local InventoryUpdate = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("InventoryUpdate")
--- local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
+local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 
--- PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
---     local slots = slotData
---     print(slots)
--- end)
+
+
+PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
+    local slots = slotData
+    for i, v in pairs(slots) do
+        print(i, v)
+    end
+end)
 
 local starterKit = {
     "HK416";
