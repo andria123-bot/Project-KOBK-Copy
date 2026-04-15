@@ -15,11 +15,14 @@ local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
 local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
+local SnycTracerToOthers = ReplicatedStorage.Shared.Remotes:FindFirstChild("SnycTracerToOthers")
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
 local PlayerRespawned = ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerRespawned")
-local LoadViewmodel = require(script.Parent.LoadViewmodel)
+local ShootValidation = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("ShootValidation")
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
+local BulletVisualiser = require(script.Parent.BulletVisualiser)
+local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local Scope = require(script.Parent.Scope)
 
 local SpringModule = require(ReplicatedStorage.Shared.Modules.Spring)
@@ -250,7 +253,6 @@ function Shoot()
 		if weaponSystem.state == weaponSystem.states[6] then
 			return
 		end
-		print(weaponData.name)
 		if weaponData.modifiers.fireMode == "Semi Auto" then
 			local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.inventory[weaponSystem.currentSlot])
 			if success then
@@ -399,7 +401,7 @@ end
 
 RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem.viewmodel then
-		print(weaponSystem.state) -- Debugging
+		-- print(weaponSystem.state) -- Debugging
 
 		if tick() > kickReturnTime and viewmodelKickOffset ~= CFrame.new() then
 			viewmodelKickOffset = CFrame.new()
@@ -675,6 +677,12 @@ mouse.Button1Up:Connect(function()
         end
     end
 end)
+local CreateServerVisuals = ReplicatedStorage.Shared.Remotes:FindFirstChild("CreateServerVisuals")
+
+SnycTracerToOthers.OnClientEvent:Connect(function(origin, direction, speed, shooter)
+	if shooter == player then return end
+	BulletVisualiser:CreateVisualTracer(origin, direction, speed)
+end)
 
 while wait() do
 	if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
@@ -691,7 +699,13 @@ while wait() do
 			weaponSystem.animations.ThirdPerson[5]:Stop()
 			weaponSystem.animations.ThirdPerson[6]:Stop()
 
-			local muzzleFlash = game.ReplicatedStorage.Objects.MuzzleFlash:Clone()
+			local origin = weaponSystem.viewmodel.Muzzle.Position
+    		local direction = camera.CFrame.LookVector
+
+    		-- CreateServerVisuals:FireServer(origin, direction, data.bulletSpeed)
+			BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed)
+
+			local muzzleFlash = game.ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()
 			muzzleFlash.Parent = game.Workspace
 			muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
 
@@ -715,11 +729,11 @@ while wait() do
 				viewmodelKickOffset = CFrame.new()
 			end)
 
-			if SpringModule then
-				local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
-				recoilSpring:Impulse(hugeRecoil * 2000000)
-				camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(recoilData.rx), math.rad(recoilData.ry), math.rad(recoilData.rz))
-			end
+			-- if SpringModule then
+			-- 	local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
+			-- 	recoilSpring:Impulse(hugeRecoil * 2000000)
+			-- 	camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(recoilData.rx), math.rad(recoilData.ry), math.rad(recoilData.rz))
+			-- end
 
 			currentAmmo = data.ammoLeft
 			currentMaxAmmo = data.maxAmmo

@@ -1,14 +1,9 @@
 local playerWeaponSystemData = {
     weaponSystem = {
         inventory = {
-            "";
-            "";
-            "";
-            "";
-            "";
-            "";
-            "";
-            "";
+            PlayerInventory = {};
+
+            StorageInventory = {};
         };
         
         gear = {
@@ -51,6 +46,12 @@ local playerWeaponSystemData = {
             nil; -- empty reload
             nil; -- inspect
             nil; -- deequip/holster
+        };
+
+        equipment = {
+            Clothing = {},
+            Uthils = {},
+            Weapons = {},
         };
 
         lastShotTime = 0;

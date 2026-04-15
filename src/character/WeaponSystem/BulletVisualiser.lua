@@ -1,20 +1,20 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local AmmoTracer = ReplicatedStorage.Objects:FindFirstChild("AmmoTracer")
+local CreateServerVisuals = ReplicatedStorage.Shared.Remotes:FindFirstChild("CreateServerVisuals")
+local AmmoTracer = ReplicatedStorage.VFX.Tracers:FindFirstChild("TracerAmmo")
 local RunService = game:GetService("RunService")
-local BulletImpactMaterials = ReplicatedStorage.VFX:WaitForChild("BulletImpactMaterials")
 
 local BulletVisualiser = {}
 
 local activeTracers = {}
-local bulletId = 0
 
-function BulletVisualiser:CreateVisualTracer(origin, direction, speed, tracerColor, owner)
+function BulletVisualiser:CreateVisualTracer(origin, direction, speed)
     if not AmmoTracer then return end
-    
+
     local tracer = AmmoTracer:Clone()
-    tracer.Color = tracerColor or Color3.new(1, 0.8, 0)
     tracer.Parent = workspace
-    tracer.CFrame = CFrame.new(origin)
+    tracer.Position = origin
+    tracer.Anchored = true
+    tracer.CanCollide = false
     
     local tracerData = {
         tracer = tracer,
@@ -31,26 +31,32 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, tracerCol
     task.spawn(function()
         local lastPos = origin
         local startTime = tick()
-        local duration = 1 -- Tracer lifetime
+        local duration = .1 -- Tracer lifetime
+
+        local gravity = 196.2  -- roblox gravity
 
         while tracerData.active and tick() - startTime < duration do
             local elapsed = tick() - startTime
-            local alpha = math.min(1, elapsed - duration)
             local distance = speed * elapsed
-            local currentPos = origin + direction + distance
-
+            
+            -- gravity drop
+            local drop = 0.5 * gravity * elapsed * elapsed
+            
+            local currentPos = origin + (direction * distance)
+            currentPos = currentPos - Vector3.new(0, drop, 0)
+            
             tracer.CFrame = CFrame.new(currentPos, currentPos + direction)
-
-            -- Tracer Scale based on distance
+            
+            -- Scale tracer size based on distance to camera
             local distanceToCamera = (workspace.CurrentCamera.CFrame.Position - currentPos).Magnitude
-            local scale = math.clamp(distanceToCamera / 200, .2, 2)
+            local scale = math.clamp(distanceToCamera / 200, 0.2, 2)
             tracer.Size = Vector3.new(scale, scale, scale)
-
+            
             RunService.RenderStepped:Wait()
         end
 
         tracer:Destroy()
-        tracer.active = false
+        tracerData.active = false
     end)
     
     return tracer

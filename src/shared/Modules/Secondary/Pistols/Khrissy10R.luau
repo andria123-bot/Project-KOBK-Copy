@@ -119,7 +119,7 @@ end
 
 local fastcast = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastRedux)
 local caster = fastcast.new()
-fastcast.VisualizeCasts = true
+fastcast.VisualizeCasts = false
 
 local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Exclude

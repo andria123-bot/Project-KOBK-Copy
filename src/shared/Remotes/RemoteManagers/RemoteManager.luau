@@ -7,6 +7,8 @@ local InventoryFolder = RemotesFolder.InventoryEvents
 local RequestsFolder = RemotesFolder.Requests
 
 local remoteEvents = {
+	"CreateServerVisuals",
+	"SnycTracerToOthers",
 	"UpdateWeaponState",
 	"UpdateClientState",
 	"PlayerRespawned",
@@ -30,6 +32,7 @@ local remoteFunctions = {
 	"RequestWeaponSystemData",
 	"RequestWeaponCategory",
 	"RequestWeaponData",
+	"ShootValidation",
 	"RequestReload",
 	"RequestModule",
 	"RequestShoot",

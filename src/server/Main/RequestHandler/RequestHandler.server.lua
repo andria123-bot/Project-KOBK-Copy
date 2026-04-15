@@ -1,16 +1,18 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
-local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
+local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
+local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
+local CreateServerVisuals = ReplicatedStorage.Shared.Remotes:FindFirstChild("CreateServerVisuals")
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
+local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
+local BulletImpactMaterials = ReplicatedStorage.VFX:WaitForChild("BulletImpactMaterials")
 local PlayerRespawned = ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerRespawned")
-print(PlayerRespawned.Parent)
 
-local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 local PlayerWeaponSystemData = require(script.Parent.Parent.PlayerWeaponSystemData)
-local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
+local BulletHandler = require(script.Parent.Parent.BulletHandler.BulletHandler)
+local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 
 local playerAmmo = {}
 local lastShotTime = {}
@@ -63,7 +65,7 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
     }
 end
 
-RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
+RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything from here should go to BulletHandler.lua
     local character = player.Character or player:WaitForChild(player.Character)
 	if not character then return end 
 
@@ -71,10 +73,9 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
     if not weaponModule then return false end
 
     local weaponData = require(weaponModule)
-    local muzzle = character:WaitForChild(item):WaitForChild("Muzzle")
 
-    local origin = muzzle.Position
     local direction = LookVector
+    local muzzlePos = player:WaitForChild("Character"):FindFirstChild(item).Muzzle
 	    
     local now = tick()
     local lastShot = lastShotTime[player] or 0
@@ -92,7 +93,9 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
     playerAmmo[player][item] = playerAmmo[player][item] - 1
     
     local isLastBullet = (playerAmmo[player][item] == 0)
-    weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil) -- leater change to character's weapon muzzle's position and lookvector
+
+    -- weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil)
+    CreateServerVisuals:FireServer(muzzlePos, direction, weaponData.bulletSpeed)
 
     local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
 
@@ -104,15 +107,16 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, muzzlePos)
     if sound then
         sound:Play()
     end
-		
+
 	return true, {rx = rx, ry = ry, rz = rz}, {
-        isLastBullet = isLastBullet,
-        ammoLeft = playerAmmo[player][item],
         maxAmmo = playerAmmo[player][item .. "_max"],
+        bulletSpeed = weaponData.bulletSpeed,
         imageIconId = weaponData.imageIconId,
+        tracerColor = weaponData.tracerColor,
+        ammoLeft = playerAmmo[player][item],
         fireMode = weaponData.fireMode,
         ammoType = weaponData.ammoType,
-        tracerColor = weaponData.tracerColor
+        isLastBullet = isLastBullet,
     }
 end
 

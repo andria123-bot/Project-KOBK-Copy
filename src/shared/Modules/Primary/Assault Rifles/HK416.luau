@@ -85,7 +85,7 @@ local data = {
 	damage = 30.5,  
 	headshot = 70,
 	debounce = 0.1,
-	reloadTime = 3.1,  
+	reloadTime = 3.7,  
 	jamChance = 0.0005,
 	value = 5800,
 	weight = 3.02, -- kg
@@ -110,7 +110,7 @@ local data = {
 
 local fastcast = require(ReplicatedStorage.Shared.Modules.FastCastReduxFolder.FastCastRedux)
 local caster = fastcast.new()
-fastcast.VisualizeCasts = true
+fastcast.VisualizeCasts = false
 
 local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Exclude
