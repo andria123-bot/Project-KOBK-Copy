@@ -25,6 +25,8 @@ local BulletVisualiser = require(script.Parent.BulletVisualiser)
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local Scope = require(script.Parent.Scope)
 
+-- local InventoryHandler = require(script.Parent.Parent.client.Inventory.InventoryHandler)
+
 local SpringModule = require(ReplicatedStorage.Shared.Modules.Spring)
 
 local recoilSpring = SpringModule.new(Vector3.new(0,0,0), 0.5, 50)

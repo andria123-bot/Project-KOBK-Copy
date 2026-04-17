@@ -1,14 +1,13 @@
 local playerWeaponSystemData = {
     weaponSystem = {
-        inventory = {
+        Inventory = {
             PlayerInventory = {};
-
             StorageInventory = {};
 
-            equipment = {
+            Equipment = {
                 Clothing = {
-                    Mask     = { equipped = false,  name = "" },
-                    Gloves   = { equipped = false, name = ""},
+                    Mask     = { equipped = false, name = "" },
+                    Gloves   = { equipped = false, name = "" },
                     TShirt   = { equipped = true,  name = "Default" },
                     Pants    = { equipped = true,  name = "Default" },
                     Backpack = { equipped = false, name = "Fieldpack45" },
@@ -17,15 +16,15 @@ local playerWeaponSystemData = {
                     Armor    = { equipped = true, name = "6B45" },
                 },
                 Utils = {
-                    Melee    = { equipped = true, name = {}}, -- name should be moduleScriptData of the item
-                    GPS      = { equipped = false, name = {}},
-                    Map      = { equipped = false, name = {}},
-                    Compass  = { equipped = false, name = {}},
+                    Melee   = { equipped = true, name = "Tomahawk" },
+                    GPS     = { equipped = false, name = "" },
+                    Map     = { equipped = false, name = "" },
+                    Compass = { equipped = false, name = "" },
                 },
                 Weapons = {
-                    Slot1    = { equipped = false, item = {}},
-                    Slot2    = { equipped = false, item = {}},
-                    Slot3    = { equipped = false, item = {}},
+                    Slot1 = { equipped = true, item = "HK416" },
+                    Slot2 = { equipped = true, item = "Khrissy10R" },
+                    Slot3 = { equipped = true, item = "Tomahawk" },
                 },
             };
 
@@ -97,12 +96,17 @@ local playerWeaponSystemData = {
             IsReloading = false;
         },
 
-        module = {},
         viewmodel = nil,
         currentSlot = 0,
     }
 }
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RequestPlayerData = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("RequestPlayerData")
+
+RequestPlayerData.OnInvoke = function()
+    return playerWeaponSystemData.weaponSystem
+end
 
 function playerWeaponSystemData:setState(newState)
     print(newState) 

@@ -44,6 +44,10 @@ local bindableEvents = {
 	"SyncProjectileBindable",
 }
 
+local bindableFunctions = {
+	"RequestPlayerData",
+}
+
 for _, name in ipairs(remoteEvents) do
 	local remote = Instance.new("RemoteEvent")
 	remote.Name = name
@@ -67,6 +71,13 @@ end
 
 for _, name in ipairs(bindableEvents) do
 	local remote = Instance.new("BindableEvent")
+	remote.Name = name
+	remote.Parent = BindablesFolder
+	remoteManager[name .. "Bindable"] = remote
+end
+
+for _, name in ipairs(bindableFunctions) do
+	local remote = Instance.new("BindableFunction")
 	remote.Name = name
 	remote.Parent = BindablesFolder
 	remoteManager[name .. "Bindable"] = remote

@@ -26,8 +26,6 @@ function BulletHandler:ValidateBulletHit(origin, direction, maxDistance, owner, 
     end
 end
 
-
-
 SyncProjectileBindable.Event:Connect(function(player, origin, direction, speed)
     for _, otherPlayer in pairs(game.Players:GetPlayers()) do
         if otherPlayer ~= player then

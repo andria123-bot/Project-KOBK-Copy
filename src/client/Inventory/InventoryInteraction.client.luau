@@ -13,14 +13,15 @@ local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitFo
 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
 local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 
-local SlotInitializer = require(script.Parent.SlotInitializer)
-SlotInitializer:InitSys()
+local InventoryUIController = require(script.Parent.InventoryUIController)
+InventoryUIController:InitSys()
+print("Inited sys")
 
-local slots = SlotInitializer.slots
+local slots = InventoryUIController.slots
 
 repeat
 	task.wait()
-until #slots.inventory > 0
+until #slots.Inventory > 0
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -52,7 +53,7 @@ local function getSlotUnderMouse()
 	local guiInset = GuiService:GetGuiInset()
 	local adjustedMousePos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
 
-	for index, slot in pairs(slots.inventory) do
+	for index, slot in pairs(slots.Inventory) do
 		if slot then
 			local slotPos = slot.AbsolutePosition
 			local slotSize = slot.AbsoluteSize
@@ -81,7 +82,7 @@ local function createDragClone(original)
 end
 
 local function updateSlot(index)
-	local slot = slots.inventory[index]
+	local slot = slots.Inventory[index]
 	if not slot then return end
 	
 	local itemIcon = slot:FindFirstChild("ItemIcon")
@@ -104,7 +105,7 @@ local function updateSlot(index)
 				
 				if success and module and module.imageIconId then
 					itemImageCache[itemName] = module.imageIconId
-					local currentSlot = slots.inventory[index]
+					local currentSlot = slots.Inventory[index]
 					if currentSlot then
 						local currentIcon = currentSlot:FindFirstChild("ItemIcon")
 						if currentIcon and playerInventoryData[index] == itemName then
@@ -133,15 +134,15 @@ local function sendPlayerSlotData()
 		utils = {};
 	}
 	
-	for i = 1, #slots.inventory do
+	for i = 1, #slots.Inventory do
 		slotData.slots["Slot" .. i] = playerInventoryData[i] or ""
 	end
 	
-	for i = 1, #slots.weaponSlots do
+	for i = 1, #slots.WeaponSlots do
 		slotData.weaponSlots["WeaponSlot" .. i] = ""
 	end
 	
-	for i = 1, #slots.utils do
+	for i = 1, #slots.Utils do
 		slotData.utils["UtilSlot" .. i] = ""
 	end
 	
@@ -149,13 +150,13 @@ local function sendPlayerSlotData()
 end
 
 local function SlotHandler()
-	for index, k in pairs(slots.inventory) do
+	for index, k in pairs(slots.Inventory) do
 		local itemIcon = k:FindFirstChild("ItemIcon")
 		if itemIcon and not itemIcon:GetAttribute("DragHandlerAttached") then
 			itemIcon:SetAttribute("DragHandlerAttached", true)
 			itemIcon.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					if  playerInventoryData[index]
+					if playerInventoryData[index]
 						and playerInventoryData[index] ~= ""
 						and playerInventoryData[index] ~= "Empty"
 					then
@@ -197,7 +198,7 @@ UserInputService.InputEnded:Connect(function(input)
 			sendPlayerSlotData()
 		end
 		
-		local originalSlot = slots.inventory[dragging.fromSlot]
+		local originalSlot = slots.Inventory[dragging.fromSlot]
 		if originalSlot then
 			local originalIcon = originalSlot:FindFirstChild("ItemIcon")
 			if originalIcon then
@@ -214,13 +215,19 @@ end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
 	local index = 1
-	for i, v in pairs(savedInventory) do
-		playerInventoryData[i] = v
+	
+	-- Handle both array and struct formats
+	if type(savedInventory) == "table" and savedInventory.PlayerInventory then
+		playerInventoryData = savedInventory.PlayerInventory
+	else
+		for i, v in pairs(savedInventory) do
+			playerInventoryData[i] = v
+		end
 	end
 
 	repeat
 		task.wait()
-	until playerInventoryData[index] ~= nil
+	until playerInventoryData[index] ~= nil or index > 10
 
 	RenderItems()
 	SlotHandler()

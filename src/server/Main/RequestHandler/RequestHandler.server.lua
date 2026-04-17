@@ -171,6 +171,6 @@ end)
 
 RequestWeaponSystemData.OnServerInvoke = function(player)
     return {
-        PlayerWeaponSystemData.weaponSystem
+        PlayerWeaponSystemData.weaponSystem;
     }
 end

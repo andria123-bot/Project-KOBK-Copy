@@ -1,7 +1,6 @@
 
 --[[
     Loads default kit for new players from DefaultInventory
-
 ]]
 
 local defaultInventory = {}
@@ -12,8 +11,6 @@ local inventoryStore = DataStoreService:GetDataStore("InventoryStore")
 
 local InventoryUpdate = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("InventoryUpdate")
 local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
-
-
 
 PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
     local slots = slotData
@@ -32,7 +29,7 @@ local starterKit = {
 function defaultInventory.loadDefaultInventory(playerData)
     if not playerData.weaponSystem then return false end
 
-    local inventory = playerData.weaponSystem.inventory
+    local inventory = playerData.weaponSystem.Inventory.PlayerInventory
     local hasItems = false
     for _, item in ipairs(inventory) do
         if item and item ~= "" then
@@ -55,7 +52,11 @@ end
 function defaultInventory.mergeInventory(playerData, savedInventory)
     if not playerData.weaponSystem then return false end
 
-    local inventory = playerData.weaponSystem.inventory
+    print(playerData)
+    print(playerData.weaponSystem)
+    print(playerData.weaponSystem.Inventory)
+
+    local inventory = playerData.weaponSystem.Inventory.PlayerInventory
     if savedInventory then -- Has saved data, use it
         for i = 1, #savedInventory do
             inventory[i] = savedInventory[i] or ""
@@ -79,12 +80,12 @@ end
 
 function defaultInventory.saveInventory(player, playerData)
     pcall(function()
-        inventoryStore:SetAsync(player.UserId, playerData.weaponSystem.inventory)
+        inventoryStore:SetAsync(player.UserId, playerData.weaponSystem.Inventory.PlayerInventory)
     end)
 end
 
 local function sendInventoryToClient(player, playerData)
-    InventoryUpdate:FireClient(player, playerData.weaponSystem.inventory)
+    InventoryUpdate:FireClient(player, playerData.weaponSystem.Inventory.PlayerInventory)
 end
 
 return defaultInventory
