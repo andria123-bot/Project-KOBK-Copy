@@ -45,10 +45,48 @@ UpdateClientState.OnClientEvent:Connect(function(newState)
     weaponSystem.state = newState
 end)
 
+SendInventory.OnClientEvent:Connect(function()
+    -- Ensure the Inventory structure exists
+    if not weaponSystem.Inventory then
+        weaponSystem.Inventory = {
+            PlayerInventory = {},
+            StorageInventory = {},
+            Equipment = {
+                Clothing = {},
+                Utils = {},
+                Weapons = {},
+            },
+            SlotCount = 0
+        }
+    end
+    
+    if not weaponSystem.Inventory.PlayerInventory then
+        weaponSystem.Inventory.PlayerInventory = {}
+    end
+end)
+
+RequestInventory:FireServer()
+
 SendInventory.OnClientEvent:Connect(function(savedInventory)
-    weaponSystem.Inventory.PlayerInventory = weaponSystem.Inventory.PlayerInventory or {}
-    for i = 1, #savedInventory do
-        weaponSystem.Inventory.PlayerInventory[i] = savedInventory[i] or ""
+    if not weaponSystem.Inventory then
+        weaponSystem.Inventory = {
+            PlayerInventory = {},
+            StorageInventory = {},
+            Equipment = {
+                Clothing = {},
+                Utils = {},
+                Weapons = {},
+            },
+            SlotCount = 0
+        }
+    end
+	
+    if savedInventory.PlayerInventory then
+        weaponSystem.Inventory = savedInventory
+    else
+        for i = 1, #savedInventory do
+            weaponSystem.Inventory.PlayerInventory[i] = savedInventory[i] or ""
+        end
     end
 
     print("Inventory synced:", weaponSystem.Inventory)
@@ -85,7 +123,7 @@ local hud = player.PlayerGui:WaitForChild("HUD")
 
 function updateHUD(state, data)
 	if hud and data then
-		if weaponSystem.viewmodel and weaponSystem.module and isEquipedWeapon then
+		if weaponSystem.viewmodel and weaponSystem.modifiers and isEquipedWeapon then
 			if weaponSystem.modifiers.isMelee or weaponSystem.modifiers.isGrenade then
 				hud.Enabled = false
 			end
@@ -305,6 +343,9 @@ function Inspect()
         weaponSystem.modifiers.IsInspecting = true
         
         UpdateWeaponStateRemote:FireServer(weaponSystem.states[4])
+
+		weaponSystem.animations.FirstPerson[1]:Stop()
+        weaponSystem.animations.ThirdPerson[1]:Stop()
         
         weaponSystem.animations.FirstPerson[8]:Stop()
         weaponSystem.animations.FirstPerson[7]:Play()
@@ -369,7 +410,7 @@ function Reload()
         weaponSystem.modifiers.IsInspecting = false
     end
     
-    local gun = weaponSystem.inventory[weaponSystem.currentSlot]
+    local gun = weaponSystem.Inventory.PlayerInventory[weaponSystem.currentSlot]
 
     if currentAmmo == 0 then
         weaponSystem.animations.FirstPerson[6]:Play()
@@ -460,8 +501,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 	and weaponSystem.state ~= weaponSystem.states[8] then
 		if input.KeyCode == Enum.KeyCode.One then
 			if weaponSystem.currentSlot ~= 1 and weaponSystem.state ~= weaponSystem.states[3] and weaponSystem.state ~= weaponSystem.states[8] then
-				if weaponSystem.inventory[1] ~= "Empty" then
-					loadSlot(weaponSystem.inventory[1])
+				if weaponSystem.Inventory.PlayerInventory[1] ~= "" then
+					loadSlot(weaponSystem.Inventory.PlayerInventory[1])
 					weaponSystem.currentSlot = 1
 					isEquipedWeapon = true
 				end
@@ -470,8 +511,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Two then
 			if weaponSystem.currentSlot ~= 2 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[2] ~= "Empty" then
-					loadSlot(weaponSystem.inventory[2])
+				if weaponSystem.Inventory.PlayerInventory[2] ~= "Empty" then
+					loadSlot(weaponSystem.Inventory.PlayerInventory[2])
 					weaponSystem.currentSlot = 2
 					isEquipedWeapon = true
 				end
@@ -480,8 +521,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Three then
 			if weaponSystem.currentSlot ~= 3 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.inventory[3] ~= "Empty" then
-					loadSlot(weaponSystem.inventory[3])
+				if weaponSystem.Inventory.PlayerInventory[3] ~= "Empty" then
+					loadSlot(weaponSystem.Inventory.PlayerInventory[3])
 					weaponSystem.currentSlot = 3
 					isEquipedWeapon = true
 				end
@@ -490,8 +531,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		-- if input.KeyCode == Enum.KeyCode.Four then
 		-- 	if weaponSystem.currentSlot ~= 4 and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 		if weaponSystem.inventory[4] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.inventory[4])
+		-- 		if weaponSystem.Inventory.PlayerInventory[4] ~= "Empty" then
+		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[4])
 		-- 			weaponSystem.currentSlot = 4
 		-- 			isEquipedWeapon = true
 		-- 		end
@@ -500,8 +541,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		-- if input.KeyCode == Enum.KeyCode.Five then
 		-- 	if weaponSystem.currentSlot ~= 5 and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 		if weaponSystem.inventory[5] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.inventory[5])
+		-- 		if weaponSystem.Inventory.PlayerInventory[5] ~= "Empty" then
+		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[5])
 		-- 			weaponSystem.currentSlot = 5
 		-- 			isEquipedWeapon = true
 		-- 		end
@@ -510,8 +551,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		-- if input.KeyCode == Enum.KeyCode.Six then
 		-- 	if weaponSystem.currentSlot ~= 6 and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 		if weaponSystem.inventory[6] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.inventory[6])
+		-- 		if weaponSystem.Inventory.PlayerInventory[6] ~= "Empty" then
+		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[6])
 		-- 			weaponSystem.currentSlot = 6
 		-- 			isEquipedWeapon = true
 		-- 		end
@@ -520,8 +561,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		-- if input.KeyCode == Enum.KeyCode.Seven and weaponSystem.state ~= weaponSystem.states[3] then
 		-- 	if weaponSystem.currentSlot ~= 7 then
-		-- 		if weaponSystem.inventory[7] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.inventory[7])
+		-- 		if weaponSystem.Inventory.PlayerInventory[7] ~= "Empty" then
+		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[7])
 		-- 			weaponSystem.currentSlot = 7
 		-- 			isEquipedWeapon = true
 		-- 		end
@@ -530,8 +571,8 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		-- if input.KeyCode == Enum.KeyCode.Eight then
 		-- 	if weaponSystem.currentSlot ~= 8 and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 		if weaponSystem.inventory[8] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.inventory[8])
+		-- 		if weaponSystem.Inventory.PlayerInventory[8] ~= "Empty" then
+		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[8])
 		-- 			weaponSystem.currentSlot = 8
 		-- 			isEquipedWeapon = true
 		-- 		end
@@ -558,7 +599,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 				and weaponSystem.state ~= weaponSystem.states[3] 
 				and weaponSystem.state ~= weaponSystem.states[8]
 				and weaponSystem.state ~= weaponSystem.states[4] then 
-				if not weaponSystem.module.isGrenade and not weaponSystem.module.isMelee then
+				if not weaponSystem.modifiers.isGrenade and not weaponSystem.modifiers.isMelee then
 					if not weaponSystem.modifiers.IsReloading then
 						weaponSystem.modifiers.IsAiming = true
 						if not weaponSystem.modifiers.IsShooting then
@@ -687,7 +728,7 @@ end)
 
 while wait() do
 	if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
-		local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.inventory[weaponSystem.currentSlot], camera.CFrame.LookVector, weaponSystem.viewmodel.Muzzle.Position)
+		local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.Inventory.PlayerInventory[weaponSystem.currentSlot], camera.CFrame.LookVector, weaponSystem.viewmodel.Muzzle.Position)
 		
 		if success and recoilData and data then
 			weaponSystem.animations.FirstPerson[2]:Stop()

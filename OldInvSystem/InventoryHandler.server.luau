@@ -137,8 +137,6 @@ RequestInventory.OnServerEvent:Connect(function(player)
 end)
 
 MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
-	print("[SERVER] ===== MoveItem INVOKED ===== by:", player.Name)
-    print("[SERVER] fromSlot:", fromSlot, "toSlot:", toSlot)
     
     local playerData = PlayerInventories[player]
     if not playerData or not playerData.Inventory then return false end
