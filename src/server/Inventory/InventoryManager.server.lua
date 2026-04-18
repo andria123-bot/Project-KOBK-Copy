@@ -6,13 +6,12 @@ local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForCh
 local RequestPlayerData = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("RequestPlayerData")
 
 local data = RequestPlayerData:Invoke()
-print("Got data:", data)
 
 Players.PlayerAdded:Connect(function(player)
     local playerInventory = {
         PlayerInventory = {},
         StorageInventory = {},
-        Equipment = data.Inventory.Equipment,  -- Direct reference
+        Equipment = data.Inventory.Equipment,
         SlotCount = data.Inventory.SlotCount
     }
     
@@ -28,5 +27,6 @@ Players.PlayerAdded:Connect(function(player)
         end
     end
     
+    wait(1.2)
     SendInventory:FireClient(player, playerInventory)
 end)

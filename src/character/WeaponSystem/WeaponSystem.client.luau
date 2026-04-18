@@ -46,12 +46,12 @@ UpdateClientState.OnClientEvent:Connect(function(newState)
 end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
-    weaponSystem.inventory.PlayerInventory = weaponSystem.inventory.PlayerInventory or {}
+    weaponSystem.Inventory.PlayerInventory = weaponSystem.Inventory.PlayerInventory or {}
     for i = 1, #savedInventory do
-        weaponSystem.inventory.PlayerInventory[i] = savedInventory[i] or ""
+        weaponSystem.Inventory.PlayerInventory[i] = savedInventory[i] or ""
     end
 
-    print("Inventory synced:", weaponSystem.inventory)
+    print("Inventory synced:", weaponSystem.Inventory)
 end)
 
 RequestInventory:FireServer()

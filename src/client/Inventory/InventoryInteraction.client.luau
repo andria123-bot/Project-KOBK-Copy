@@ -15,7 +15,6 @@ local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForC
 
 local InventoryUIController = require(script.Parent.InventoryUIController)
 InventoryUIController:InitSys()
-print("Inited sys")
 
 local slots = InventoryUIController.slots
 
@@ -29,6 +28,7 @@ local GearsGui = MainParent.GearParent.GearGUI
 local InventoryParent = MainParent:WaitForChild("InventoryParent")
 
 local GuiService = game:GetService("GuiService")
+local SafetyService = game:GetService("SafetyService")
 
 local playerInventoryData = {}
 local itemImageCache = {}
@@ -159,6 +159,7 @@ local function SlotHandler()
 					if playerInventoryData[index]
 						and playerInventoryData[index] ~= ""
 						and playerInventoryData[index] ~= "Empty"
+						and playerInventoryData[index] ~= nil
 					then
 						dragging.active = true
 						dragging.fromSlot = index
@@ -172,51 +173,52 @@ local function SlotHandler()
 end
 
 UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active and dragging.clone then
-		local slotGroup, slotIndex, slotFrame = getSlotUnderMouse()
-		
-		if slotGroup and slotIndex and slotIndex ~= dragging.fromSlot then
-			local fromItem = playerInventoryData[dragging.fromSlot]
-			local toItem = playerInventoryData[slotIndex]
-			
-			playerInventoryData[slotIndex] = fromItem
-			playerInventoryData[dragging.fromSlot] = toItem or ""
-			
-			updateSlot(dragging.fromSlot)
-			updateSlot(slotIndex)
-			
-			local success = MoveItem:InvokeServer(dragging.fromSlot, slotIndex)
-			
-			if not success then
-				playerInventoryData[dragging.fromSlot] = fromItem
-				playerInventoryData[slotIndex] = toItem
-				updateSlot(dragging.fromSlot)
-				updateSlot(slotIndex)
-				print("Server rejected move - reverting")
-			end
-			
-			sendPlayerSlotData()
-		end
-		
-		local originalSlot = slots.Inventory[dragging.fromSlot]
-		if originalSlot then
-			local originalIcon = originalSlot:FindFirstChild("ItemIcon")
-			if originalIcon then
-				originalIcon.Visible = true
-			end
-		end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active then
+        local slotGroup, slotIndex, slotFrame = getSlotUnderMouse()
+        
+        if dragging.clone then
+            dragging.clone:Destroy()
+            dragging.clone = nil
+        end
+        
+        if slotGroup and slotIndex and slotIndex ~= dragging.fromSlot then
+            local fromItem = playerInventoryData[dragging.fromSlot]
+            local toItem = playerInventoryData[slotIndex]
+            
+            playerInventoryData[slotIndex] = fromItem
+            playerInventoryData[dragging.fromSlot] = toItem or ""
+            
+            updateSlot(dragging.fromSlot)
+            updateSlot(slotIndex)
+            
+            task.spawn(function()
+                local success = MoveItem:InvokeServer(dragging.fromSlot, slotIndex)
+                if not success then
+                    playerInventoryData[dragging.fromSlot] = fromItem
+                    playerInventoryData[slotIndex] = toItem
+                    updateSlot(dragging.fromSlot)
+                    updateSlot(slotIndex)
+                end
+                sendPlayerSlotData()
+            end)
+        end
+        
+        local originalSlot = slots.Inventory[dragging.fromSlot]
+        if originalSlot then
+            local originalIcon = originalSlot:FindFirstChild("ItemIcon")
+            if originalIcon then
+                originalIcon.Visible = true
+            end
+        end
 
-		dragging.active = false
-		if dragging.clone then
-			dragging.clone:Destroy()
-		end
-	end
+        dragging.active = false
+        dragging.fromSlot = nil
+    end
 end)
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
 	local index = 1
 	
-	-- Handle both array and struct formats
 	if type(savedInventory) == "table" and savedInventory.PlayerInventory then
 		playerInventoryData = savedInventory.PlayerInventory
 	else
@@ -224,7 +226,7 @@ SendInventory.OnClientEvent:Connect(function(savedInventory)
 			playerInventoryData[i] = v
 		end
 	end
-
+	
 	repeat
 		task.wait()
 	until playerInventoryData[index] ~= nil or index > 10

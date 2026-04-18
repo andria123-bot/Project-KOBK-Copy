@@ -52,10 +52,6 @@ end
 function defaultInventory.mergeInventory(playerData, savedInventory)
     if not playerData.weaponSystem then return false end
 
-    print(playerData)
-    print(playerData.weaponSystem)
-    print(playerData.weaponSystem.Inventory)
-
     local inventory = playerData.weaponSystem.Inventory.PlayerInventory
     if savedInventory then -- Has saved data, use it
         for i = 1, #savedInventory do

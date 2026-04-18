@@ -183,7 +183,6 @@ function InventoryUIController:RenderItems()
 end
 
 SendInventory.OnClientEvent:Connect(function(savedInventory)
-    
     if type(savedInventory) == "table" and savedInventory.PlayerInventory then
         playerInventoryData = savedInventory.PlayerInventory
     else
