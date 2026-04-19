@@ -179,16 +179,22 @@ function loadSlot(Item)
 
 		weaponSystem.viewmodel = LoadViewmodel.GetViewmodel(Item):Clone()
 		weaponSystem.viewmodel.Parent = camera
-
 		if weaponSystem.viewmodel then
 			local animData = RequestWeaponData:InvokeServer(Item)
 			local readyData = animData.animations
 			local animator = weaponSystem.viewmodel.AnimationController.Animator
 			local characterAnimator = character.Humanoid.Animator
 
+			for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
+				if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
+					print(v)
+					v.Transparency = 1
+				end
+			end
+
 			ReplicatedStorage.Shared.Remotes.LoadSlot:FireServer(Item)
 			weaponData = RequestWeaponData:InvokeServer(Item)
-
+		
 			local firstPersonAnims = {
 				{index = 1, name = "Fire", id = readyData.fireAnim},
 				{index = 2, name = "Equip", id = readyData.equipAnim},
@@ -240,12 +246,6 @@ function loadSlot(Item)
 				end
 			end
 
-			for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
-				if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
-					v.Transparency = 1
-				end
-			end
-
 			weaponSystem.animations.FirstPerson[2]:Play()
 			weaponSystem.animations.ThirdPerson[2]:Play()
 
@@ -262,7 +262,7 @@ function loadSlot(Item)
 
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
 
-			task.wait(.1)
+			task.wait(.5)
 
 			for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 				if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
@@ -470,7 +470,7 @@ RunService.RenderStepped:Connect(function(dt)
 
 			for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
 				if v:IsA("Model") then
-					v:SetPrimaryPartCFrame(camera.CFrame * weaponData.aimData.swayCF * weaponData.aimData.aimCF * bobOffset * rotOffset * viewmodelKickOffset)
+					v:SetPrimaryPartCFrame(camera.CFrame) --  * weaponData.aimData.swayCF * weaponData.aimData.aimCF * bobOffset * rotOffset * viewmodelKickOffset
 					updateCameraShake()
 
 					if weaponSystem.animations and weaponSystem.viewmodel then
@@ -511,7 +511,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Two then
 			if weaponSystem.currentSlot ~= 2 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.Inventory.PlayerInventory[2] ~= "Empty" then
+				if weaponSystem.Inventory.PlayerInventory[2] ~= "" then
 					loadSlot(weaponSystem.Inventory.PlayerInventory[2])
 					weaponSystem.currentSlot = 2
 					isEquipedWeapon = true
@@ -521,7 +521,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Three then
 			if weaponSystem.currentSlot ~= 3 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.Inventory.PlayerInventory[3] ~= "Empty" then
+				if weaponSystem.Inventory.PlayerInventory[3] ~= "" then
 					loadSlot(weaponSystem.Inventory.PlayerInventory[3])
 					weaponSystem.currentSlot = 3
 					isEquipedWeapon = true

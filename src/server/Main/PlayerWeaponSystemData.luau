@@ -22,7 +22,7 @@ local playerWeaponSystemData = {
                     Compass = { equipped = false, name = "" },
                 },
                 Weapons = {
-                    Slot1 = { equipped = true, item = "HK416" },
+                    Slot1 = { equipped = true, item = "HK416" }, -- loadstartergear should fill these orr player could manually equip these, both are easy way. gn
                     Slot2 = { equipped = true, item = "Khrissy10R" },
                     Slot3 = { equipped = true, item = "Tomahawk" },
                 },
