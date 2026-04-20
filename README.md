@@ -35,8 +35,9 @@ remove .Unit on server                                                          
 fix death bug                                                                   | Medium | Fixed
 when died it doesnt reset ammo                                                  | Medium | Fixed
 Full auto is delayed                                                            | Medium | Fixed
-shooting needs to be more smooth                                                | Medium | Fixed Kinda
+shooting needs to be more smooth                                                | Medium | Fixed Kinda Animation Left
 Add Anti-cheat for speed, position area, inventory                              | Hard   |
+BulletVisual is not replicated to other clients                                 | Easy   |
 
 fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle | Medium | Fixed
 

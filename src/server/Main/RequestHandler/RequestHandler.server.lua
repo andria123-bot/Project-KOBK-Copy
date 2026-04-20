@@ -109,6 +109,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything f
     end
 
 	return true, {rx = rx, ry = ry, rz = rz}, {
+        loadedBulletType = weaponData.loadedBulletType,
         maxAmmo = playerAmmo[player][item .. "_max"],
         bulletSpeed = weaponData.bulletSpeed,
         imageIconId = weaponData.imageIconId,

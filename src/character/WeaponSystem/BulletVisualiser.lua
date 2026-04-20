@@ -6,8 +6,9 @@ local BulletVisualiser = {}
 
 local activeTracers = {}
 
-function BulletVisualiser:CreateVisualTracer(origin, direction, speed)
+function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBulletType)
     if not AmmoTracer then return end
+    if loadedBulletType ~= "Tracer" then return end
 
     local tracer = AmmoTracer:Clone()
     tracer.Parent = workspace.BulletTracers
@@ -26,7 +27,7 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed)
 
     table.insert(activeTracers, tracerData)
 
-    -- Tracer Creation
+    -- tracer creation
     task.spawn(function()
         local lastPos = origin
         local startTime = tick()
@@ -46,7 +47,7 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed)
             
             tracer.CFrame = CFrame.new(currentPos, currentPos + direction)
             
-            -- Scale tracer size based on distance to camera
+            -- scale tracer size based on distance to camera
             local distanceToCamera = (workspace.CurrentCamera.CFrame.Position - currentPos).Magnitude
             local scale = math.clamp(distanceToCamera / 200, 0.2, 2)
             tracer.Size = Vector3.new(scale, scale, scale)

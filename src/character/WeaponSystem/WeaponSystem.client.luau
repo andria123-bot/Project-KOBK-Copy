@@ -187,7 +187,6 @@ function loadSlot(Item)
 
 			for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 				if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
-					print(v)
 					v.Transparency = 1
 				end
 			end
@@ -246,9 +245,6 @@ function loadSlot(Item)
 				end
 			end
 
-			weaponSystem.animations.FirstPerson[2]:Play()
-			weaponSystem.animations.ThirdPerson[2]:Play()
-
 			isEquipedWeapon = true
 
 			updateHUD(false, {
@@ -260,9 +256,12 @@ function loadSlot(Item)
 				name = weaponData.name,
 			})
 
-			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
+			weaponSystem.animations.FirstPerson[2]:Play()
+			weaponSystem.animations.ThirdPerson[2]:Play()
 
-			task.wait(.5)
+			wait(.5)
+
+			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
 
 			for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 				if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
@@ -470,7 +469,7 @@ RunService.RenderStepped:Connect(function(dt)
 
 			for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
 				if v:IsA("Model") then
-					v:SetPrimaryPartCFrame(camera.CFrame) --  * weaponData.aimData.swayCF * weaponData.aimData.aimCF * bobOffset * rotOffset * viewmodelKickOffset
+					v:SetPrimaryPartCFrame(camera.CFrame * weaponData.aimData.swayCF * weaponData.aimData.aimCF * bobOffset * rotOffset * viewmodelKickOffset)
 					updateCameraShake()
 
 					if weaponSystem.animations and weaponSystem.viewmodel then
@@ -744,10 +743,10 @@ while wait() do
 			local origin = weaponSystem.viewmodel.Muzzle.Position
     		local direction = camera.CFrame.LookVector
 
-			BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed)
+			BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed, data.loadedBulletType)
 
 			local muzzleFlash = game.ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()
-			muzzleFlash.Parent = game.Workspace
+			muzzleFlash.Parent = weaponSystem.viewmodel.Muzzle
 			muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
 
 			for i, v in pairs(muzzleFlash:GetDescendants()) do

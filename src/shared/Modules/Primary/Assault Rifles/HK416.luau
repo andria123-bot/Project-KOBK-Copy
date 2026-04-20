@@ -102,6 +102,7 @@ local data = {
 	slotType = "Loadout",
 	ammoType = "5.56x45",
 	canBeStored = false,
+	loadedBulletType = "Tracer"; -- T / AP
 
 	isGrenade = false,
 	isMelee = false,
