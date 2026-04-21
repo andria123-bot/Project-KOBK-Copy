@@ -445,7 +445,9 @@ RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem.viewmodel then
 		-- print(weaponSystem.state) -- Debugging
 
-		if tick() > kickReturnTime and viewmodelKickOffset ~= CFrame.new() then
+		local t = tick()
+
+		if t > kickReturnTime and viewmodelKickOffset ~= CFrame.new() then
 			viewmodelKickOffset = CFrame.new()
 		end
 
@@ -457,9 +459,9 @@ RunService.RenderStepped:Connect(function(dt)
 
 			if humanoid.MoveDirection.Magnitude > 0 then
 				if humanoid.WalkSpeed == 16 then
-					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 8) * .02, -humanoid.CameraOffset.Y / 7, -humanoid.CameraOffset.Z / 3) * CFrame.Angles(0, math.cos(tick() * -0) * -.0, math.sin(tick() * -4) * .01), 1 - 0.001 ^ dt)
+					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(t * 8) * .02, -humanoid.CameraOffset.Y / 7, -humanoid.CameraOffset.Z / 3) * CFrame.Angles(0, math.cos(t * -0) * -.0, math.sin(tick() * -4) * .01), 1 - 0.001 ^ dt)
 				elseif humanoid.WalkSpeed == 22 then
-					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(tick() * 10) * .1, -humanoid.CameraOffset.Y / 3, -humanoid.CameraOffset.Z / 3) * CFrame.Angles(0, math.cos(tick() * -8) * -.1, math.sin(tick() * -8) * .1) * (weaponData.aimData.sprintCF or CFrame.new()), 1 - 0.001 ^ dt)
+					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(t * 10) * .1, -humanoid.CameraOffset.Y / 3, -humanoid.CameraOffset.Z / 3) * CFrame.Angles(0, math.cos(t * -8) * -.1, math.sin(tick() * -8) * .1) * (weaponData.aimData.sprintCF or CFrame.new()), 1 - 0.001 ^ dt)
 				end
 			else
 				bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y / 3, 0), 1 - 0.001 ^ dt)
@@ -467,20 +469,18 @@ RunService.RenderStepped:Connect(function(dt)
 
 			local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
 
-			for _, v in pairs(camera:GetChildren()) do -- apply things to viewmodel
-				if v:IsA("Model") then
-					v:SetPrimaryPartCFrame(camera.CFrame * weaponData.aimData.swayCF * weaponData.aimData.aimCF * bobOffset * rotOffset * viewmodelKickOffset)
-					updateCameraShake()
+			if weaponSystem.viewmodel and weaponSystem.viewmodel.PrimaryPart then -- apply things to viewmodel
+				weaponSystem.viewmodel:SetPrimaryPartCFrame(camera.CFrame * weaponData.aimData.swayCF * weaponData.aimData.aimCF * bobOffset * rotOffset * viewmodelKickOffset)
+				updateCameraShake()
 
-					if weaponSystem.animations and weaponSystem.viewmodel then
-						if not weaponSystem.modifiers.isMelee then
-							if not weaponSystem.animations.FirstPerson[1].IsPlaying and not weaponSystem.animations.FirstPerson[4].IsPlaying and not weaponSystem.animations.FirstPerson[2].IsPlaying and not weaponSystem.animations.FirstPerson[6].IsPlaying and not weaponSystem.animations.FirstPerson[5].IsPlaying and not weaponSystem.animations.FirstPerson[7].IsPlaying and not weaponSystem.animations.FirstPerson[3].IsPlaying then
-								if not weaponSystem.animations.FirstPerson[8].IsPlaying then
-									weaponSystem.animations.FirstPerson[8]:Play()
-								end
-							else
-								weaponSystem.animations.FirstPerson[8]:Stop()
+				if weaponSystem.animations and weaponSystem.viewmodel then
+					if not weaponSystem.modifiers.isMelee then
+						if not weaponSystem.animations.FirstPerson[1].IsPlaying and not weaponSystem.animations.FirstPerson[4].IsPlaying and not weaponSystem.animations.FirstPerson[2].IsPlaying and not weaponSystem.animations.FirstPerson[6].IsPlaying and not weaponSystem.animations.FirstPerson[5].IsPlaying and not weaponSystem.animations.FirstPerson[7].IsPlaying and not weaponSystem.animations.FirstPerson[3].IsPlaying then
+							if not weaponSystem.animations.FirstPerson[8].IsPlaying then
+								weaponSystem.animations.FirstPerson[8]:Play()
 							end
+						else
+							weaponSystem.animations.FirstPerson[8]:Stop()
 						end
 					end
 				end

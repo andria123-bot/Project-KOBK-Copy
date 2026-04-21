@@ -4,6 +4,7 @@ local UIS = game:GetService("UserInputService")
 local character = script.Parent
 local humanoid = character:WaitForChild("Humanoid")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ChatService = game:GetService("Chat")
 
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
@@ -66,6 +67,10 @@ StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
 -- 	end)
 -- 	task.wait()
 -- until success
+
+ChatService:SetBubbleChatSettings({
+    Enabled = false
+})
 
 game.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 humanoid.BreakJointsOnDeath = false

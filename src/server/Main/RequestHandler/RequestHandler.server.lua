@@ -73,6 +73,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything f
     if not weaponModule then return false end
 
     local weaponData = require(weaponModule)
+    if playerAmmo[player][item] <= 0 then return false end
 
     local direction = LookVector
     local muzzlePos = character:FindFirstChild(item).Muzzle.Position
@@ -88,14 +89,14 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything f
         return false
     end
     
-    if playerAmmo[player][item] <= 0 then return false end
-    
     playerAmmo[player][item] = playerAmmo[player][item] - 1
     
     local isLastBullet = (playerAmmo[player][item] == 0)
 
     -- weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil) -- default fastcast
-    SyncProjectileBindable:Fire(player, muzzlePos, direction, weaponData.bulletSpeed) -- custom projectile
+    SyncProjectileBindable:Fire(player, muzzlePos, direction, weaponData.bulletSpeed) -- Sync projectie visuals to other clients
+
+    BulletHandler:FireBullet(player, muzzlePos, direction, weaponData)
 
     local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
 
@@ -118,6 +119,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything f
         fireMode = weaponData.fireMode,
         ammoType = weaponData.ammoType,
         isLastBullet = isLastBullet,
+        name = weaponData.name,
     }
 end
 

@@ -82,8 +82,8 @@ local data = {
 	canAddExtendedMag = true,
 
 	-- Damage
-	damage = 30.5,  
-	headshot = 70,
+	damage = 28.6,  
+	headshot = 67.67,
 	debounce = 0.1,
 	reloadTime = 3.7,  
 	jamChance = 0.0005,
@@ -98,6 +98,7 @@ local data = {
 	
 	bulletSpeed = 1200,
 	maxDistanceTravel = 1500;
+	dragCoefficient = 0.00022,
 
 	slotType = "Loadout",
 	ammoType = "5.56x45",

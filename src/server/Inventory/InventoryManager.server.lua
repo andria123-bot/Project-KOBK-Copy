@@ -24,6 +24,6 @@ Players.PlayerAdded:Connect(function(player)
     local savedInventory = defaultInventory.loadSavedInventory(player)
     
     defaultInventory.mergeInventory(playerData, savedInventory)
-    
+
     SendInventory:FireClient(player, playerData.weaponSystem.Inventory.PlayerInventory)
 end)
