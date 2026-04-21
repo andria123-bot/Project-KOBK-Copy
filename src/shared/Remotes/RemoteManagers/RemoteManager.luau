@@ -8,6 +8,7 @@ local RequestsFolder = RemotesFolder.Requests
 local BindablesFolder = RemotesFolder.Bindables
 
 local remoteEvents = {
+	"SendKillFeedMessage",
 	"SnycTracerToOthers",
 	"UpdateWeaponState",
 	"UpdateClientState",

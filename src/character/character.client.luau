@@ -1,10 +1,12 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
+local generalChannel = TextChatService:WaitForChild("TextChannels"):WaitForChild("RBXGeneral")
+local SendKillFeedMessage = ReplicatedStorage.Shared.Remotes:WaitForChild("SendKillFeedMessage")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local UIS = game:GetService("UserInputService")
 local character = script.Parent
 local humanoid = character:WaitForChild("Humanoid")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ChatService = game:GetService("Chat")
 
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
 local UpdateWeaponStateRemote = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateWeaponState")
@@ -68,9 +70,17 @@ StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
 -- 	task.wait()
 -- until success
 
-ChatService:SetBubbleChatSettings({
-    Enabled = false
-})
+-- ChatService:SetBubbleChatSettings({
+--     Enabled = false
+-- })
+
+SendKillFeedMessage.OnClientEvent:Connect(function(message)
+    -- Formatting with Rich Text (Orange color and Bold)
+    local styledMessage = "<b><font color='#FFA500'>[FEED]: </font></b>" .. message
+    
+    -- Display the message in the chat box
+    generalChannel:DisplaySystemMessage(styledMessage)
+end)
 
 game.StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 humanoid.BreakJointsOnDeath = false

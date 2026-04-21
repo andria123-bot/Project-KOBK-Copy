@@ -24,6 +24,7 @@ local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 local BulletVisualiser = require(script.Parent.BulletVisualiser)
 local LoadViewmodel = require(script.Parent.LoadViewmodel)
 local Scope = require(script.Parent.Scope)
+local ViewmodelBob = require(script.Parent.ViewmodelBob)
 
 -- local InventoryHandler = require(script.Parent.Parent.client.Inventory.InventoryHandler)
 
@@ -35,17 +36,20 @@ recoilSpring.Damping = 5
 local viewmodelKickOffset = CFrame.new()
 local kickReturnTime = 0
 
+local connections = {}
+
+
 local RequiredWeaponSystem = RequestWeaponSystemData:InvokeServer()
 local weaponSystem = RequiredWeaponSystem[1]
 local weaponData
 local currentAmmo = 0
 local currentMaxAmmo = 0
 
-UpdateClientState.OnClientEvent:Connect(function(newState)
+connections.UpdateClientState = UpdateClientState.OnClientEvent:Connect(function(newState)
     weaponSystem.state = newState
 end)
 
-SendInventory.OnClientEvent:Connect(function()
+connections.SendInventory = SendInventory.OnClientEvent:Connect(function()
     -- Ensure the Inventory structure exists
     if not weaponSystem.Inventory then
         weaponSystem.Inventory = {
@@ -67,7 +71,7 @@ end)
 
 RequestInventory:FireServer()
 
-SendInventory.OnClientEvent:Connect(function(savedInventory)
+connections.SendInventory = SendInventory.OnClientEvent:Connect(function(savedInventory)
     if not weaponSystem.Inventory then
         weaponSystem.Inventory = {
             PlayerInventory = {},
@@ -102,6 +106,7 @@ local AimHelper = require(script.Parent.Aim)
 local aimHelper = AimHelper
 
 local debounce = false
+local cachedData = {}
 
 local isEquipedWeapon = false
 
@@ -162,6 +167,13 @@ function loadSlot(Item)
 			weaponSystem.animations.ThirdPerson[7]:Destroy()
 			weaponSystem.animations.FirstPerson[3]:Play()
 			player.Character.IdleAnim:Destroy()
+		end
+
+		for _, track in pairs(weaponSystem.animations.FirstPerson) do
+			if track then
+				track:Stop()
+				track:Destroy()
+			end
 		end
 
 		for _, v in pairs(camera:GetChildren()) do
@@ -230,6 +242,8 @@ function loadSlot(Item)
 				animation.AnimationId = anim.id
 				weaponSystem.animations.ThirdPerson[anim.index] = characterAnimator:LoadAnimation(animation)
 			end
+
+			cachedData = weaponData.aimData
 
 			weaponSystem.animations.ThirdPerson[7]:Play()
 			local sounds = RequestWeaponData:InvokeServer(Item).sounds
@@ -398,6 +412,7 @@ function Reload()
             weaponData.aimData.aimCF = CFrame.new()
         end
     end
+    weaponSystem.modifiers.IsShooting = false
 
     weaponSystem.modifiers.isReloading = true
     UpdateWeaponStateRemote:FireServer(weaponSystem.states[3])
@@ -441,57 +456,47 @@ function updateCameraShake()
 	oldCamCF = newCamCF
 end
 
-RunService.RenderStepped:Connect(function(dt)
-	if humanoid and weaponSystem.viewmodel then
-		-- print(weaponSystem.state) -- Debugging
+local zeroCF = CFrame.new()
+local zeroAng = CFrame.Angles(0, 0, 0)
 
+connections.RunService = RunService.RenderStepped:Connect(function(dt)
+	if humanoid and weaponSystem.viewmodel and weaponData then
 		local t = tick()
 
-		if t > kickReturnTime and viewmodelKickOffset ~= CFrame.new() then
-			viewmodelKickOffset = CFrame.new()
+		-- print(weaponSystem.state) -- Debugging
+
+		if t > kickReturnTime and viewmodelKickOffset ~= zeroCF then
+			viewmodelKickOffset = zeroCF
 		end
 
-		if weaponSystem.viewmodel and weaponData then
-			local rot = camera.CFrame:ToObjectSpace(weaponData.aimData.lastCameraCF)
-			local X, Y, _ = rot:ToOrientation() 
-			weaponData.aimData.swayCF = weaponData.aimData.swayCF:Lerp(CFrame.Angles(math.sin(X) * weaponData.aimData.currentSwayAMT, math.sin(Y) * weaponData.aimData.currentSwayAMT, 0), 1 - 0.001 ^ dt)
-			weaponData.aimData.lastCameraCF = camera.CFrame
+		local bob = ViewmodelBob.GetBob(t, humanoid.CameraOffset, cachedData.sprintCF)
+		bobOffset = bobOffset:Lerp(bob, 1 - 0.001 ^ dt)
 
-			if humanoid.MoveDirection.Magnitude > 0 then
-				if humanoid.WalkSpeed == 16 then
-					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(t * 8) * .02, -humanoid.CameraOffset.Y / 7, -humanoid.CameraOffset.Z / 3) * CFrame.Angles(0, math.cos(t * -0) * -.0, math.sin(tick() * -4) * .01), 1 - 0.001 ^ dt)
-				elseif humanoid.WalkSpeed == 22 then
-					bobOffset = bobOffset:Lerp(CFrame.new(math.cos(t * 10) * .1, -humanoid.CameraOffset.Y / 3, -humanoid.CameraOffset.Z / 3) * CFrame.Angles(0, math.cos(t * -8) * -.1, math.sin(tick() * -8) * .1) * (weaponData.aimData.sprintCF or CFrame.new()), 1 - 0.001 ^ dt)
-				end
-			else
-				bobOffset = bobOffset:Lerp(CFrame.new(0, -humanoid.CameraOffset.Y / 3, 0), 1 - 0.001 ^ dt)
-			end
+		local rotAngle = ViewmodelRotation:getRotation(dt, weaponSystem.state)
+		local rotOffset = rotAngle ~= 0 and CFrame.Angles(0, 0, rotAngle) or zeroAng
 
-			local rotOffset = CFrame.Angles(0, 0, ViewmodelRotation:getRotation(dt, weaponSystem.state))
+		if weaponSystem.viewmodel and weaponSystem.viewmodel.PrimaryPart then -- apply things to viewmodel
+			weaponSystem.viewmodel:SetPrimaryPartCFrame(camera.CFrame * cachedData.swayCF * cachedData.aimCF * bobOffset * rotOffset * viewmodelKickOffset)
+			updateCameraShake()
 
-			if weaponSystem.viewmodel and weaponSystem.viewmodel.PrimaryPart then -- apply things to viewmodel
-				weaponSystem.viewmodel:SetPrimaryPartCFrame(camera.CFrame * weaponData.aimData.swayCF * weaponData.aimData.aimCF * bobOffset * rotOffset * viewmodelKickOffset)
-				updateCameraShake()
-
-				if weaponSystem.animations and weaponSystem.viewmodel then
-					if not weaponSystem.modifiers.isMelee then
-						if not weaponSystem.animations.FirstPerson[1].IsPlaying and not weaponSystem.animations.FirstPerson[4].IsPlaying and not weaponSystem.animations.FirstPerson[2].IsPlaying and not weaponSystem.animations.FirstPerson[6].IsPlaying and not weaponSystem.animations.FirstPerson[5].IsPlaying and not weaponSystem.animations.FirstPerson[7].IsPlaying and not weaponSystem.animations.FirstPerson[3].IsPlaying then
-							if not weaponSystem.animations.FirstPerson[8].IsPlaying then
-								weaponSystem.animations.FirstPerson[8]:Play()
-							end
-						else
-							weaponSystem.animations.FirstPerson[8]:Stop()
+			if weaponSystem.animations and weaponSystem.viewmodel then
+				if not weaponSystem.modifiers.isMelee then
+					if not weaponSystem.animations.FirstPerson[1].IsPlaying and not weaponSystem.animations.FirstPerson[4].IsPlaying and not weaponSystem.animations.FirstPerson[2].IsPlaying and not weaponSystem.animations.FirstPerson[6].IsPlaying and not weaponSystem.animations.FirstPerson[5].IsPlaying and not weaponSystem.animations.FirstPerson[7].IsPlaying and not weaponSystem.animations.FirstPerson[3].IsPlaying then
+						if not weaponSystem.animations.FirstPerson[8].IsPlaying then
+							weaponSystem.animations.FirstPerson[8]:Play()
 						end
+					else
+						weaponSystem.animations.FirstPerson[8]:Stop()
 					end
 				end
 			end
-
-			aimHelper:Aim(dt)
 		end
+
+		aimHelper:Aim(dt)
 	end
 end)
 
-UIS.InputBegan:Connect(function(input, gpe)
+connections.InputBegan = UIS.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 
 	if (weaponSystem.state == weaponSystem.states[1] 
@@ -582,7 +587,6 @@ UIS.InputBegan:Connect(function(input, gpe)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		if character and weaponSystem.viewmodel 
 		and weaponSystem.state ~= weaponSystem.states[3] and not weaponSystem.modifiers.isReloading then
-			print("Shooting Clicked")
 			Shoot()
 		end
 
@@ -639,7 +643,7 @@ UIS.InputBegan:Connect(function(input, gpe)
 	end
 end)
 
-UIS.InputEnded:Connect(function(input)
+connections.InputEnded = UIS.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         if weaponSystem.viewmodel then
             if weaponSystem.state == weaponSystem.states[6] then return end
@@ -664,6 +668,12 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 		end
 	end
 
+	 for _, connection in pairs(connections) do
+        if connection then
+            connection:Disconnect()
+        end
+    end
+
 	UpdateWeaponStateRemote:FireServer(weaponSystem.states[8])
 	
 	for _, v in pairs(game.ReplicatedStorage.Shared.Modules:GetDescendants()) do
@@ -679,7 +689,7 @@ ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
 	end
 end)
 
-PlayerRespawned.OnClientEvent:Connect(function()
+connections.PlayerRespawned = PlayerRespawned.OnClientEvent:Connect(function()
     UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
     weaponSystem.modifiers.IsAiming = false
     weaponSystem.modifiers.IsShooting = false
@@ -703,7 +713,7 @@ PlayerRespawned.OnClientEvent:Connect(function()
     end
 end)
 
-mouse.Button1Up:Connect(function()
+connections.MouseButton1Up = mouse.Button1Up:Connect(function()
     if weaponSystem.viewmodel and weaponData then
         if weaponSystem.state == weaponSystem.states[6] then return end
         if weaponSystem.state ~= weaponSystem.states[8]
@@ -720,85 +730,87 @@ mouse.Button1Up:Connect(function()
     end
 end)
 
-SnycTracerToOthers.OnClientEvent:Connect(function(origin, direction, speed, shooter)
+connections.SnycTracerToOthers = SnycTracerToOthers.OnClientEvent:Connect(function(origin, direction, speed, shooter)
 	if shooter == player then return end
 	BulletVisualiser:CreateVisualTracer(origin, direction, speed)
 end)
 
 while wait() do
-	if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
-		local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.Inventory.PlayerInventory[weaponSystem.currentSlot], camera.CFrame.LookVector, weaponSystem.viewmodel.Muzzle.Position)
-		
-		if success and recoilData and data then
-			weaponSystem.animations.FirstPerson[2]:Stop()
-			weaponSystem.animations.FirstPerson[5]:Stop()
-			weaponSystem.animations.FirstPerson[6]:Stop()
-			weaponSystem.animations.FirstPerson[7]:Stop()
-			weaponSystem.animations.FirstPerson[8]:Stop()
-			weaponSystem.animations.ThirdPerson[2]:Stop()
-			weaponSystem.animations.ThirdPerson[4]:Stop()
-			weaponSystem.animations.ThirdPerson[5]:Stop()
-			weaponSystem.animations.ThirdPerson[6]:Stop()
+	while weaponSystem.modifiers.IsShooting and weaponData do
+        if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
+			local success, recoilData, data = RequestShoot:InvokeServer(weaponSystem.Inventory.PlayerInventory[weaponSystem.currentSlot], camera.CFrame.LookVector, weaponSystem.viewmodel.Muzzle.Position)
+			
+			if success and recoilData and data then
+				weaponSystem.animations.FirstPerson[2]:Stop()
+				weaponSystem.animations.FirstPerson[5]:Stop()
+				weaponSystem.animations.FirstPerson[6]:Stop()
+				weaponSystem.animations.FirstPerson[7]:Stop()
+				weaponSystem.animations.FirstPerson[8]:Stop()
+				weaponSystem.animations.ThirdPerson[2]:Stop()
+				weaponSystem.animations.ThirdPerson[4]:Stop()
+				weaponSystem.animations.ThirdPerson[5]:Stop()
+				weaponSystem.animations.ThirdPerson[6]:Stop()
 
-			local origin = weaponSystem.viewmodel.Muzzle.Position
-    		local direction = camera.CFrame.LookVector
+				local origin = weaponSystem.viewmodel.Muzzle.Position
+				local direction = camera.CFrame.LookVector
 
-			BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed, data.loadedBulletType)
+				BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed, data.loadedBulletType)
 
-			local muzzleFlash = game.ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()
-			muzzleFlash.Parent = weaponSystem.viewmodel.Muzzle
-			muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+				-- local muzzleFlash = game.ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()
+				-- muzzleFlash.Parent = weaponSystem.viewmodel.Muzzle
+				-- muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
 
-			for i, v in pairs(muzzleFlash:GetDescendants()) do
-				if v:IsA("ParticleEmitter") then
-					v:Emit(math.random(1,3))
-				elseif v:IsA("Light") then
-					v.Enabled = true
-					task.delay(0.07, function()
-						v.Enabled = false
-					end)
+				-- for i, v in pairs(muzzleFlash:GetDescendants()) do
+				-- 	if v:IsA("ParticleEmitter") then
+				-- 		v:Emit(math.random(1,3))
+				-- 	elseif v:IsA("Light") then
+				-- 		v.Enabled = true
+				-- 		task.delay(0.07, function()
+				-- 			v.Enabled = false
+				-- 		end)
+				-- 	end
+				-- end
+
+				-- game:GetService("Debris"):AddItem(muzzleFlash, 1)
+
+				viewmodelKickOffset = CFrame.new(0, 0, 0.2)
+				kickReturnTime = tick() + 0.08
+				task.spawn(function()
+					task.wait(0.08)
+					viewmodelKickOffset = CFrame.new()
+				end)
+
+				if SpringModule then
+					local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
+					recoilSpring:Impulse(hugeRecoil * 2)
+					camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(recoilData.rx), math.rad(recoilData.ry), math.rad(recoilData.rz))
 				end
+
+				currentAmmo = data.ammoLeft
+				currentMaxAmmo = data.maxAmmo
+				updateHUD(true, {
+					ammoLeft = currentAmmo,
+					maxAmmo = currentMaxAmmo,
+				})
+
+				if data.isLastBullet then
+					weaponSystem.animations.FirstPerson[1]:Stop()
+					weaponSystem.animations.ThirdPerson[1]:Stop()
+					weaponSystem.animations.FirstPerson[4]:Play()
+				else
+					weaponSystem.animations.FirstPerson[1]:Stop()
+					weaponSystem.animations.FirstPerson[1]:Play()
+					weaponSystem.animations.ThirdPerson[1]:Play()
+				end
+
+				if data.ammoLeft == 0 then
+					weaponSystem.modifiers.IsShooting = false
+					wait(.4)
+					Reload()
+				end
+
+        		task.wait(data.fireRate)
 			end
-
-			game:GetService("Debris"):AddItem(muzzleFlash, 1)
-
-			viewmodelKickOffset = CFrame.new(0, 0, 0.2)
-			kickReturnTime = tick() + 0.08
-			task.spawn(function()
-				task.wait(0.08)
-				viewmodelKickOffset = CFrame.new()
-			end)
-
-			-- if SpringModule then
-			-- 	local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
-			-- 	recoilSpring:Impulse(hugeRecoil * 2000000)
-			-- 	camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(recoilData.rx), math.rad(recoilData.ry), math.rad(recoilData.rz))
-			-- end
-
-			currentAmmo = data.ammoLeft
-			currentMaxAmmo = data.maxAmmo
-			updateHUD(true, {
-				ammoLeft = currentAmmo,
-				maxAmmo = currentMaxAmmo,
-			})
-
-			if data.isLastBullet then
-				weaponSystem.animations.FirstPerson[1]:Stop()
-				weaponSystem.animations.ThirdPerson[1]:Stop()
-				weaponSystem.animations.FirstPerson[4]:Play()
-			else
-				weaponSystem.animations.FirstPerson[1]:Stop()
-				weaponSystem.animations.FirstPerson[1]:Play()
-				weaponSystem.animations.ThirdPerson[1]:Play()
-			end
-
-			if data.ammoLeft == 0 then
-				weaponSystem.modifiers.IsShooting = false
-				wait(.4)
-				Reload()
-			end
-
-			wait(data.fireRate)
 		end
-	end
+    end
 end

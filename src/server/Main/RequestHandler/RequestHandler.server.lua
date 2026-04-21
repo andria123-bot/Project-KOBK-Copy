@@ -114,10 +114,10 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector) -- everything f
         maxAmmo = playerAmmo[player][item .. "_max"],
         bulletSpeed = weaponData.bulletSpeed,
         imageIconId = weaponData.imageIconId,
-        tracerColor = weaponData.tracerColor,
         ammoLeft = playerAmmo[player][item],
         fireMode = weaponData.fireMode,
         ammoType = weaponData.ammoType,
+        fireRate = weaponData.fireRate,
         isLastBullet = isLastBullet,
         name = weaponData.name,
     }

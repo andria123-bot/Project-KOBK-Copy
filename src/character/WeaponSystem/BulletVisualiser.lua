@@ -10,56 +10,56 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     if not AmmoTracer then return end
     if loadedBulletType ~= "Tracer" then return end
 
-    -- local tracer = AmmoTracer:Clone()
-    -- tracer.Parent = workspace.BulletTracers
-    -- tracer.Position = origin
-    -- tracer.Anchored = true
-    -- tracer.CanCollide = false
+    local tracer = AmmoTracer:Clone()
+    tracer.Parent = workspace.BulletTracers
+    tracer.Position = origin
+    tracer.Anchored = true
+    tracer.CanCollide = false
     
-    -- local tracerData = {
-    --     tracer = tracer,
-    --     position = origin,
-    --     direction = direction,
-    --     speed = speed,
-    --     startTime = tick(),
-    --     active = true
-    -- }
+    local tracerData = {
+        tracer = tracer,
+        position = origin,
+        direction = direction,
+        speed = speed,
+        startTime = tick(),
+        active = true
+    }
 
-    -- table.insert(activeTracers, tracerData)
+    table.insert(activeTracers, tracerData)
 
-    -- -- tracer creation
-    -- task.spawn(function()
-    --     local lastPos = origin
-    --     local startTime = tick()
-    --     local duration = 2 -- Tracer lifetime
+    -- tracer creation
+    task.spawn(function()
+        local lastPos = origin
+        local startTime = tick()
+        local duration = 2 -- Tracer lifetime
 
-    --     local gravity = 196.2  -- roblox gravity
+        local gravity = 196.2  -- roblox gravity
 
-    --     while tracerData.active and tick() - startTime < duration do
-    --         local elapsed = tick() - startTime
-    --         local distance = speed * elapsed
+        while tracerData.active and tick() - startTime < duration do
+            local elapsed = tick() - startTime
+            local distance = speed * elapsed
             
-    --         -- gravity drop
-    --         local drop = 0.5 * gravity * elapsed * elapsed
+            -- gravity drop
+            local drop = 0.5 * gravity * elapsed * elapsed
             
-    --         local currentPos = origin + (direction * distance)
-    --         currentPos = currentPos - Vector3.new(0, drop, 0)
+            local currentPos = origin + (direction * distance)
+            currentPos = currentPos - Vector3.new(0, drop, 0)
             
-    --         tracer.CFrame = CFrame.new(currentPos, currentPos + direction)
+            tracer.CFrame = CFrame.new(currentPos, currentPos + direction)
             
-    --         -- scale tracer size based on distance to camera
-    --         local distanceToCamera = (workspace.CurrentCamera.CFrame.Position - currentPos).Magnitude
-    --         local scale = math.clamp(distanceToCamera / 200, 0.2, 2)
-    --         tracer.Size = Vector3.new(scale, scale, scale)
+            -- scale tracer size based on distance to camera
+            local distanceToCamera = (workspace.CurrentCamera.CFrame.Position - currentPos).Magnitude
+            local scale = math.clamp(distanceToCamera / 200, 0.2, 2)
+            tracer.Size = Vector3.new(scale, scale, scale)
             
-    --         RunService.RenderStepped:Wait()
-    --     end
+            RunService.RenderStepped:Wait()
+        end
 
-    --     tracer:Destroy()
-    --     tracerData.active = false
-    -- end)
+        tracer:Destroy()
+        tracerData.active = false
+    end)
     
-    -- return tracer
+    return tracer
 end
 
 return BulletVisualiser

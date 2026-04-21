@@ -1,12 +1,17 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TouchInputService = game:GetService("TouchInputService")
 local Vetra = require(ReplicatedStorage.Vetra)
 local BulletContext = require(ReplicatedStorage.Vetra.Core.BulletContext)
 local AmmoTracer = ReplicatedStorage.VFX.Tracers:FindFirstChild("TracerAmmo")
-local RunService = game:GetService("RunService")
-local Debris = game:GetService("Debris")
+local SendKillFeedMessage = ReplicatedStorage.Shared.Remotes:WaitForChild("SendKillFeedMessage")
 
 local BulletHandler = {}
 
+local function SendKillFeedback(killer, victim, weaponName, distance)
+    local message = string.format("%s Killed %s with %s From %.1f Meters.", killer.Name, victim.Name, weaponName, distance)
+    
+    SendKillFeedMessage:FireAllClients(message)
+end
 function BulletHandler:FireBullet(player, origin, direction, weaponData)
     
     local solver = Vetra.new()
@@ -35,6 +40,7 @@ function BulletHandler:FireBullet(player, origin, direction, weaponData)
     signals.OnHit:Connect(function(ctx, result, vel)
         if not result then return end
         local hit = result.Instance
+        local pos = result.Position
         
         if hit then
             local hitData = ctx.__solverData
@@ -43,9 +49,20 @@ function BulletHandler:FireBullet(player, origin, direction, weaponData)
             local humanoid = hit.Parent and hit.Parent:FindFirstChild("Humanoid")
 
             if humanoid and hit.Parent ~= player.Character then
+                if humanoid.Health <= 0 then
+                    return  -- Don't shoot dead bodies
+                end
+
                 local isHead = hit.Name == "Head"
                 local damage = isHead and hitData.headshot or hitData.damage
+
+                local healthBefore = humanoid.Health
                 humanoid:TakeDamage(damage)
+
+                if healthBefore - damage <= 0 and humanoid.Health <= 0  then
+                    local distance = (ctx.Origin - pos).Magnitude
+                    SendKillFeedback(player, hit.Parent, hitData.weapon, distance)
+                end
             end
         -- else
             -- print("Hit nothing")
