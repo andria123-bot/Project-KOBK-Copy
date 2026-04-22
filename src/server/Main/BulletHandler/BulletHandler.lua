@@ -1,9 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TouchInputService = game:GetService("TouchInputService")
 local Vetra = require(ReplicatedStorage.Vetra)
 local BulletContext = require(ReplicatedStorage.Vetra.Core.BulletContext)
+local BehaviorBuilder = require(ReplicatedStorage.Vetra.Builders.BehaviorBuilder)
 local AmmoTracer = ReplicatedStorage.VFX.Tracers:FindFirstChild("TracerAmmo")
 local SendKillFeedMessage = ReplicatedStorage.Shared.Remotes:WaitForChild("SendKillFeedMessage")
+local SyncProjectile = ReplicatedStorage.Shared.Remotes:WaitForChild("SyncProjectile")
 
 local BulletHandler = {}
 
@@ -12,23 +13,49 @@ local function SendKillFeedback(killer, victim, weaponName, distance)
     
     SendKillFeedMessage:FireAllClients(message)
 end
-function BulletHandler:FireBullet(player, origin, direction, weaponData)
-    
+
+function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, weaponData)
+    local character = shooter.Character
+    if not character then return end
+
+    local weapon = character:FindFirstChild(weaponData.name)
+    local thirdPersonOrigin = weapon and weapon:FindFirstChild("Muzzle") and weapon.Muzzle.Position or character.HumanoidRootPart.Position
+
+    local distanceFromCharacter = (clientFirstPersonOrigin - character.HumanoidRootPart.Position).Magnitude
+
+    if distanceFromCharacter > 10 then 
+        warn("Suspicious origin from", shooter.Name)
+        clientFirstPersonOrigin = thirdPersonOrigin 
+    end 
+
+    for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+        SyncProjectile:FireClient(targetPlayer, shooter, clientFirstPersonOrigin, thirdPersonOrigin, direction, weaponData)
+    end
+
     local solver = Vetra.new()
 
-    local behavior = {
-        MaxDistance = weaponData.maxDistanceTravel or 800,
-        DragCoefficient = weaponData.dragCoefficient or 0.00022,
-        DragModel = Vetra.Enums.DragModel.Quadratic,
-        Gravity = Vector3.new(0, -workspace.Gravity, 0),
-    }
+    local Behavior = BehaviorBuilder.new():
+          Physics()
+            :MaxDistance(weaponData.maxDistanceTravel or 800)
+            :Gravity(Vector3.new(0, -workspace.Gravity, 0))
+          :Done()
+          :Drag()
+            :Coefficient(weaponData.dragCoefficient)
+            :Model(Vetra.Enums.DragModel.Quadratic)
+        --   :Done() -- tracer nothing else
+        --   :Cosmetic()
+        --     :Template(AmmoTracer)
+        --     :Container(workspace)
+        --     :AutoDelete(true)
+          :Done()
+          :Build()
 
     local context = BulletContext.new({
-        Origin = origin,
+        Origin = thirdPersonOrigin,
         Direction = direction,
         Speed = weaponData.bulletSpeed or 880,
         SolverData = {
-            player = player,
+            player = shooter,
             weapon = weaponData.name,
             damage = weaponData.damage,
             headShot = weaponData.headshot,
@@ -46,22 +73,23 @@ function BulletHandler:FireBullet(player, origin, direction, weaponData)
             local hitData = ctx.__solverData
             if not hitData then return end
 
+
             local humanoid = hit.Parent and hit.Parent:FindFirstChild("Humanoid")
 
-            if humanoid and hit.Parent ~= player.Character then
+            if humanoid and hit.Parent ~= shooter.Character then
                 if humanoid.Health <= 0 then
-                    return  -- Don't shoot dead bodies
+                    return  -- dead body
                 end
 
                 local isHead = hit.Name == "Head"
-                local damage = isHead and hitData.headshot or hitData.damage
+                local damage = isHead and hitData.headShot or hitData.damage
 
                 local healthBefore = humanoid.Health
                 humanoid:TakeDamage(damage)
 
                 if healthBefore - damage <= 0 and humanoid.Health <= 0  then
                     local distance = (ctx.Origin - pos).Magnitude
-                    SendKillFeedback(player, hit.Parent, hitData.weapon, distance)
+                    SendKillFeedback(shooter, hit.Parent, hitData.weapon, distance)
                 end
             end
         -- else
@@ -69,7 +97,7 @@ function BulletHandler:FireBullet(player, origin, direction, weaponData)
         end
     end)
     
-    solver:Fire(context, behavior)
+    solver:Fire(context, Behavior)
     print("Bullet fired!")
 end
 

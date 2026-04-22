@@ -13,7 +13,7 @@ local data = {
 		inspectAnim = "rbxassetid://80262626757998",
 		idleAnim = "rbxassetid://90962731439428",
 
-		tpIdleAnim = "rbxassetid://131819337932852",
+		tpIdleAnim = "rbxassetid://101943279476475",
 		tpShootAnim = "rbxassetid://131819337932852",
 		tpReloadAnim = "rbxassetid://131819337932852",
 		tpEmptyReloadAnim = "rbxassetid://131819337932852",
@@ -92,7 +92,7 @@ local data = {
 	-- Recoil
 	x = 1.2,
 	y = 0.72,
-	z = 1.9;
+	z = 1.4;
 	
 	bulletSpeed = 1200,
 	maxDistanceTravel = 1500;

@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local AmmoTracer = ReplicatedStorage.VFX.Tracers:FindFirstChild("TracerAmmo")
 local RunService = game:GetService("RunService")
+local SyncProjectile = ReplicatedStorage.Shared.Remotes:WaitForChild("SyncProjectile")  -- RemoteEvent
 
 local BulletVisualiser = {}
 
@@ -10,8 +11,16 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     if not AmmoTracer then return end
     if loadedBulletType ~= "Tracer" then return end
 
+    -- Ensure folder exists
+    local tracerFolder = workspace:FindFirstChild("BulletTracers")
+    if not tracerFolder then
+        tracerFolder = Instance.new("Folder")
+        tracerFolder.Name = "BulletTracers"
+        tracerFolder.Parent = workspace
+    end
+
     local tracer = AmmoTracer:Clone()
-    tracer.Parent = workspace.BulletTracers
+    tracer.Parent = tracerFolder
     tracer.Position = origin
     tracer.Anchored = true
     tracer.CanCollide = false
@@ -27,12 +36,10 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
 
     table.insert(activeTracers, tracerData)
 
-    -- tracer creation
+    -- tracer movement
     task.spawn(function()
-        local lastPos = origin
         local startTime = tick()
         local duration = 2 -- Tracer lifetime
-
         local gravity = 196.2  -- roblox gravity
 
         while tracerData.active and tick() - startTime < duration do
@@ -57,9 +64,27 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
 
         tracer:Destroy()
         tracerData.active = false
+        
+        -- Remove from active tracers list
+        for i, data in pairs(activeTracers) do
+            if data == tracerData then
+                table.remove(activeTracers, i)
+                break
+            end
+        end
     end)
     
     return tracer
 end
+
+SyncProjectile.OnClientEvent:Connect(function(shooter, firstPersonOrigin, thirdPersonOrigin, direction, weaponData)
+    local player = game.Players.LocalPlayer
+
+    local origin = (shooter == player) and firstPersonOrigin or thirdPersonOrigin
+    
+    local loadedBulletType = weaponData.loadedBulletType or "Tracer"
+    
+    BulletVisualiser:CreateVisualTracer(origin, direction, weaponData.bulletSpeed or 880, loadedBulletType)
+end)
 
 return BulletVisualiser

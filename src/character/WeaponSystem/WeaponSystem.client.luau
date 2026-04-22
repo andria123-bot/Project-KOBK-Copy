@@ -196,6 +196,7 @@ function loadSlot(Item)
 			local readyData = animData.animations
 			local animator = weaponSystem.viewmodel.AnimationController.Animator
 			local characterAnimator = character.Humanoid.Animator
+			ViewmodelBob.ClearCache()
 
 			for _, v in pairs(weaponSystem.viewmodel:GetDescendants()) do
 				if v:IsA("Part") or v:IsA("BasePart") or v:IsA("MeshPart") then
@@ -754,24 +755,27 @@ while wait() do
 				local origin = weaponSystem.viewmodel.Muzzle.Position
 				local direction = camera.CFrame.LookVector
 
-				BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed, data.loadedBulletType)
+				--[[
+				
+					-- BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed, data.loadedBulletType)
 
-				-- local muzzleFlash = game.ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()
-				-- muzzleFlash.Parent = weaponSystem.viewmodel.Muzzle
-				-- muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
+					-- local muzzleFlash = game.ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()
+					-- muzzleFlash.Parent = weaponSystem.viewmodel.Muzzle
+					-- muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
 
-				-- for i, v in pairs(muzzleFlash:GetDescendants()) do
-				-- 	if v:IsA("ParticleEmitter") then
-				-- 		v:Emit(math.random(1,3))
-				-- 	elseif v:IsA("Light") then
-				-- 		v.Enabled = true
-				-- 		task.delay(0.07, function()
-				-- 			v.Enabled = false
-				-- 		end)
-				-- 	end
-				-- end
+					-- for i, v in pairs(muzzleFlash:GetDescendants()) do
+					-- 	if v:IsA("ParticleEmitter") then
+					-- 		v:Emit(math.random(1,3))
+					-- 	elseif v:IsA("Light") then
+					-- 		v.Enabled = true
+					-- 		task.delay(0.07, function()
+					-- 			v.Enabled = false
+					-- 		end)
+					-- 	end
+					-- end
 
-				-- game:GetService("Debris"):AddItem(muzzleFlash, 1)
+					-- game:GetService("Debris"):AddItem(muzzleFlash, 1)
+				]]
 
 				viewmodelKickOffset = CFrame.new(0, 0, 0.2)
 				kickReturnTime = tick() + 0.08

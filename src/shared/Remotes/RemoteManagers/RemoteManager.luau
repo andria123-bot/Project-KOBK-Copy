@@ -13,6 +13,7 @@ local remoteEvents = {
 	"UpdateWeaponState",
 	"UpdateClientState",
 	"PlayerRespawned",
+	"SyncProjectile",
 	"PlayerAdded",
 	"PlayerDied",
 	"ItemFoley",
@@ -42,7 +43,6 @@ local remoteFunctions = {
 }
 
 local bindableEvents = {
-	"SyncProjectileBindable",
 }
 
 local bindableFunctions = {
