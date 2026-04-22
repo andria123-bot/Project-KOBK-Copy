@@ -90,9 +90,9 @@ local data = {
 
 	fireRate = 0.085, 
 	-- Recoil
-	x = 1.2,
-	y = 0.72,
-	z = 1.4;
+	x = .2,
+	y = 0.8,
+	z = .4;
 	
 	bulletSpeed = 1200,
 	maxDistanceTravel = 1500;

@@ -752,31 +752,6 @@ while wait() do
 				weaponSystem.animations.ThirdPerson[5]:Stop()
 				weaponSystem.animations.ThirdPerson[6]:Stop()
 
-				local origin = weaponSystem.viewmodel.Muzzle.Position
-				local direction = camera.CFrame.LookVector
-
-				--[[
-				
-					-- BulletVisualiser:CreateVisualTracer(origin, direction, data.bulletSpeed, data.loadedBulletType)
-
-					-- local muzzleFlash = game.ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()
-					-- muzzleFlash.Parent = weaponSystem.viewmodel.Muzzle
-					-- muzzleFlash.CFrame = weaponSystem.viewmodel.Muzzle.CFrame
-
-					-- for i, v in pairs(muzzleFlash:GetDescendants()) do
-					-- 	if v:IsA("ParticleEmitter") then
-					-- 		v:Emit(math.random(1,3))
-					-- 	elseif v:IsA("Light") then
-					-- 		v.Enabled = true
-					-- 		task.delay(0.07, function()
-					-- 			v.Enabled = false
-					-- 		end)
-					-- 	end
-					-- end
-
-					-- game:GetService("Debris"):AddItem(muzzleFlash, 1)
-				]]
-
 				viewmodelKickOffset = CFrame.new(0, 0, 0.2)
 				kickReturnTime = tick() + 0.08
 				task.spawn(function()
@@ -785,9 +760,24 @@ while wait() do
 				end)
 
 				if SpringModule then
-					local hugeRecoil = Vector3.new(math.random(-1, 1), .8, -.45)
-					recoilSpring:Impulse(hugeRecoil * 2)
-					camera.CFrame = camera.CFrame * CFrame.Angles(math.rad(recoilData.rx), math.rad(recoilData.ry), math.rad(recoilData.rz))
+					-- Create two step recoil: kick + settle
+					local kickRecoil = CFrame.Angles(
+						math.rad(recoilData.rx * 0.8),
+						math.rad(recoilData.ry * 0.5),
+						math.rad(recoilData.rz * 0.3)
+					)
+					
+					local settleRecoil = CFrame.Angles(
+						math.rad(recoilData.rx * 0.2),
+						math.rad(recoilData.ry * 0.1),
+						math.rad(recoilData.rz * 0.05)
+					)
+					
+					camera.CFrame = camera.CFrame * kickRecoil
+					
+					task.delay(0.05, function()
+						camera.CFrame = camera.CFrame * settleRecoil
+					end)
 				end
 
 				currentAmmo = data.ammoLeft

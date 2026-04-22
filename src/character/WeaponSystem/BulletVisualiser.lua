@@ -40,7 +40,7 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     task.spawn(function()
         local startTime = tick()
         local duration = 2 -- Tracer lifetime
-        local gravity = 196.2  -- roblox gravity
+        local gravity = 196.2  -- roblox def gravity
 
         while tracerData.active and tick() - startTime < duration do
             local elapsed = tick() - startTime
@@ -82,7 +82,26 @@ SyncProjectile.OnClientEvent:Connect(function(shooter, firstPersonOrigin, thirdP
 
     local origin = (shooter == player) and firstPersonOrigin or thirdPersonOrigin
     
-    local loadedBulletType = weaponData.loadedBulletType or "Tracer"
+    local loadedBulletType = weaponData.loadedBulletType
+
+    local muzzleFlashTemplate = ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash
+    local newMuzzleFlash = muzzleFlashTemplate:Clone()
+    newMuzzleFlash.Parent = workspace
+    newMuzzleFlash.CFrame = CFrame.new(origin)  -- Position at muzzle
+    
+    -- Play effects
+    for _, v in pairs(newMuzzleFlash:GetDescendants()) do
+        if v:IsA("ParticleEmitter") then
+            v:Emit(math.random(1, 3))
+        elseif v:IsA("Light") then
+            v.Enabled = true
+            task.delay(0.07, function()
+                if v and v.Parent then
+                    v.Enabled = false
+                end
+            end)
+        end
+    end
     
     BulletVisualiser:CreateVisualTracer(origin, direction, weaponData.bulletSpeed or 880, loadedBulletType)
 end)
