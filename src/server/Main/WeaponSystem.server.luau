@@ -2,11 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
-
 local remoteManagers = require(ReplicatedStorage.Shared.Remotes.RemoteManagers.RemoteManager)
-local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
-local FastCastReduxManager = require(script.Parent.Parent.FastCastReduxManager)
-FastCastReduxManager:changeParent()
 
 ReplicatedStorage.Localscripts.Animate.Parent = game.StarterPlayer.StarterCharacterScripts
 
@@ -168,14 +164,8 @@ ReplicatedStorage.Shared.Remotes.Melee.OnServerEvent:Connect(function(player, li
 				local axeHole = ReplicatedStorage.Objects.AxeHole:Clone()
 				axeHole.CFrame = CFrame.new(ray.Position, ray.Position + ray.Normal)
 				
-				local bulletHolesFolder = Instance.new("Folder")
-				axeHole.Parent = game.Workspace
-				axeHole.Name = "BulletHolesFolder"
-				
-				if game.Workspace:FindFirstChild("BulletHole") then
-					if game.Workspace:FindFirstChild("bulletHolesFolder") then
-						axeHole.Parent = bulletHolesFolder
-					end
+				if game.Workspace:FindFirstChild("ImpactHoles") then
+					axeHole.Parent = workspace.ImpactHoles
 				end
 				
 				axeHole.Impact:Play()

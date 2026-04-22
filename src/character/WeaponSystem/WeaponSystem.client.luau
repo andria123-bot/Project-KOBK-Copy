@@ -19,7 +19,6 @@ local SnycTracerToOthers = ReplicatedStorage.Shared.Remotes:FindFirstChild("Snyc
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
 local PlayerRespawned = ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerRespawned")
-local ShootValidation = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("ShootValidation")
 local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
 local BulletVisualiser = require(script.Parent.BulletVisualiser)
 local LoadViewmodel = require(script.Parent.LoadViewmodel)

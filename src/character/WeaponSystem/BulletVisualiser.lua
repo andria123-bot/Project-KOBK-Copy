@@ -39,7 +39,7 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     -- tracer movement
     task.spawn(function()
         local startTime = tick()
-        local duration = 2 -- Tracer lifetime
+        local duration = 4 -- Tracer lifetime
         local gravity = 196.2  -- roblox def gravity
 
         while tracerData.active and tick() - startTime < duration do

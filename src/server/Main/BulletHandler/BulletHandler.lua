@@ -2,17 +2,44 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Vetra = require(ReplicatedStorage.Vetra)
 local BulletContext = require(ReplicatedStorage.Vetra.Core.BulletContext)
 local BehaviorBuilder = require(ReplicatedStorage.Vetra.Builders.BehaviorBuilder)
-local AmmoTracer = ReplicatedStorage.VFX.Tracers:FindFirstChild("TracerAmmo")
 local SendKillFeedMessage = ReplicatedStorage.Shared.Remotes:WaitForChild("SendKillFeedMessage")
 local SyncProjectile = ReplicatedStorage.Shared.Remotes:WaitForChild("SyncProjectile")
-local muzzleFlash = ReplicatedStorage.VFX.MuzzleFlashes.DefaultMuzzleFlash:Clone()
+
+local ImpactHoles = workspace:FindFirstChild("ImpactHoles")
+
+local ConcreteImpact = ReplicatedStorage.VFX.BulletImpactMaterials:FindFirstChild("ConcreteImpact")
 
 local BulletHandler = {}
 
+local ImpactMaterials = {
+    [Enum.Material.Concrete] = ConcreteImpact,
+}
+
 local function SendKillFeedback(killer, victim, weaponName, distance)
     local message = string.format("%s Killed %s with %s From %.1f Meters.", killer.Name, victim.Name, weaponName, distance)
-    
     SendKillFeedMessage:FireAllClients(message)
+end
+
+local function CreateBulletHole(hit, position, normal, material)
+    local hitImpactTemplate = ImpactMaterials[material]
+    
+    local impact = hitImpactTemplate:Clone()
+    impact.Parent = ImpactHoles
+    impact.CFrame = CFrame.new(position, position + normal)
+    impact.CanCollide = false
+    
+    impact.CFrame = impact.CFrame * CFrame.Angles(0, math.rad(math.random(0, 360)), 0)
+    
+    for _, v in pairs(impact:GetDescendants()) do
+        if v:IsA("ParticleEmitter") then
+            v:Emit(math.random(3, 8))
+        elseif v:IsA("Sound") then
+            v.Volume = 0.4
+            v:Play()
+        end
+    end
+    
+    -- game:GetService("Debris"):AddItem(impact, 15) 
 end
 
 function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, weaponData)
@@ -37,13 +64,12 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
 
     local Behavior = BehaviorBuilder.new():
           Physics()
-            :MaxDistance(weaponData.maxDistanceTravel)
+            :MaxDistance(weaponData.maxDistanceTravel or 800)
             :Gravity(Vector3.new(0, -workspace.Gravity, 0))
           :Done()
           :Drag()
-            :Coefficient(weaponData.dragCoefficient)
+            :Coefficient(weaponData.dragCoefficient or 0.00022)
             :Model(Vetra.Enums.DragModel.Quadratic)
-        --   :Done():Cosmetic():Template(AmmoTracer):Container(workspace):AutoDelete(true) -- tracer nothing else
           :Done()
           :Build()
 
@@ -65,17 +91,19 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
         if not result then return end
         local hit = result.Instance
         local pos = result.Position
+        local normal = result.Normal
+        
+        print("Hit detected:", hit and hit.Name or "nil", "Material:", hit and hit.Material or "nil")
         
         if hit then
             local hitData = ctx.__solverData
             if not hitData then return end
 
-
             local humanoid = hit.Parent and hit.Parent:FindFirstChild("Humanoid")
 
             if humanoid and hit.Parent ~= shooter.Character then
                 if humanoid.Health <= 0 then
-                    return  -- dead body
+                    return
                 end
 
                 local isHead = hit.Name == "Head"
@@ -84,18 +112,18 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
                 local healthBefore = humanoid.Health
                 humanoid:TakeDamage(damage)
 
-                if healthBefore - damage <= 0 and humanoid.Health <= 0  then
+                if healthBefore - damage <= 0 and humanoid.Health <= 0 then
                     local distance = (ctx.Origin - pos).Magnitude
                     SendKillFeedback(shooter, hit.Parent, hitData.weapon, distance)
                 end
+            else
+                CreateBulletHole(hit, pos, normal, hit.Material)
             end
-        -- else
-            -- print("Hit nothing")
         end
     end)
     
     solver:Fire(context, Behavior)
-    print("Bullet fired!")
+    print("Bullet fired from:", shooter.Name)
 end
 
 return BulletHandler
