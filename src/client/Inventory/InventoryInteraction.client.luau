@@ -24,11 +24,11 @@ until #slots.Inventory > 0
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
-local GearsGui = MainParent.GearParent.GearGUI
+
+-- local GearsGui = MainParent.GearParent.GearGUI
 local InventoryParent = MainParent:WaitForChild("InventoryParent")
 
 local GuiService = game:GetService("GuiService")
-local SafetyService = game:GetService("SafetyService")
 
 local playerInventoryData = {}
 local itemImageCache = {}

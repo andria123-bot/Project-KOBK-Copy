@@ -12,7 +12,7 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
-local rowsParent = MainParent.InventoryParent.InventoryGui.InventoryItemsFrame.SingleRowParent
+local rowsParent = MainParent.InventoryParent.InventoryItemsFrame.SingleRowParent
 
 local TemplateInvRow = ReplicatedStorage.GUIS.TemplateInvRow
 
@@ -82,10 +82,13 @@ function InventoryUIController:InitSlots()
 
     for _, row in pairs(rowsParent:GetChildren()) do
         if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
-            local container = row:FindFirstChild("RowsParent")
+            print(row)
+            local container = row:FindFirstChild("SlotRow")
+            print(container)
             if container then
                 for _, slot in pairs(container:GetChildren()) do
                     if slot:IsA("Frame") then
+                        print(slot)
                         self.slots.Inventory[globalIndex] = slot
                         slot.Name = "Slot" .. tostring(globalIndex)
                         local itemIcon = slot:FindFirstChild("ItemIcon")
@@ -99,6 +102,7 @@ function InventoryUIController:InitSlots()
         end
     end
 
+    print(globalIndex)
     return globalIndex - 1
 end
 
@@ -194,12 +198,12 @@ SendInventory.OnClientEvent:Connect(function(savedInventory)
 end)
 
 function InventoryUIController:InitSys()
-    self:FetchData()
-    self:GetEquippedClothing()
-    self:ApplyParentSize()
-    self:ApplyRows()
-    self:InitSlots()
-    self:RenderItems()
+    print(self:FetchData())
+    print(self:GetEquippedClothing())
+    print(self:ApplyParentSize())
+    print(self:ApplyRows())
+    print(self:InitSlots())
+    print(self:RenderItems())
 end
 
 return InventoryUIController

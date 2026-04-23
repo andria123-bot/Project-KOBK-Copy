@@ -16,7 +16,7 @@ local ImpactMaterials = {
 }
 
 local function SendKillFeedback(killer, victim, weaponName, distance)
-    local message = string.format("%s Killed %s with %s From %.1f Meters.", killer.Name, victim.Name, weaponName, distance)
+    local message = string.format("%s Killed %s with %s From %.1f Meters.", killer.DisplayName, victim.Name, weaponName, distance)
     SendKillFeedMessage:FireAllClients(message)
 end
 
@@ -82,6 +82,7 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
             weapon = weaponData.name,
             damage = weaponData.damage,
             headShot = weaponData.headshot,
+            ammoType = weaponData.ammoType,
         }
     })
 
@@ -92,8 +93,6 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
         local hit = result.Instance
         local pos = result.Position
         local normal = result.Normal
-        
-        print("Hit detected:", hit and hit.Name or "nil", "Material:", hit and hit.Material or "nil")
         
         if hit then
             local hitData = ctx.__solverData
@@ -114,7 +113,7 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
 
                 if healthBefore - damage <= 0 and humanoid.Health <= 0 then
                     local distance = (ctx.Origin - pos).Magnitude
-                    SendKillFeedback(shooter, hit.Parent, hitData.weapon, distance)
+                    SendKillFeedback(shooter, hit.Parent, hitData.ammoType, distance)
                 end
             else
                 CreateBulletHole(hit, pos, normal, hit.Material)
