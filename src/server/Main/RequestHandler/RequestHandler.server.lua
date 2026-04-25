@@ -29,6 +29,7 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
     end
     
     return {
+        emptyReloadTime = weaponModule.emptyReloadTime,
         maxAmmo = playerAmmo[player][Item .. "_max"],
         currentAmmo = playerAmmo[player][Item],
         imageIconId = weaponModule.imageIconId,

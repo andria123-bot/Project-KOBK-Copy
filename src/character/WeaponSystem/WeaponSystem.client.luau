@@ -401,9 +401,9 @@ function melee(isLightStab)
 end
 
 function Reload()
-    if currentAmmo >= currentMaxAmmo then
-        return
-    end
+    if currentAmmo >= currentMaxAmmo then return end
+	if weaponSystem.modifiers.isReloading then return end
+
     if weaponSystem.modifiers.IsAiming then
         weaponSystem.modifiers.IsAiming = false
         UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
@@ -412,6 +412,7 @@ function Reload()
             weaponData.aimData.aimCF = CFrame.new()
         end
     end
+	
     weaponSystem.modifiers.IsShooting = false
 
     weaponSystem.modifiers.isReloading = true
@@ -428,7 +429,7 @@ function Reload()
 
     if currentAmmo == 0 then
         weaponSystem.animations.FirstPerson[6]:Play()
-        wait(weaponData.reloadTime)
+        wait(weaponData.emptyReloadTime)
     else
         weaponSystem.animations.FirstPerson[5]:Play()
         wait(weaponData.reloadTime)
@@ -532,56 +533,6 @@ connections.InputBegan = UIS.InputBegan:Connect(function(input, gpe)
 				end
 			end
 		end
-
-		-- if input.KeyCode == Enum.KeyCode.Four then
-		-- 	if weaponSystem.currentSlot ~= 4 and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 		if weaponSystem.Inventory.PlayerInventory[4] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[4])
-		-- 			weaponSystem.currentSlot = 4
-		-- 			isEquipedWeapon = true
-		-- 		end
-		-- 	end
-		-- end
-
-		-- if input.KeyCode == Enum.KeyCode.Five then
-		-- 	if weaponSystem.currentSlot ~= 5 and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 		if weaponSystem.Inventory.PlayerInventory[5] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[5])
-		-- 			weaponSystem.currentSlot = 5
-		-- 			isEquipedWeapon = true
-		-- 		end
-		-- 	end
-		-- end
-
-		-- if input.KeyCode == Enum.KeyCode.Six then
-		-- 	if weaponSystem.currentSlot ~= 6 and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 		if weaponSystem.Inventory.PlayerInventory[6] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[6])
-		-- 			weaponSystem.currentSlot = 6
-		-- 			isEquipedWeapon = true
-		-- 		end
-		-- 	end
-		-- end
-
-		-- if input.KeyCode == Enum.KeyCode.Seven and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 	if weaponSystem.currentSlot ~= 7 then
-		-- 		if weaponSystem.Inventory.PlayerInventory[7] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[7])
-		-- 			weaponSystem.currentSlot = 7
-		-- 			isEquipedWeapon = true
-		-- 		end
-		-- 	end
-		-- end
-
-		-- if input.KeyCode == Enum.KeyCode.Eight then
-		-- 	if weaponSystem.currentSlot ~= 8 and weaponSystem.state ~= weaponSystem.states[3] then
-		-- 		if weaponSystem.Inventory.PlayerInventory[8] ~= "Empty" then
-		-- 			loadSlot(weaponSystem.Inventory.PlayerInventory[8])
-		-- 			weaponSystem.currentSlot = 8
-		-- 			isEquipedWeapon = true
-		-- 		end
-		-- 	end
-		-- end
 	end
 
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -662,20 +613,31 @@ connections.InputEnded = UIS.InputEnded:Connect(function(input)
 end)
 
 ReplicatedStorage.Shared.Remotes.PlayerDied.OnClientEvent:Connect(function()
+	if aimHelper and aimHelper.Reset then
+		aimHelper:Reset()
+	end
+	
+	camera.FieldOfView = 70
+	
+	weaponSystem.modifiers.IsAiming = false
+	weaponSystem.modifiers.IsInspecting = false
+	weaponSystem.modifiers.IsReloading = false
+	weaponSystem.modifiers.IsShooting = false
+	
+	UpdateWeaponStateRemote:FireServer(weaponSystem.states[8])
+	
 	for _, v in pairs(camera:GetDescendants()) do
 		if v:IsA("Model") then
 			v:Destroy()
 		end
 	end
 
-	 for _, connection in pairs(connections) do
+	for _, connection in pairs(connections) do
         if connection then
             connection:Disconnect()
         end
     end
 
-	UpdateWeaponStateRemote:FireServer(weaponSystem.states[8])
-	
 	for _, v in pairs(game.ReplicatedStorage.Shared.Modules:GetDescendants()) do
 		if v:IsA("ModuleScript") and v.Name ~= "FastCastRedux" and v.Name ~= "ActiveSignal" and v.Name ~= "Signal" and v.Name ~= "Table" and v.Name ~= "TypeDefinitions"  and v.Name ~= "TypeMarshaller" and v.Name ~= "Misc" then
 			require(v).ammo = require(v).maxAmmo -- should use requestModule
@@ -730,10 +692,10 @@ connections.MouseButton1Up = mouse.Button1Up:Connect(function()
     end
 end)
 
-connections.SnycTracerToOthers = SnycTracerToOthers.OnClientEvent:Connect(function(origin, direction, speed, shooter)
-	if shooter == player then return end
-	BulletVisualiser:CreateVisualTracer(origin, direction, speed)
-end)
+-- connections.SnycTracerToOthers = SnycTracerToOthers.OnClientEvent:Connect(function(origin, direction, speed, shooter)
+-- 	if shooter == player then return end
+-- 	BulletVisualiser:CreateVisualTracer(origin, direction, speed)
+-- end)
 
 while wait() do
 	while weaponSystem.modifiers.IsShooting and weaponData do

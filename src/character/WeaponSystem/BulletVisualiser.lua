@@ -25,12 +25,14 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     tracer.Anchored = true
     tracer.CanCollide = false
     
+    -- CAPTURE VALUES LOCALLY (fixes the bug)
+    local startOrigin = origin
+    local startDirection = direction.Unit
+    local startSpeed = speed
+    local startTime = tick()
+    
     local tracerData = {
         tracer = tracer,
-        position = origin,
-        direction = direction,
-        speed = speed,
-        startTime = tick(),
         active = true
     }
 
@@ -38,31 +40,42 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
 
     -- tracer movement
     task.spawn(function()
-        local startTime = tick()
-        local duration = 4 -- Tracer lifetime
-        local gravity = 196.2  -- roblox def gravity
-
+        local lastPos = startOrigin
+        local gravity = 196.2
+        local duration = 4
+        
+        local elapsed = 0
+        local lastUpdate = tick()
+        
         while tracerData.active and tick() - startTime < duration do
-            local elapsed = tick() - startTime
-            local distance = speed * elapsed
+            local now = tick()
+            local dt = now - lastUpdate
+            lastUpdate = now
+            elapsed = elapsed + dt
             
-            -- gravity drop
+            local distance = startSpeed * elapsed
             local drop = 0.5 * gravity * elapsed * elapsed
             
-            local currentPos = origin + (direction * distance)
+            local currentPos = startOrigin + (startDirection * distance)
             currentPos = currentPos - Vector3.new(0, drop, 0)
             
-            tracer.CFrame = CFrame.new(currentPos, currentPos + direction)
+            -- Only update position if tracer still exists
+            if tracer and tracer.Parent then
+                tracer.CFrame = CFrame.new(currentPos, currentPos + startDirection)
+                
+                -- scale tracer size based on distance to camera
+                local distanceToCamera = (workspace.CurrentCamera.CFrame.Position - currentPos).Magnitude
+                local scale = math.clamp(distanceToCamera / 200, 0.2, 2)
+                tracer.Size = Vector3.new(scale, scale, scale)
+            end
             
-            -- scale tracer size based on distance to camera
-            local distanceToCamera = (workspace.CurrentCamera.CFrame.Position - currentPos).Magnitude
-            local scale = math.clamp(distanceToCamera / 200, 0.2, 2)
-            tracer.Size = Vector3.new(scale, scale, scale)
-            
+            lastPos = currentPos
             RunService.RenderStepped:Wait()
         end
 
-        tracer:Destroy()
+        if tracer and tracer.Parent then
+            tracer:Destroy()
+        end
         tracerData.active = false
         
         -- Remove from active tracers list
@@ -92,7 +105,7 @@ SyncProjectile.OnClientEvent:Connect(function(shooter, firstPersonOrigin, thirdP
     -- Play effects
     for _, v in pairs(newMuzzleFlash:GetDescendants()) do
         if v:IsA("ParticleEmitter") then
-            v:Emit(math.random(1, 3))
+            v:Emit(math.random(0, 2))
         elseif v:IsA("Light") then
             v.Enabled = true
             task.delay(0.07, function()
@@ -105,5 +118,7 @@ SyncProjectile.OnClientEvent:Connect(function(shooter, firstPersonOrigin, thirdP
     
     BulletVisualiser:CreateVisualTracer(origin, direction, weaponData.bulletSpeed or 880, loadedBulletType)
 end)
+
+
 
 return BulletVisualiser

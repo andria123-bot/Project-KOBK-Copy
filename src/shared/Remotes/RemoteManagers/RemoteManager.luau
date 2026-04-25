@@ -13,6 +13,7 @@ local remoteEvents = {
 	"UpdateWeaponState",
 	"UpdateClientState",
 	"PlayerRespawned",
+	"MuzzlePos",
 	"SyncProjectile",
 	"PlayerAdded",
 	"PlayerDied",

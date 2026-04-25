@@ -4,6 +4,14 @@ local BulletContext = require(ReplicatedStorage.Vetra.Core.BulletContext)
 local BehaviorBuilder = require(ReplicatedStorage.Vetra.Builders.BehaviorBuilder)
 local SendKillFeedMessage = ReplicatedStorage.Shared.Remotes:WaitForChild("SendKillFeedMessage")
 local SyncProjectile = ReplicatedStorage.Shared.Remotes:WaitForChild("SyncProjectile")
+local AmmoTracer = ReplicatedStorage.VFX.Tracers:WaitForChild("TracerAmmo")
+local MuzzleEvent = ReplicatedStorage.Shared.Remotes:WaitForChild("MuzzlePos")
+
+local clientMuzzlePoos
+
+MuzzleEvent.OnServerEvent:Connect(function(player, position)
+    clientMuzzlePoos = position
+end)
 
 local ImpactHoles = workspace:FindFirstChild("ImpactHoles")
 
@@ -49,12 +57,13 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
     local weapon = character:FindFirstChild(weaponData.name)
     local thirdPersonOrigin = weapon and weapon:FindFirstChild("Muzzle") and weapon.Muzzle.Position or character.HumanoidRootPart.Position
 
+
     local distanceFromCharacter = (clientFirstPersonOrigin - character.HumanoidRootPart.Position).Magnitude
 
-    if distanceFromCharacter > 10 then 
-        warn("Suspicious origin from", shooter.Name)
-        clientFirstPersonOrigin = thirdPersonOrigin 
-    end 
+    -- if distanceFromCharacter > 10 then 
+    --     warn("Suspicious origin from", shooter.Name)
+    --     clientFirstPersonOrigin = thirdPersonOrigin 
+    -- end 
 
     for _, targetPlayer in pairs(game.Players:GetPlayers()) do
         SyncProjectile:FireClient(targetPlayer, shooter, clientFirstPersonOrigin, thirdPersonOrigin, direction, weaponData)
@@ -62,11 +71,12 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
 
     local solver = Vetra.new()
 
-    local Behavior = BehaviorBuilder.new():
-          Physics()
+    local Behavior = BehaviorBuilder.new()
+          :Physics()
             :MaxDistance(weaponData.maxDistanceTravel or 800)
             :Gravity(Vector3.new(0, -workspace.Gravity, 0))
           :Done()
+          -- :Cosmetic():Template(AmmoTracer):Container(workspace):Done()
           :Drag()
             :Coefficient(weaponData.dragCoefficient or 0.00022)
             :Model(Vetra.Enums.DragModel.Quadratic)
@@ -76,7 +86,7 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
     local context = BulletContext.new({
         Origin = thirdPersonOrigin,
         Direction = direction,
-        Speed = weaponData.bulletSpeed or 880,
+        Speed = weaponData.bulletSpeed,
         SolverData = {
             player = shooter,
             weapon = weaponData.name,

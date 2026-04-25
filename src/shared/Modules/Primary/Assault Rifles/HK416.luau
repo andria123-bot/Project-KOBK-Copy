@@ -83,18 +83,19 @@ local data = {
 	damage = 28.6,  
 	headshot = 67.67,
 	debounce = 0.1,
-	reloadTime = 3.7,  
+	reloadTime = 2.9,  
+	emptyReloadTime = 3.67,
 	jamChance = 0.0005,
 	value = 5800,
 	weight = 3.02, -- kg
 
-	fireRate = 0.085, 
+	fireRate = 0.008, 
 	-- Recoil
 	x = .2,
 	y = 0.8,
 	z = .4;
 	
-	bulletSpeed = 1200,
+	bulletSpeed = 1500,
 	maxDistanceTravel = 1500;
 	dragCoefficient = 0.00022,
 
