@@ -89,7 +89,7 @@ local data = {
 	value = 5800,
 	weight = 3.02, -- kg
 
-	fireRate = 0.008, 
+	fireRate = 0.08, 
 	-- Recoil
 	x = .2,
 	y = 0.8,

@@ -9,6 +9,8 @@ local humanoid = character:WaitForChild("Humanoid")
 local camera = game.Workspace.CurrentCamera
 local mouse = player:GetMouse()
 
+local parent = script.Parent
+
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local RequestWeaponData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponData")
@@ -19,11 +21,12 @@ local SnycTracerToOthers = ReplicatedStorage.Shared.Remotes:FindFirstChild("Snyc
 local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestReload")
 local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
 local PlayerRespawned = ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerRespawned")
-local ViewmodelRotation = require(script.Parent.ViewmodelRotation)
-local BulletVisualiser = require(script.Parent.BulletVisualiser)
-local LoadViewmodel = require(script.Parent.LoadViewmodel)
-local Scope = require(script.Parent.Scope)
-local ViewmodelBob = require(script.Parent.ViewmodelBob)
+
+local ViewmodelRotation = require(parent:WaitForChild("ViewmodelRotation"))
+local BulletVisualiser = require(parent:WaitForChild("BulletVisualiser"))
+local LoadViewmodel = require(parent:WaitForChild("LoadViewmodel"))
+local Scope = require(parent:WaitForChild("Scope"))
+local ViewmodelBob = require(parent:WaitForChild("ViewmodelBob"))
 
 -- local InventoryHandler = require(script.Parent.Parent.client.Inventory.InventoryHandler)
 
@@ -451,9 +454,23 @@ end
 
 local oldCamCF = CFrame.new()
 
+--[[
 function updateCameraShake()
 	local newCamCF = weaponSystem.viewmodel.FakeCamera.CFrame:ToObjectSpace(weaponSystem.viewmodel.PrimaryPart.CFrame)
 	camera.CFrame = camera.CFrame * newCamCF:ToObjectSpace(oldCamCF)
+	oldCamCF = newCamCF
+end
+]]
+
+function updateCameraShake() -- placeholder for less camera shake, it should be done in anim
+	local newCamCF = weaponSystem.viewmodel.FakeCamera.CFrame:ToObjectSpace(
+		weaponSystem.viewmodel.PrimaryPart.CFrame
+	)
+
+	local delta = newCamCF:ToObjectSpace(oldCamCF)
+
+	camera.CFrame = camera.CFrame * CFrame.identity:Lerp(delta, 0.5)
+
 	oldCamCF = newCamCF
 end
 
@@ -477,6 +494,7 @@ connections.RunService = RunService.RenderStepped:Connect(function(dt)
 		local rotOffset = rotAngle ~= 0 and CFrame.Angles(0, 0, rotAngle) or zeroAng
 
 		if weaponSystem.viewmodel and weaponSystem.viewmodel.PrimaryPart then -- apply things to viewmodel
+			print(viewmodelKickOffset)
 			weaponSystem.viewmodel:SetPrimaryPartCFrame(camera.CFrame * cachedData.swayCF * cachedData.aimCF * bobOffset * rotOffset * viewmodelKickOffset)
 			updateCameraShake()
 
@@ -713,33 +731,14 @@ while wait() do
 				weaponSystem.animations.ThirdPerson[5]:Stop()
 				weaponSystem.animations.ThirdPerson[6]:Stop()
 
-				viewmodelKickOffset = CFrame.new(0, 0, 0.2)
-				kickReturnTime = tick() + 0.08
-				task.spawn(function()
-					task.wait(0.08)
-					viewmodelKickOffset = CFrame.new()
-				end)
+				local ShootModule = require(script.Parent.Shoot)
 
-				if SpringModule then
-					-- Create two step recoil: kick + settle
-					local kickRecoil = CFrame.Angles(
-						math.rad(recoilData.rx * 0.8),
-						math.rad(recoilData.ry * 0.5),
-						math.rad(recoilData.rz * 0.3)
-					)
-					
-					local settleRecoil = CFrame.Angles(
-						math.rad(recoilData.rx * 0.2),
-						math.rad(recoilData.ry * 0.1),
-						math.rad(recoilData.rz * 0.05)
-					)
-					
-					camera.CFrame = camera.CFrame * kickRecoil
-					
-					task.delay(0.05, function()
-						camera.CFrame = camera.CFrame * settleRecoil
-					end)
-				end
+				ShootModule:Fire(
+					camera,
+					weaponData.fireMode,
+					recoilData,
+					data.fireRate
+				)
 
 				currentAmmo = data.ammoLeft
 				currentMaxAmmo = data.maxAmmo
@@ -754,8 +753,8 @@ while wait() do
 					weaponSystem.animations.FirstPerson[4]:Play()
 				else
 					weaponSystem.animations.FirstPerson[1]:Stop()
-					weaponSystem.animations.FirstPerson[1]:Play()
-					weaponSystem.animations.ThirdPerson[1]:Play()
+					-- weaponSystem.animations.FirstPerson[1]:Play()
+					-- weaponSystem.animations.ThirdPerson[1]:Play()
 				end
 
 				if data.ammoLeft == 0 then
