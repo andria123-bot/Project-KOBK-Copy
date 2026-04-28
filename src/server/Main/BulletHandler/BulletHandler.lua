@@ -21,6 +21,7 @@ local BulletHandler = {}
 
 local ImpactMaterials = {
     [Enum.Material.Concrete] = ConcreteImpact,
+    [Enum.Material.Plastic] = ConcreteImpact,
 }
 
 local function SendKillFeedback(killer, victim, weaponName, distance)
@@ -65,9 +66,9 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
     --     clientFirstPersonOrigin = thirdPersonOrigin 
     -- end 
 
-    for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-        SyncProjectile:FireClient(targetPlayer, shooter, clientFirstPersonOrigin, thirdPersonOrigin, direction, weaponData)
-    end
+    -- for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+    --     SyncProjectile:FireClient(targetPlayer, shooter, clientFirstPersonOrigin, thirdPersonOrigin, direction, weaponData)
+    -- end
 
     local solver = Vetra.new()
 
@@ -76,7 +77,7 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
             :MaxDistance(weaponData.maxDistanceTravel or 800)
             :Gravity(Vector3.new(0, -workspace.Gravity, 0))
           :Done()
-          -- :Cosmetic():Template(AmmoTracer):Container(workspace):Done()
+          :Cosmetic():Template(AmmoTracer):Container(workspace):Done()
           :Drag()
             :Coefficient(weaponData.dragCoefficient or 0.00022)
             :Model(Vetra.Enums.DragModel.Quadratic)

@@ -5,6 +5,7 @@ local playerIds = {
     [1210653126] = true,
     [7162629627] = true,
     [4381811563] = true,
+    [3092110782] = true,
 }
 local badgeId = 4421489520473847
 local BadgeService = game:GetService("BadgeService")
