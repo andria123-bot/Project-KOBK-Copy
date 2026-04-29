@@ -90,7 +90,7 @@ local data = {
 	value = 5800,
 	weight = 3.02, -- kg
 
-	fireRate = 0.08, 
+	fireRate = 0.008, 
 
 	recoilSprings = {
         rotFrequency = 35,  -- How fast camera recoil returns
@@ -149,6 +149,6 @@ function data:SetBulletType(bullType)
 	end
 end
 
-data:SetBulletType("5.56x45 AP")
+data:SetBulletType("5.56x45 T")
 
 return data

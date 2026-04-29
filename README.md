@@ -24,10 +24,10 @@ Add visual projectiles
 Tons of bugs:
 when player dies he can re-equip weapon and still shoot                         | Easy   | Fixed
 when player dies fastcast redux manager is cooked                               | Medium | Fixed
-MoveItem event is client sided so it means hackers can bypass it and dupe items | Hard   |
+MoveItem event is client sided so it means hackers can bypass it and dupe items | Hard   | 
 modules are accessable by client, red flag                                      | Hard   | Fixed
 recoil happens on client, create seperated module for that                      | Medium | Fixed
-loadslot shoul be based on weaponSlot not inventory                             | Hard   |
+loadslot shoul be based on weaponSlot not inventory                             | Hard   | 
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
 
 when ammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
@@ -40,6 +40,8 @@ Add Anti-cheat for speed, position area, inventory                              
 BulletVisual is not replicated to other clients                                 | Easy   | Fixed
 
 While reloading if i run it sets state to sprinting and i can keep reloding     | Easy   | Fixed
+While shooting camera always leans on X and Z axis                              | Medium | 
+While walking the muzzle effects and tracers are staying at old position        | Hard   | 
 
 
 fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle | Medium | Fixed
