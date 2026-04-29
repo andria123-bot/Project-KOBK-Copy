@@ -9,7 +9,7 @@ local activeTracers = {}
 
 function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBulletType)
     if not AmmoTracer then return end
-    if loadedBulletType ~= "Tracer" then return end
+    if loadedBulletType:sub(-1) ~= "T" then return end
 
     -- Ensure folder exists
     local tracerFolder = workspace:FindFirstChild("BulletTracers")
@@ -25,7 +25,6 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     tracer.Anchored = true
     tracer.CanCollide = false
     
-    -- CAPTURE VALUES LOCALLY (fixes the bug)
     local startOrigin = origin
     local startDirection = direction.Unit
     local startSpeed = speed

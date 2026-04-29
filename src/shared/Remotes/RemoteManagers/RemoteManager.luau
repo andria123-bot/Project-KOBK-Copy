@@ -9,7 +9,6 @@ local BindablesFolder = RemotesFolder.Bindables
 
 local remoteEvents = {
 	"SendKillFeedMessage",
-	"SnycTracerToOthers",
 	"UpdateWeaponState",
 	"UpdateClientState",
 	"PlayerRespawned",

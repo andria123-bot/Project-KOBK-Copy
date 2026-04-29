@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local AmmoList = require(ReplicatedStorage.Shared.Modules.Ammos:WaitForChild("AmmoList"))
 
 local data = {
 	name = "HK416",
@@ -90,10 +91,33 @@ local data = {
 	weight = 3.02, -- kg
 
 	fireRate = 0.08, 
-	-- Recoil
-	x = .2,
-	y = 0.8,
-	z = .4;
+
+	recoilSprings = {
+        rotFrequency = 35,  -- How fast camera recoil returns
+        rotDamping = 3,     -- How much camera recoil bounces
+        posFrequency = 35,  -- How fast viewmodel kickback returns
+        posDamping = 3.5,   -- How much kickback bounces
+        camFrequency = 100, -- How fast camera shake returns
+        camDamping = 6,     -- How much camera shake bounces
+    },
+    
+    recoilForce = {
+        rot = Vector3.new(0.07, 0.06, 0.03),  -- rot.X = Camera pitch (up/down recoil) | rot.Y = Camera yaw (left/right recoil) | rot.Z = Camera roll (tilt)
+        pos = Vector3.new(0, 0, 10),          -- pos.X = Viewmodel horizontal kickback | pos.Y = Viewmodel vertical kickback | pos.Z = Viewmodel backward kickback
+        camera = Vector3.new(1.2, 0.5, 0),    -- camera.X = Camera horizontal shake | camera.Y = Camera vertical shake | camera.Z = Camera roll shake
+    },
+
+	serverRecoilPattern = {
+        {x = 0.0, y = 0.0},  -- shot 1
+        {x = 0.0, y = 0.0},  -- shot 2
+        {x = 0.0, y = 0.0},  -- shot 3
+        {x = 0.0, y = 0.0},  -- shot 4
+        {x = 0.1, y = 0.0},  -- shot 5
+        {x = 0.0, y = -0.1}, -- shot 6
+        {x = 0.0, y = -0.2}, -- shot 7
+        {x = 0.0, y = -0.1}, -- shot 8
+        {x = 0.0, y = 0.0},  -- shot 9
+    },
 	
 	bulletSpeed = 1500,
 	maxDistanceTravel = 1500;
@@ -102,11 +126,29 @@ local data = {
 	slotType = "Loadout",
 	ammoType = "5.56x45",
 	canBeStored = false,
-	loadedBulletType = "Tracer"; -- T / AP
+	loadedBulletType = "";
 
 	isGrenade = false,
 	isMelee = false,
 	isShootgun = false,
 }
+
+function data:SetBulletType(bullType)
+	if AmmoList[bullType] then
+		self.loadedBulletType = bullType
+		self.damage = AmmoList[bullType].damage
+		self.headshot = AmmoList[bullType].headshot
+		self.muzzleVelocity = AmmoList[bullType].muzzleVelocity
+		self.dragCoefficient = AmmoList[bullType].dragCoefficient
+		self.gravity = AmmoList[bullType].gravity
+		self.hipSpread = AmmoList[bullType].hipSpread
+		self.aimingSpread = AmmoList[bullType].aimingSpread
+		self.spreadRecovery = AmmoList[bullType].spreadRecovery
+		self.armorPen = AmmoList[bullType].armorPen
+		self.penetrationPower = AmmoList[bullType].penetrationPower
+	end
+end
+
+data:SetBulletType("5.56x45 AP")
 
 return data

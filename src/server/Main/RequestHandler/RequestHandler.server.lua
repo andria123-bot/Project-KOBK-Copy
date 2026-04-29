@@ -15,6 +15,7 @@ local LoadModule = require(ServerScriptService.Server.ModuleHandler.LoadModule)
 
 local playerAmmo = {}
 local lastShotTime = {}
+local playerShotCount = {}
 
 RequestWeaponData.OnServerInvoke = function(player, Item)
     local weaponModule = require(LoadModule.GetModule(Item))
@@ -27,10 +28,14 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
         playerAmmo[player][Item] = weaponModule.ammo
         playerAmmo[player][Item .. "_max"] = weaponModule.maxAmmo
     end
-    
+
     return {
         emptyReloadTime = weaponModule.emptyReloadTime,
+        kickbackAmount = weaponModule.kickbackAmount,
+        kickReturnTime = weaponModule.kickReturnTime,
         maxAmmo = playerAmmo[player][Item .. "_max"],
+        recoilSprings = weaponModule.recoilSprings,
+        recoilForce = weaponModule.recoilForce,
         currentAmmo = playerAmmo[player][Item],
         imageIconId = weaponModule.imageIconId,
         reloadTime = weaponModule.reloadTime,
@@ -65,47 +70,54 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
     }
 end
 
-RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrigin) -- everything from here should go to BulletHandler.lua
-    local character = player.Character or player.CharacterAdded:Wait()
-	if not character then return end 
+RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrigin)
+    local character = player.Character
+    if not character then return false end
 
     local weaponModule = LoadModule.GetModule(item)
     if not weaponModule then return false end
 
     local weaponData = require(weaponModule)
-    if playerAmmo[player][item] <= 0 then return false end
-
+    
+    -- ammo check
+    if not playerAmmo[player] or playerAmmo[player][item] <= 0 then 
+        return false 
+    end
+    
+    -- rate limit
     local now = tick()
-    local lastShot = lastShotTime[player] or 0
-    if now - lastShot < weaponData.fireRate then
+    if lastShotTime[player] and now - lastShotTime[player] < weaponData.fireRate then
         return false
     end
     lastShotTime[player] = now
     
-    if not playerAmmo[player] or not playerAmmo[player][item] then
-        return false
-    end
-    
+    -- ammo decrease
     playerAmmo[player][item] = playerAmmo[player][item] - 1
+    local isLastBullet = playerAmmo[player][item] == 0
     
-    local isLastBullet = (playerAmmo[player][item] == 0)
-
-    -- weaponData:Fire(player, character, muzzlePos, direction, weaponData.bulletSpeed, nil) -- default fastcast
-
-    BulletHandler:FireBullet(player, firstPersonOrigin, LookVector, weaponData)
-
-    local modX, modY, modZ = weaponData.x, weaponData.y, weaponData.z
-
-    local rx = (math.random() * modX * 0.8) + (math.random() < 0.2 and -modX * 0.2 or 0)
-    local ry = (math.random() - 0.5) * 2 * modY
-    local rz = (math.random() - 0.5) * 2 * modZ
-
-    local sound = player.Character:WaitForChild("UpperTorso"):FindFirstChild("Shoot")
+    -- SERVER RECOIL PATTERN
+    local shotNum = (playerShotCount[player] or 0) + 1
+    playerShotCount[player] = shotNum
+    
+    local patternIndex = (shotNum - 1) % #weaponData.serverRecoilPattern + 1
+    local recoilOffset = weaponData.serverRecoilPattern[patternIndex]
+    
+    -- Apply server recoil
+    local finalDirection = LookVector + Vector3.new(recoilOffset.x, recoilOffset.y, 0)
+    finalDirection = finalDirection.Unit
+    
+    -- Fire bullet (server decides hit)
+    BulletHandler:FireBullet(player, firstPersonOrigin, finalDirection, weaponData)
+    
+    local sound = player.Character:FindFirstChild("UpperTorso"):FindFirstChild("Shoot")
     if sound then
         sound:Play()
     end
 
-	return true, {rx = rx, ry = ry, rz = rz}, {
+    print(true)
+    
+    -- Return data to client
+    return true, {
         loadedBulletType = weaponData.loadedBulletType,
         maxAmmo = playerAmmo[player][item .. "_max"],
         bulletSpeed = weaponData.bulletSpeed,
@@ -151,7 +163,7 @@ end)
 
 PlayerRespawned.OnServerEvent:Connect(function(player)
     if playerAmmo[player] then
-        for weapon, current in pairs(playerAmmo[player]) do
+        for weapon, _ in pairs(playerAmmo[player]) do
             if not string.find(weapon, "_max") then
                 local maxAmmo = playerAmmo[player][weapon .. "_max"]
                 if maxAmmo then
