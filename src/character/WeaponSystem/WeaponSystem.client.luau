@@ -433,20 +433,6 @@ function Reload()
     UpdateWeaponStateRemote:FireServer(weaponSystem.states[1])
 end
 
-local oldCamCF = CFrame.new()
-
-function updateCameraShake() -- placeholder for less camera shake, it should be done in anim
-	local newCamCF = weaponSystem.viewmodel.FakeCamera.CFrame:ToObjectSpace(
-		weaponSystem.viewmodel.PrimaryPart.CFrame
-	)
-
-	local delta = newCamCF:ToObjectSpace(oldCamCF)
-
-	camera.CFrame = camera.CFrame * CFrame.identity:Lerp(delta, 0.5)
-
-	oldCamCF = newCamCF
-end
-
 local zeroAng = CFrame.Angles(0, 0, 0)
 local t = tick()
 
@@ -467,12 +453,9 @@ connections.RunService = RunService.RenderStepped:Connect(function(dt)
 				local camVal = cameraRecoil:update(dt)
 				
 				local kickbackOffset = CFrame.new(posVal.X, posVal.Y, posVal.Z) * CFrame.Angles(rotVal.X, rotVal.Y, rotVal.Z)
-				
+
 				weaponSystem.viewmodel:SetPrimaryPartCFrame(camera.CFrame * cachedData.swayCF * cachedData.aimCF * bobOffset * sideRotOffset * kickbackOffset)
 			
-				updateCameraShake()
-				
-				-- always leans on X and Z axis, il fix it tmrw
 				camera.CFrame = camera.CFrame * CFrame.Angles(camVal.X, camVal.Y, camVal.Z)
 
 				if weaponSystem.animations and weaponSystem.viewmodel then
@@ -689,50 +672,107 @@ connections.MouseButton1Up = mouse.Button1Up:Connect(function()
     end
 end)
 
+local patternIndex = 1
+
 while wait() do
-	while weaponSystem.modifiers.IsShooting and weaponData do
+    while weaponSystem.modifiers.IsShooting and weaponData do
         if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
-			local success, data = RequestShoot:InvokeServer(weaponSystem.Inventory.PlayerInventory[weaponSystem.currentSlot], camera.CFrame.LookVector, weaponSystem.viewmodel.Muzzle.Position)
-			if success and data then
-				weaponSystem.animations.FirstPerson[2]:Stop()
-				weaponSystem.animations.FirstPerson[5]:Stop()
-				weaponSystem.animations.FirstPerson[6]:Stop()
-				weaponSystem.animations.FirstPerson[7]:Stop()
-				weaponSystem.animations.FirstPerson[8]:Stop()
-				weaponSystem.animations.ThirdPerson[2]:Stop()
-				weaponSystem.animations.ThirdPerson[4]:Stop()
-				weaponSystem.animations.ThirdPerson[5]:Stop()
-				weaponSystem.animations.ThirdPerson[6]:Stop()
+            local success, data, ammoType = RequestShoot:InvokeServer(
+                weaponSystem.Inventory.PlayerInventory[weaponSystem.currentSlot], 
+                camera.CFrame.LookVector, 
+                weaponSystem.viewmodel.Muzzle.Position
+            )
+            
+            if success and data and ammoType then
+                weaponSystem.animations.FirstPerson[2]:Stop()
+                weaponSystem.animations.FirstPerson[5]:Stop()
+                weaponSystem.animations.FirstPerson[6]:Stop()
+                weaponSystem.animations.FirstPerson[7]:Stop()
+                weaponSystem.animations.FirstPerson[8]:Stop()
+                weaponSystem.animations.ThirdPerson[2]:Stop()
+                weaponSystem.animations.ThirdPerson[4]:Stop()
+                weaponSystem.animations.ThirdPerson[5]:Stop()
+                weaponSystem.animations.ThirdPerson[6]:Stop()
 
-				recoilRot:shove(weaponData.recoilForce.rot)
-				recoilPos:shove(weaponData.recoilForce.pos)
-				cameraRecoil:shove(weaponData.recoilForce.camera)
+                local finalRecoilRot = weaponData.recoilForce.rot
+                local finalRecoilPos = weaponData.recoilForce.pos
+                local finalCameraRecoil = weaponData.recoilForce.camera
 
-				currentAmmo = data.ammoLeft
-				currentMaxAmmo = data.maxAmmo
-				updateHUD(true, {
-					ammoLeft = currentAmmo,
-					maxAmmo = currentMaxAmmo,
-				})
+                if data.serverRecoilPattern and #data.serverRecoilPattern > 0 then
+                    local patternRecoil = data.serverRecoilPattern[patternIndex]
+					local ammoData = ammoType
+					local currentSpread = ammoData.hipSpread
 
-				if data.isLastBullet then
-					weaponSystem.animations.FirstPerson[1]:Stop()
-					weaponSystem.animations.ThirdPerson[1]:Stop()
-					weaponSystem.animations.FirstPerson[4]:Play()
-				else
-					weaponSystem.animations.FirstPerson[1]:Stop()
-					-- weaponSystem.animations.FirstPerson[1]:Play() -- using coded recoil instead of anim recoil for now, will add anim recoil later
-					weaponSystem.animations.ThirdPerson[1]:Play()
-				end
+					if weaponSystem.modifiers.IsAiming then
+						currentSpread = ammoData.aimingSpread
+					end
 
-				if data.ammoLeft == 0 then
-					weaponSystem.modifiers.IsShooting = false
-					wait(.4)
-					Reload()
-				end
+					local randomVariation = Vector3.new(
+						(math.random() - 0.5) * currentSpread,
+						(math.random() - 0.5) * currentSpread,
+						0
+					)
+                    
+                    finalRecoilRot = Vector3.new(
+                        patternRecoil.x + randomVariation.X,
+                        patternRecoil.y + randomVariation.Y,
+                        weaponData.recoilForce.rot.Z
+                    )
+                    
+                    finalCameraRecoil = Vector3.new(
+                        patternRecoil.x * 10,
+                        patternRecoil.y * 8,
+                        weaponData.recoilForce.camera.Z
+                    )
+                    
+                    patternIndex = patternIndex + 1
+                    if patternIndex > #data.serverRecoilPattern then
+                        patternIndex = 1
+                    end
+                end
 
-        		task.wait(data.fireRate)
-			end
-		end
+                if recoilRot then
+                    recoilRot:shove(finalRecoilRot)
+                end
+                if recoilPos then
+                    recoilPos:shove(finalRecoilPos)
+                end
+                if cameraRecoil then
+                    cameraRecoil:shove(finalCameraRecoil)
+                end
+
+                currentAmmo = data.ammoLeft
+                currentMaxAmmo = data.maxAmmo
+                updateHUD(true, {
+                    ammoLeft = currentAmmo,
+                    maxAmmo = currentMaxAmmo,
+                })
+
+                if data.isLastBullet then
+                    weaponSystem.animations.FirstPerson[1]:Stop()
+                    weaponSystem.animations.ThirdPerson[1]:Stop()
+                    weaponSystem.animations.FirstPerson[4]:Play()
+                else
+                    weaponSystem.animations.FirstPerson[4]:Stop()
+                    weaponSystem.animations.ThirdPerson[1]:Stop()
+
+                    -- weaponSystem.animations.FirstPerson[1]:Play()
+                    -- weaponSystem.animations.ThirdPerson[1]:Play()
+                end
+
+                if data.ammoLeft == 0 then
+                    weaponSystem.modifiers.IsShooting = false
+                    wait(0.4)
+                    Reload()
+                end
+
+                task.wait(data.fireRate or weaponData.fireRate)
+            else
+                break
+            end
+        else
+            break
+        end
     end
+    task.wait()
 end

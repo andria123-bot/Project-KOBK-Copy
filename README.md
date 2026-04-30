@@ -43,6 +43,8 @@ While reloading if i run it sets state to sprinting and i can keep reloding     
 While shooting camera always leans on X and Z axis                              | Medium | 
 While walking the muzzle effects and tracers are staying at old position        | Hard   | 
 
+Some stupid ass bug is breaking my inventory system, probably assigning starteritems to nil
+
 
 fix after holding on mousebtn1 and when it auto reloads it should not set state to shooting/idle | Medium | Fixed
 

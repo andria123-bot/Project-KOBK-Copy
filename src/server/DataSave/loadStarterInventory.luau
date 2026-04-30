@@ -27,7 +27,7 @@ local starterKit = {
 }
 
 function defaultInventory.loadDefaultInventory(playerData)
-    if not playerData.weaponSystem then return false end
+    -- if not playerData.weaponSystem then return false end
 
     local inventory = playerData.weaponSystem.Inventory.PlayerInventory
     local hasItems = false
@@ -50,7 +50,7 @@ function defaultInventory.loadDefaultInventory(playerData)
 end
 
 function defaultInventory.mergeInventory(playerData, savedInventory)
-    if not playerData.weaponSystem then return false end
+    -- if not playerData.weaponSystem then return false end
 
     local inventory = playerData.weaponSystem.Inventory.PlayerInventory
     if savedInventory then -- Has saved data, use it

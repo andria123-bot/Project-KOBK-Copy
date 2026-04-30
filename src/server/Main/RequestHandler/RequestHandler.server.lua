@@ -7,6 +7,7 @@ local RequestReload = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("Re
 local UpdateClientState = ReplicatedStorage.Shared.Remotes:WaitForChild("UpdateClientState")
 local RequestShoot = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestShoot")
 local BulletImpactMaterials = ReplicatedStorage.VFX:WaitForChild("BulletImpactMaterials")
+local AmmoList = require(ReplicatedStorage.Shared.Modules.Ammos:WaitForChild("AmmoList"))
 local PlayerRespawned = ReplicatedStorage.Shared.Remotes:WaitForChild("PlayerRespawned")
 
 local PlayerWeaponSystemData = require(script.Parent.Parent.PlayerWeaponSystemData)
@@ -30,6 +31,7 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
     end
 
     return {
+        loadedBulletType = weaponModule.loadedBulletType,
         emptyReloadTime = weaponModule.emptyReloadTime,
         kickbackAmount = weaponModule.kickbackAmount,
         kickReturnTime = weaponModule.kickReturnTime,
@@ -78,6 +80,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrig
     if not weaponModule then return false end
 
     local weaponData = require(weaponModule)
+    local bulletData = AmmoList[weaponData.loadedBulletType]
     
     -- ammo check
     if not playerAmmo[player] or playerAmmo[player][item] <= 0 then 
@@ -95,18 +98,18 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrig
     playerAmmo[player][item] = playerAmmo[player][item] - 1
     local isLastBullet = playerAmmo[player][item] == 0
     
-    -- SERVER RECOIL PATTERN
+    -- srvr recoil pattern
     local shotNum = (playerShotCount[player] or 0) + 1
     playerShotCount[player] = shotNum
     
     local patternIndex = (shotNum - 1) % #weaponData.serverRecoilPattern + 1
     local recoilOffset = weaponData.serverRecoilPattern[patternIndex]
     
-    -- Apply server recoil
+    -- apply server recoil
     local finalDirection = LookVector + Vector3.new(recoilOffset.x, recoilOffset.y, 0)
     finalDirection = finalDirection.Unit
     
-    -- Fire bullet (server decides hit)
+    -- fire vetra bullet
     BulletHandler:FireBullet(player, firstPersonOrigin, finalDirection, weaponData)
     
     local sound = player.Character:FindFirstChild("UpperTorso"):FindFirstChild("Shoot")
@@ -114,10 +117,9 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrig
         sound:Play()
     end
 
-    print(true)
-    
-    -- Return data to client
+
     return true, {
+        serverRecoilPattern = weaponData.serverRecoilPattern,
         loadedBulletType = weaponData.loadedBulletType,
         maxAmmo = playerAmmo[player][item .. "_max"],
         bulletSpeed = weaponData.bulletSpeed,
@@ -128,6 +130,9 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrig
         fireRate = weaponData.fireRate,
         isLastBullet = isLastBullet,
         name = weaponData.name,
+    }, {
+        hipSpread = bulletData.hipSpread,
+        aimSpread = bulletData.aimSpread,
     }
 end
 

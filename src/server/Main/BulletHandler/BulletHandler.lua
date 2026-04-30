@@ -7,10 +7,10 @@ local SyncProjectile = ReplicatedStorage.Shared.Remotes:WaitForChild("SyncProjec
 local AmmoTracer = ReplicatedStorage.VFX.Tracers:WaitForChild("TracerAmmo")
 local MuzzleEvent = ReplicatedStorage.Shared.Remotes:WaitForChild("MuzzlePos")
 
-local clientMuzzlePoos
+local clientMuzzlePos
 
 MuzzleEvent.OnServerEvent:Connect(function(player, position)
-    clientMuzzlePoos = position
+    clientMuzzlePos = position
 end)
 
 local ImpactHoles = workspace:FindFirstChild("ImpactHoles")

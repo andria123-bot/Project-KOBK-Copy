@@ -9,7 +9,7 @@ local AmmoList = {
         dragCoefficient = 0.00022,  -- Air resistance
         gravity = 0.5,              -- Drop multiplier
 
-        hipSpread = 0.8,            -- Degrees when not aiming
+        hipSpread = 0.7,            -- Degrees when not aiming
         aimingSpread = 0.1,         -- Degrees when ADS
         spreadRecovery = 0.1,       -- Seconds to reset
 
