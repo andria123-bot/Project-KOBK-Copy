@@ -132,7 +132,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrig
         name = weaponData.name,
     }, {
         hipSpread = bulletData.hipSpread,
-        aimSpread = bulletData.aimSpread,
+        aimingSpread = bulletData.aimingSpread,
     }
 end
 
