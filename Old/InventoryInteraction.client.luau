@@ -175,7 +175,6 @@ function CloseInventory()
 	
 	local now = tick()
 	if now - lastCloseTime < 2 then
-		print("Saving too fast, skipping")
 		return
 	end
 	lastCloseTime = now
@@ -183,7 +182,6 @@ function CloseInventory()
 	inventoryOpen = false
 	InventoryParent.Visible = false
 	
-	-- Save when closing
 	SaveInventory:FireServer(playerInventoryData)
 end
 
@@ -253,12 +251,6 @@ UserInputService.InputEnded:Connect(function(input)
 end)
 
 SendInventory.OnClientEvent:Connect(function(inventoryData)
-    -- Print first 5 slots of PlayerInventory
-    if inventoryData.PlayerInventory then
-        for i = 1, 5 do
-            print("Slot", i, ":", inventoryData.PlayerInventory[i])
-        end
-    end
 	if not inventoryData then return end
 	
 	playerInventoryData = {}

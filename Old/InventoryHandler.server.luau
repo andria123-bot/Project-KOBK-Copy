@@ -122,9 +122,7 @@ PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
 end)
 
 RequestInventory.OnServerEvent:Connect(function(player)
-    print("Received inventory request from player:", player.Name)
     if PlayerInventories[player] then
-        print("Sending inventory to player:", player.Name)
         SendInventory:FireClient(player, PlayerInventories[player].Inventory)
     end
 end)
@@ -140,14 +138,14 @@ MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
     if fromSlot == toSlot then return false end
     if not inventory[fromSlot] or inventory[fromSlot] == "" then return false end
     
-    -- if playerSlots[player] and playerSlots[player].slots then
-    --     local slotKey = "Slot" .. fromSlot
-    --     if playerSlots[player].slots[slotKey] ~= inventory[fromSlot] then
-    --         print(player.Name, "item mismatch - cheating detected!")
-    --         -- player:Kick("Cheating detected")
-    --         return false
-    --     end
-    -- end
+    if playerSlots[player] and playerSlots[player].slots then
+        local slotKey = "Slot" .. fromSlot
+        if playerSlots[player].slots[slotKey] ~= inventory[fromSlot] then
+            print(player.Name, "item mismatch - cheating detected!")
+            -- player:Kick("Cheating detected")
+            return false
+        end
+    end
     
     local now = tick()
     if lastMoveTime[player] and now - lastMoveTime[player] < 3 then

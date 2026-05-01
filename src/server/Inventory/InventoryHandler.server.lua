@@ -1,4 +1,5 @@
 print("=== INVENTORY HANDLER SERVER SCRIPT LOADED ===")
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
@@ -15,7 +16,10 @@ local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInvent
 local PlayerInventories = {}
 local playerSlots = {}
 local lastMoveTime = {}
-local lastInventoryState = {}
+local saveTimers = {}
+
+local SAVE_DEBOUNCE = 3
+local PERIODIC_SAVE = 60
 
 local templateData = RequestPlayerData:Invoke()
 
@@ -33,7 +37,6 @@ local function createPlayerInventory()
         SlotCount = templateInventory.SlotCount or 15
     }
     
-    -- Initialize PlayerInventory with empty strings
     for i = 1, newInventory.SlotCount do
         newInventory.PlayerInventory[i] = ""
     end
@@ -53,49 +56,31 @@ local function createPlayerInventory()
     return newInventory
 end
 
-local function SaveInventory(player, newInventory)
-    if not newInventory then return false end
+local function DebouncedSave(player, inventory)
+    if saveTimers[player] then
+        task.cancel(saveTimers[player])  -- FIXED: use task.cancel()
+    end
     
-    local oldInventory = lastInventoryState[player]
-    
-    -- Check if inventory actually changed
-    local hasChanged = false
-    if not oldInventory then
-        hasChanged = true
-    else
-        for i = 1, #newInventory do
-            if newInventory[i] ~= oldInventory[i] then
-                hasChanged = true
-                break
-            end
+    saveTimers[player] = task.delay(SAVE_DEBOUNCE, function()
+        local success = pcall(function()
+            defaultInventory.saveInventory(player, { weaponSystem = { Inventory = { PlayerInventory = inventory } } })
+        end)
+        if success then
+            print("Debounced save for:", player.Name)
         end
-    end
-    
-    if not hasChanged then
-        print(player.Name, "inventory unchanged, skipping save")
-        return false
-    end
-    
-    -- Save to DataStore
-    local success = pcall(function()
-        defaultInventory.saveInventory(player, { weaponSystem = { Inventory = { PlayerInventory = newInventory } } })
+        saveTimers[player] = nil
     end)
-    
-    if success then
-        lastInventoryState[player] = {}
-        for i, item in pairs(newInventory) do
-            lastInventoryState[player][i] = item
-        end
-        print("Inventory saved for:", player.Name)
-        return true
-    else
-        warn("Failed to save inventory for:", player.Name)
-        return false
+end
+
+function OnInventoryChanged(player)
+    local playerData = PlayerInventories[player]
+    if playerData and playerData.Inventory then
+        DebouncedSave(player, playerData.Inventory.PlayerInventory)
     end
 end
 
-Players.PlayerAdded:Connect(function(player)
-    print("!!! PlayerAdded FIRED for:", player.Name, "!!!") 
+local function initPlayer(player)
+    print("Initializing inventory for:", player.Name)
     local playerInventory = createPlayerInventory()
     
     local savedInventory = defaultInventory.loadSavedInventory(player)
@@ -141,76 +126,54 @@ Players.PlayerAdded:Connect(function(player)
         currentSlot = 0,
     }
     
-    print("About to fire SendInventory")
     SendInventory:FireClient(player, playerInventory)
-    print("SendInventory fired for:", player.Name)
-
-    SendInventory:FireClient(player, playerInventory)
-end)
-
-print("Current players in game:", Players:GetPlayers())
-for _, player in pairs(Players:GetPlayers()) do
-    print("Already in game:", player.Name)
-    
-    -- COPY THE SAME LOGIC FROM PlayerAdded
-    local playerInventory = createPlayerInventory()
-    
-    local savedInventory = defaultInventory.loadSavedInventory(player)
-    
-    if savedInventory and type(savedInventory) == "table" then
-        if savedInventory.PlayerInventory then
-            for i, item in pairs(savedInventory.PlayerInventory) do
-                playerInventory.PlayerInventory[i] = item
-            end
-        else
-            for i, item in pairs(savedInventory) do
-                playerInventory.PlayerInventory[i] = item
-            end
-        end
-        print("Loaded saved inventory for existing player:", player.Name)
-    else
-        local starterKit = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}
-        for i, item in ipairs(starterKit) do
-            playerInventory.PlayerInventory[i] = item
-        end
-        print("Gave starter kit to existing player:", player.Name)
-    end
-    
-    PlayerInventories[player] = {
-        Inventory = playerInventory,
-        gear = {
-            Backpack = nil,
-            Leggings = nil,
-            TShirt = nil,
-            Helmet = nil,
-            Pants = nil,
-            Armor = nil,
-            Mask = nil,
-        },
-        animations = templateData.animations,
-        sounds = templateData.sounds,
-        lastShotTime = 0,
-        bulletId = 0,
-        state = "Idle",
-        states = templateData.states,
-        modifiers = templateData.modifiers,
-        viewmodel = nil,
-        currentSlot = 0,
-    }
-    
-    SendInventory:FireClient(player, playerInventory)
+    print("Inventory sent to:", player.Name)
 end
 
+-- Periodic backup
+task.spawn(function()
+    while true do
+        task.wait(PERIODIC_SAVE)
+        for player, playerData in pairs(PlayerInventories) do
+            if playerData and playerData.Inventory then
+                pcall(function()
+                    defaultInventory.saveInventory(player, { weaponSystem = { Inventory = playerData.Inventory } })
+                end)
+            end
+        end
+        print("Periodic backup completed")
+    end
+end)
+
+-- New players
+Players.PlayerAdded:Connect(function(player)
+    task.spawn(function()
+        initPlayer(player)
+    end)
+end)
+
+-- Existing players (Studio)
+for _, player in pairs(Players:GetPlayers()) do
+    task.spawn(function()
+        initPlayer(player)
+    end)
+end
+
+-- Player leave (immediate save)
 Players.PlayerRemoving:Connect(function(player)
+    if saveTimers[player] then
+        task.cancel(saveTimers[player])  -- FIXED: use task.cancel()
+    end
     local playerData = PlayerInventories[player]
-    
     if playerData and playerData.Inventory then
-        SaveInventory(player, playerData.Inventory.PlayerInventory)
+        pcall(function()
+            defaultInventory.saveInventory(player, { weaponSystem = { Inventory = playerData.Inventory } })
+        end)
+        print("Leave save for:", player.Name)
     end
     
     PlayerInventories[player] = nil
     playerSlots[player] = nil
-    lastInventoryState[player] = nil
 end)
 
 PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
@@ -224,7 +187,10 @@ RequestInventory.OnServerEvent:Connect(function(player)
 end)
 
 SaveInventoryRequest.OnServerEvent:Connect(function(player, inventoryData)
-    SaveInventory(player, inventoryData)
+    local playerData = PlayerInventories[player]
+    if playerData and playerData.Inventory then
+        DebouncedSave(player, inventoryData)
+    end
 end)
 
 MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
@@ -267,8 +233,8 @@ MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
         inventory[fromSlot] = ""
     end
 
-    -- Send updated inventory to client (no save here!)
     SendInventory:FireClient(player, playerData.Inventory)
+    OnInventoryChanged(player)
     
     return true
 end
