@@ -11,6 +11,7 @@ local remoteEvents = {
 	"SendKillFeedMessage",
 	"UpdateWeaponState",
 	"UpdateClientState",
+	"SaveInventory",
 	"PlayerRespawned",
 	"MuzzlePos",
 	"SyncProjectile",

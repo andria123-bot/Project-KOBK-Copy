@@ -4,15 +4,17 @@ local Players = game:GetService("Players")
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local MoveItem = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("MoveItem")
+local SaveInventoryRequest = ReplicatedStorage.Shared.Remotes:WaitForChild("SaveInventory")
 local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 local RequestPlayerData = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("RequestPlayerData")
 
 local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 
-local PlayerInventories = {}  -- Stores full weaponSystem for each player
+local PlayerInventories = {}
 local playerSlots = {}
 local lastMoveTime = {}
+local lastInventoryState = {}
 
 local templateData = RequestPlayerData:Invoke()
 
@@ -30,6 +32,7 @@ local function createPlayerInventory()
         SlotCount = templateInventory.SlotCount or 15
     }
     
+    -- Initialize PlayerInventory with empty strings
     for i = 1, newInventory.SlotCount do
         newInventory.PlayerInventory[i] = ""
     end
@@ -47,6 +50,47 @@ local function createPlayerInventory()
     end
     
     return newInventory
+end
+
+local function SaveInventory(player, newInventory)
+    if not newInventory then return false end
+    
+    local oldInventory = lastInventoryState[player]
+    
+    -- Check if inventory actually changed
+    local hasChanged = false
+    if not oldInventory then
+        hasChanged = true
+    else
+        for i = 1, #newInventory do
+            if newInventory[i] ~= oldInventory[i] then
+                hasChanged = true
+                break
+            end
+        end
+    end
+    
+    if not hasChanged then
+        print(player.Name, "inventory unchanged, skipping save")
+        return false
+    end
+    
+    -- Save to DataStore
+    local success = pcall(function()
+        defaultInventory.saveInventory(player, { weaponSystem = { Inventory = { PlayerInventory = newInventory } } })
+    end)
+    
+    if success then
+        lastInventoryState[player] = {}
+        for i, item in pairs(newInventory) do
+            lastInventoryState[player][i] = item
+        end
+        print("Inventory saved for:", player.Name)
+        return true
+    else
+        warn("Failed to save inventory for:", player.Name)
+        return false
+    end
 end
 
 Players.PlayerAdded:Connect(function(player)
@@ -102,19 +146,12 @@ Players.PlayerRemoving:Connect(function(player)
     local playerData = PlayerInventories[player]
     
     if playerData and playerData.Inventory then
-        local success, err = pcall(function()
-            defaultInventory.saveInventory(player, { weaponSystem = { Inventory = playerData.Inventory } })
-        end)
-        
-        if success then
-            print("Saved inventory for", player.Name)
-        else
-            warn("Failed to save inventory for", player.Name, err)
-        end
+        SaveInventory(player, playerData.Inventory.PlayerInventory)
     end
     
     PlayerInventories[player] = nil
     playerSlots[player] = nil
+    lastInventoryState[player] = nil
 end)
 
 PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
@@ -125,6 +162,10 @@ RequestInventory.OnServerEvent:Connect(function(player)
     if PlayerInventories[player] then
         SendInventory:FireClient(player, PlayerInventories[player].Inventory)
     end
+end)
+
+SaveInventoryRequest.OnServerEvent:Connect(function(player, inventoryData)
+    SaveInventory(player, inventoryData)
 end)
 
 MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
@@ -141,14 +182,13 @@ MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
     if playerSlots[player] and playerSlots[player].slots then
         local slotKey = "Slot" .. fromSlot
         if playerSlots[player].slots[slotKey] ~= inventory[fromSlot] then
-            print(player.Name, "item mismatch - cheating detected!")
-            -- player:Kick("Cheating detected")
+            print(player.Name, "item mismatch - rejecting move")
             return false
         end
     end
     
     local now = tick()
-    if lastMoveTime[player] and now - lastMoveTime[player] < 3 then
+    if lastMoveTime[player] and now - lastMoveTime[player] < 0.2 then
         return false
     end
     lastMoveTime[player] = now
@@ -161,17 +201,14 @@ MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
     local toItem = inventory[toSlot]
 
     if toItem ~= "" then
-        -- Swap items
         inventory[fromSlot] = toItem
         inventory[toSlot] = fromItem
     else
-        -- Move item
         inventory[toSlot] = fromItem
         inventory[fromSlot] = ""
     end
 
-    -- Save and sync
-    defaultInventory.saveInventory(player, { weaponSystem = { Inventory = playerData.Inventory } })
+    -- Send updated inventory to client (no save here!)
     SendInventory:FireClient(player, playerData.Inventory)
     
     return true

@@ -12,9 +12,10 @@ local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForCh
 local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("RequestInventory")
 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
 local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
+local SaveInventory = ReplicatedStorage.Shared.Remotes:WaitForChild("SaveInventory")
 
 local InventoryUIController = require(script.Parent.InventoryUIController)
-local InventoryFunctions = require(ReplicatedStorage.Shared.Modules.Inventory.InventoryFunctions)
+local InventoryFunctions = require(script.Parent.InventoryFunctions)
 InventoryUIController:InitSys()
 
 local slots = InventoryUIController.slots
@@ -30,6 +31,9 @@ local GuiService = game:GetService("GuiService")
 local playerInventoryData = {}
 local itemImageCache = {}
 local isMoving = false
+local inventoryOpen = false
+local lastCloseTime = 0
+
 local dragging = {
 	active = false,
 	fromSlot = nil,
@@ -74,16 +78,9 @@ local function createDragClone(original, slotFrame)
 	clone.AnchorPoint = Vector2.new(0.5, 0.5)
 	clone.Size = UDim2.new(0, original.AbsoluteSize.X, 0, original.AbsoluteSize.Y)
 	
-	-- Position clone at the exact same screen position as the original slot
 	local slotPos = slotFrame.AbsolutePosition
-	local slotSize = slotFrame.AbsoluteSize
-	
-	-- Convert to MainParent local coordinates
 	local mainParentPos = MainParent.AbsolutePosition
-	local localX = slotPos.X + slotSize.X/2 - mainParentPos.X
-	local localY = slotPos.Y + slotSize.Y/2 - mainParentPos.Y
-	
-	clone.Position = UDim2.new(0, localX, 0, localY)
+	clone.Position = UDim2.new(0, slotPos.X - mainParentPos.X, 0, slotPos.Y - mainParentPos.Y)
 	
 	return clone
 end
@@ -164,6 +161,43 @@ local function SlotHandler()
 		end
 	end
 end
+
+function OpenInventory()
+	if inventoryOpen then return end
+	
+	inventoryOpen = true
+	InventoryParent.Visible = true
+	RequestInventory:FireServer()
+end
+
+function CloseInventory()
+	if not inventoryOpen then return end
+	
+	local now = tick()
+	if now - lastCloseTime < 2 then
+		print("Saving too fast, skipping")
+		return
+	end
+	lastCloseTime = now
+	
+	inventoryOpen = false
+	InventoryParent.Visible = false
+	
+	-- Save when closing
+	SaveInventory:FireServer(playerInventoryData)
+end
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	
+	if input.KeyCode == Enum.KeyCode.Tab or input.KeyCode == Enum.KeyCode.I then
+		if inventoryOpen then
+			CloseInventory()
+		else
+			OpenInventory()
+		end
+	end
+end)
 
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active then

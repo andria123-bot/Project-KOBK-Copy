@@ -82,9 +82,7 @@ function InventoryUIController:InitSlots()
 
     for _, row in pairs(rowsParent:GetChildren()) do
         if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
-            print(row)
             local container = row:FindFirstChild("SlotRow")
-            print(container)
             if container then
                 for _, slot in pairs(container:GetChildren()) do
                     if slot:IsA("Frame") then
@@ -102,7 +100,6 @@ function InventoryUIController:InitSlots()
         end
     end
 
-    print(globalIndex)
     return globalIndex - 1
 end
 

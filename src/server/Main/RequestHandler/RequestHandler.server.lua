@@ -73,6 +73,7 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
 end
 
 RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrigin)
+    print(item)
     local character = player.Character
     if not character then return false end
 

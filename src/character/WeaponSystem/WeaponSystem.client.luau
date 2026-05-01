@@ -409,7 +409,7 @@ function Reload()
         weaponSystem.modifiers.IsInspecting = false
     end
     
-    local gun = weaponSystem.Inventory.PlayerInventory[weaponSystem.currentSlot]
+    local gun = weaponSystem.Inventory.Equipment.Weapons["Slot" .. weaponSystem.currentSlot].item
 
     if currentAmmo == 0 then
         weaponSystem.animations.FirstPerson[6]:Play()
@@ -484,9 +484,11 @@ connections.InputBegan = UIS.InputBegan:Connect(function(input, gpe)
 	or weaponSystem.state == weaponSystem.states[4]) 
 	and weaponSystem.state ~= weaponSystem.states[8] then
 		if input.KeyCode == Enum.KeyCode.One then
+			print(weaponSystem)
 			if weaponSystem.currentSlot ~= 1 and weaponSystem.state ~= weaponSystem.states[3] and weaponSystem.state ~= weaponSystem.states[8] then
-				if weaponSystem.Inventory.PlayerInventory[1] ~= "" then
-					loadSlot(weaponSystem.Inventory.PlayerInventory[1])
+				if weaponSystem.Inventory.Equipment.Weapons["Slot1"].equipped == true then
+					print(type(weaponSystem.Inventory.Equipment.Weapons.Slot1.item))
+					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Slot1.item)
 					weaponSystem.currentSlot = 1
 					isEquipedWeapon = true
 				end
@@ -495,8 +497,8 @@ connections.InputBegan = UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Two then
 			if weaponSystem.currentSlot ~= 2 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.Inventory.PlayerInventory[2] ~= "" then
-					loadSlot(weaponSystem.Inventory.PlayerInventory[2])
+				if weaponSystem.Inventory.Equipment.Weapons["Slot2"].equipped == true then
+					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Slot2.item)
 					weaponSystem.currentSlot = 2
 					isEquipedWeapon = true
 				end
@@ -505,8 +507,8 @@ connections.InputBegan = UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Three then
 			if weaponSystem.currentSlot ~= 3 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.Inventory.PlayerInventory[3] ~= "" then
-					loadSlot(weaponSystem.Inventory.PlayerInventory[3])
+				if weaponSystem.Inventory.Equipment.Weapons["Slot3"].equipped == true then
+					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Slot3.item)
 					weaponSystem.currentSlot = 3
 					isEquipedWeapon = true
 				end
@@ -677,7 +679,7 @@ while wait() do
     while weaponSystem.modifiers.IsShooting and weaponData do
         if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
             local success, data, ammoType = RequestShoot:InvokeServer(
-                weaponSystem.Inventory.PlayerInventory[weaponSystem.currentSlot], 
+                weaponSystem.Inventory.Equipment.Weapons.Slot1.item, 
                 camera.CFrame.LookVector, 
                 weaponSystem.viewmodel.Muzzle.Position
             )

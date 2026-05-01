@@ -93,7 +93,7 @@ game.Players.PlayerAdded:Connect(function(player)
 			ReplicatedStorage.Shared.Remotes.PlayerDied:FireClient(player)
 		end)
 
-		wait(.5)
+		wait(.3)
 
 		local forceField = character:FindFirstChild("ForceField")
 
