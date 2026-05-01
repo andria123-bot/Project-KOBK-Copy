@@ -253,6 +253,12 @@ UserInputService.InputEnded:Connect(function(input)
 end)
 
 SendInventory.OnClientEvent:Connect(function(inventoryData)
+    -- Print first 5 slots of PlayerInventory
+    if inventoryData.PlayerInventory then
+        for i = 1, 5 do
+            print("Slot", i, ":", inventoryData.PlayerInventory[i])
+        end
+    end
 	if not inventoryData then return end
 	
 	playerInventoryData = {}

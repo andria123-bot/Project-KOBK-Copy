@@ -1,3 +1,4 @@
+print("=== INVENTORY HANDLER SERVER SCRIPT LOADED ===")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
@@ -94,6 +95,7 @@ local function SaveInventory(player, newInventory)
 end
 
 Players.PlayerAdded:Connect(function(player)
+    print("!!! PlayerAdded FIRED for:", player.Name, "!!!") 
     local playerInventory = createPlayerInventory()
     
     local savedInventory = defaultInventory.loadSavedInventory(player)
@@ -139,8 +141,65 @@ Players.PlayerAdded:Connect(function(player)
         currentSlot = 0,
     }
     
+    print("About to fire SendInventory")
+    SendInventory:FireClient(player, playerInventory)
+    print("SendInventory fired for:", player.Name)
+
     SendInventory:FireClient(player, playerInventory)
 end)
+
+print("Current players in game:", Players:GetPlayers())
+for _, player in pairs(Players:GetPlayers()) do
+    print("Already in game:", player.Name)
+    
+    -- COPY THE SAME LOGIC FROM PlayerAdded
+    local playerInventory = createPlayerInventory()
+    
+    local savedInventory = defaultInventory.loadSavedInventory(player)
+    
+    if savedInventory and type(savedInventory) == "table" then
+        if savedInventory.PlayerInventory then
+            for i, item in pairs(savedInventory.PlayerInventory) do
+                playerInventory.PlayerInventory[i] = item
+            end
+        else
+            for i, item in pairs(savedInventory) do
+                playerInventory.PlayerInventory[i] = item
+            end
+        end
+        print("Loaded saved inventory for existing player:", player.Name)
+    else
+        local starterKit = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}
+        for i, item in ipairs(starterKit) do
+            playerInventory.PlayerInventory[i] = item
+        end
+        print("Gave starter kit to existing player:", player.Name)
+    end
+    
+    PlayerInventories[player] = {
+        Inventory = playerInventory,
+        gear = {
+            Backpack = nil,
+            Leggings = nil,
+            TShirt = nil,
+            Helmet = nil,
+            Pants = nil,
+            Armor = nil,
+            Mask = nil,
+        },
+        animations = templateData.animations,
+        sounds = templateData.sounds,
+        lastShotTime = 0,
+        bulletId = 0,
+        state = "Idle",
+        states = templateData.states,
+        modifiers = templateData.modifiers,
+        viewmodel = nil,
+        currentSlot = 0,
+    }
+    
+    SendInventory:FireClient(player, playerInventory)
+end
 
 Players.PlayerRemoving:Connect(function(player)
     local playerData = PlayerInventories[player]

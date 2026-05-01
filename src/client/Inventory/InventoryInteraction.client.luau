@@ -219,6 +219,10 @@ UserInputService.InputEnded:Connect(function(input)
 end)
 
 SendInventory.OnClientEvent:Connect(function(inventoryData)
+	print("Received inventory type:", type(inventoryData))
+    print("Has PlayerInventory?", inventoryData.PlayerInventory ~= nil)
+    print("Has Equipment?", inventoryData.Equipment ~= nil)
+    
 	if not inventoryData then return end
 	
 	playerInventoryData = {}
