@@ -102,18 +102,25 @@ SyncProjectile.OnClientEvent:Connect(function(shooter, firstPersonOrigin, thirdP
     newMuzzleFlash.CFrame = CFrame.new(origin)  -- Position at muzzle
     
     -- Play effects
-    -- for _, v in pairs(newMuzzleFlash:GetDescendants()) do
-    --     if v:IsA("ParticleEmitter") then
-    --         v:Emit(math.random(0, 2))
-    --     elseif v:IsA("Light") then
-    --         v.Enabled = true
-    --         task.delay(0.07, function()
-    --             if v and v.Parent then
-    --                 v.Enabled = false
-    --             end
-    --         end)
-    --     end
-    -- end
+    local flashAmount = math.random(0, 2)
+    local didFlash = flashAmount > 0
+
+    for _, v in pairs(newMuzzleFlash:GetDescendants()) do
+        if v:IsA("ParticleEmitter") then
+            v:Emit(flashAmount)
+
+        elseif v:IsA("Light") then
+            if didFlash then
+                v.Enabled = true
+
+                task.delay(0.07, function()
+                    if v and v.Parent then
+                        v.Enabled = false
+                    end
+                end)
+            end
+        end
+    end
     
     BulletVisualiser:CreateVisualTracer(origin, direction, weaponData.bulletSpeed or 880, loadedBulletType)
 end)

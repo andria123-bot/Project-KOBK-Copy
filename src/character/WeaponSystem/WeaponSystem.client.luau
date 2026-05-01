@@ -434,11 +434,10 @@ function Reload()
 end
 
 local zeroAng = CFrame.Angles(0, 0, 0)
-local t = tick()
 
 connections.RunService = RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem.viewmodel and weaponData then
-
+		local t = tick()
 		local bob = ViewmodelBob.GetBob(t, humanoid.CameraOffset, cachedData.sprintCF)
 		bobOffset = bobOffset:Lerp(bob, 1 - 0.001 ^ dt)
 
@@ -757,7 +756,7 @@ while wait() do
                     weaponSystem.animations.ThirdPerson[1]:Stop()
 
                     -- weaponSystem.animations.FirstPerson[1]:Play()
-                    -- weaponSystem.animations.ThirdPerson[1]:Play()
+                    weaponSystem.animations.ThirdPerson[1]:Play()
                 end
 
                 if data.ammoLeft == 0 then

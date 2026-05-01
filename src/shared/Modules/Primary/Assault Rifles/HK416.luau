@@ -90,7 +90,7 @@ local data = {
 	value = 5800,
 	weight = 3.02,
 
-	fireRate = 0.02, 
+	fireRate = 0.0085, 
 
 	recoilSprings = {
         rotFrequency = 35,  -- How fast camera recoil returns
@@ -103,7 +103,7 @@ local data = {
     
     recoilForce = {
         rot = Vector3.new(0.07, 0.06, 0.03),   -- rot.X = Camera pitch (up/down recoil) | rot.Y = Camera yaw (left/right recoil) | rot.Z = Camera roll (tilt)
-        pos = Vector3.new(0, 0, 6.7),          -- pos.X = Viewmodel horizontal kickback | pos.Y = Viewmodel vertical kickback | pos.Z = Viewmodel backward kickback
+        pos = Vector3.new(0, 0, 44.67),          -- pos.X = Viewmodel horizontal kickback | pos.Y = Viewmodel vertical kickback | pos.Z = Viewmodel backward kickback
         camera = Vector3.new(4.5, 4.5, 4.5),   -- camera.X = Camera horizontal shake | camera.Y = Camera vertical shake | camera.Z = Camera roll shake
     },
 

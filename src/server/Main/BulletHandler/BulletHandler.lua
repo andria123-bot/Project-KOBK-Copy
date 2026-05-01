@@ -4,8 +4,8 @@ local BulletContext = require(ReplicatedStorage.Vetra.Core.BulletContext)
 local BehaviorBuilder = require(ReplicatedStorage.Vetra.Builders.BehaviorBuilder)
 local SendKillFeedMessage = ReplicatedStorage.Shared.Remotes:WaitForChild("SendKillFeedMessage")
 local SyncProjectile = ReplicatedStorage.Shared.Remotes:WaitForChild("SyncProjectile")
-local AmmoTracer = ReplicatedStorage.VFX.Tracers:WaitForChild("TracerAmmo")
 local MuzzleEvent = ReplicatedStorage.Shared.Remotes:WaitForChild("MuzzlePos")
+local TestTracer = ReplicatedStorage.VFX.Tracers:FindFirstChild("TestTracer")
 
 local clientMuzzlePos
 
@@ -77,7 +77,7 @@ function BulletHandler:FireBullet(shooter, clientFirstPersonOrigin, direction, w
             :MaxDistance(weaponData.maxDistanceTravel or 800)
             :Gravity(Vector3.new(0, -workspace.Gravity, 0))
           :Done()
-        --   :Cosmetic():Template(AmmoTracer):Container(workspace):Done()
+        --   :Cosmetic():Template(TestTracer):Container(workspace):Done()
           :Drag()
             :Coefficient(weaponData.dragCoefficient or 0.00022)
             :Model(Vetra.Enums.DragModel.Quadratic)

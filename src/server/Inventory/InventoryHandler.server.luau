@@ -30,6 +30,10 @@ local function createPlayerInventory()
         SlotCount = templateInventory.SlotCount or 15
     }
     
+    for i = 1, newInventory.SlotCount do
+        newInventory.PlayerInventory[i] = ""
+    end
+    
     for k, v in pairs(templateInventory.Equipment.Clothing) do
         newInventory.Equipment.Clothing[k] = { equipped = v.equipped, name = v.name }
     end
@@ -138,13 +142,13 @@ MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
         local slotKey = "Slot" .. fromSlot
         if playerSlots[player].slots[slotKey] ~= inventory[fromSlot] then
             print(player.Name, "item mismatch - cheating detected!")
-            player:Kick("Cheating detected")
+            -- player:Kick("Cheating detected")
             return false
         end
     end
     
     local now = tick()
-    if lastMoveTime[player] and now - lastMoveTime[player] < 0.1 then
+    if lastMoveTime[player] and now - lastMoveTime[player] < 3 then
         return false
     end
     lastMoveTime[player] = now

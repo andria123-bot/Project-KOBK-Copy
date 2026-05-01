@@ -27,12 +27,12 @@ local AmmoList = {
         dragCoefficient = 0.00020,
         gravity = 0.5,
         
-        hipSpread = 0.9,             -- Less accurate
+        hipSpread = 0.9,      
         aimingSpread = 0.15,
         spreadRecovery = 0.12,
         
-        armorPen = 3.0,              -- High armor pen
-        penetrationPower = 4,        -- Goes through more walls
+        armorPen = 3.0,            
+        penetrationPower = 4,      
     },
 }
 

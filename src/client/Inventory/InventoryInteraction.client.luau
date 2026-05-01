@@ -24,8 +24,6 @@ until #slots.Inventory > 0
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
-
--- local GearsGui = MainParent.GearParent.GearGUI
 local InventoryParent = MainParent:WaitForChild("InventoryParent")
 
 local GuiService = game:GetService("GuiService")
@@ -73,7 +71,7 @@ end
 
 local function createDragClone(original)
 	local clone = original:Clone()
-	clone.Parent = InventoryParent
+	clone.Parent = MainParent
 	clone.ZIndex = 10
 	clone.AnchorPoint = Vector2.new(0.5, 0.5)
 	clone.Size = UDim2.fromOffset(original.AbsoluteSize.X, original.AbsoluteSize.Y)
@@ -82,11 +80,15 @@ local function createDragClone(original)
 end
 
 local function updateSlot(index)
+	if not index then return end
+	
 	local slot = slots.Inventory[index]
 	if not slot then return end
 	
 	local itemIcon = slot:FindFirstChild("ItemIcon")
 	if not itemIcon then return end
+	
+	if not playerInventoryData then return end
 	
 	local itemName = playerInventoryData[index]
 	
@@ -122,12 +124,18 @@ local function updateSlot(index)
 end
 
 local function RenderItems()
+	if not playerInventoryData then return end
+	
 	for index, _itemName in pairs(playerInventoryData) do
-		updateSlot(index)
+		if index then
+			updateSlot(index)
+		end
 	end
 end
 
 local function sendPlayerSlotData()
+	if not slots or not slots.Inventory then return end
+	
 	local slotData = {
 		slots = {};
 		weaponSlots = {};
@@ -150,19 +158,21 @@ local function sendPlayerSlotData()
 end
 
 local function SlotHandler()
+	if not slots or not slots.Inventory then return end
+	
 	for index, k in pairs(slots.Inventory) do
 		local itemIcon = k:FindFirstChild("ItemIcon")
 		if itemIcon and not itemIcon:GetAttribute("DragHandlerAttached") then
 			itemIcon:SetAttribute("DragHandlerAttached", true)
 			itemIcon.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					if playerInventoryData[index]
+					if playerInventoryData and playerInventoryData[index]
 						and playerInventoryData[index] ~= ""
 						and playerInventoryData[index] ~= "Empty"
 						and playerInventoryData[index] ~= nil
 					then
-						dragging.active = true
 						dragging.fromSlot = index
+						dragging.active = true
 						dragging.clone = createDragClone(itemIcon)
 						itemIcon.Visible = false
 					end
@@ -174,6 +184,11 @@ end
 
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active then
+        if not dragging.fromSlot then 
+            dragging.active = false
+            return 
+        end
+        
         local slotGroup, slotIndex, slotFrame = getSlotUnderMouse()
         
         if dragging.clone then
@@ -182,24 +197,41 @@ UserInputService.InputEnded:Connect(function(input)
         end
         
         if slotGroup and slotIndex and slotIndex ~= dragging.fromSlot then
-            local fromItem = playerInventoryData[dragging.fromSlot]
-            local toItem = playerInventoryData[slotIndex]
+		if not dragging.fromSlot or not slotIndex then return end
+		
+		-- Make sure playerInventoryData exists
+		if not playerInventoryData then return end
+		
+		-- Get items with nil fallbacks
+		local fromItem = playerInventoryData[dragging.fromSlot] or ""
+		local toItem = playerInventoryData[slotIndex] or ""
+		
+		-- Swap items
+		playerInventoryData[slotIndex] = fromItem
+		playerInventoryData[dragging.fromSlot] = toItem
+		
+		-- Update slots if they exist
+		if dragging.fromSlot then updateSlot(dragging.fromSlot) end
+		if slotIndex then updateSlot(slotIndex) end
+
+		if playerInventoryData and dragging.fromSlot then
+			print("playerInventoryData exists, fromSlot:", dragging.fromSlot, "value:", playerInventoryData[dragging.fromSlot])
+		else
+			print("playerInventoryData is nil or fromSlot is nil")
+		end
             
-            playerInventoryData[slotIndex] = fromItem
-            playerInventoryData[dragging.fromSlot] = toItem or ""
-            
-            updateSlot(dragging.fromSlot)
-            updateSlot(slotIndex)
-            
-            task.spawn(function()
-                local success = MoveItem:InvokeServer(dragging.fromSlot, slotIndex)
-                if not success then
-                    playerInventoryData[dragging.fromSlot] = fromItem
-                    playerInventoryData[slotIndex] = toItem
-                    updateSlot(dragging.fromSlot)
-                    updateSlot(slotIndex)
+		task.spawn(function()
+			if dragging.fromSlot and slotIndex then
+				local success = MoveItem:InvokeServer(dragging.fromSlot, slotIndex)
+				if not success then
+					print(playerInventoryData, dragging.fromSlot, fromItem)
+					playerInventoryData[dragging.fromSlot] = fromItem
+					playerInventoryData[slotIndex] = toItem
+					if dragging.fromSlot then updateSlot(dragging.fromSlot) end
+					if slotIndex then updateSlot(slotIndex) end
+				end
+				sendPlayerSlotData()
                 end
-                sendPlayerSlotData()
             end)
         end
         
@@ -216,24 +248,33 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
+-- After receiving inventory, print the data
 SendInventory.OnClientEvent:Connect(function(savedInventory)
-	local index = 1
-	
-	if type(savedInventory) == "table" and savedInventory.PlayerInventory then
-		playerInventoryData = savedInventory.PlayerInventory
-	else
-		for i, v in pairs(savedInventory) do
-			playerInventoryData[i] = v
-		end
-	end
-	
-	repeat
-		task.wait()
-	until playerInventoryData[index] ~= nil or index > 10
-
-	RenderItems()
-	SlotHandler()
-	sendPlayerSlotData()
+    if not savedInventory then return end
+    
+    -- Clear existing
+    playerInventoryData = {}
+    
+    -- Get inventory data
+    local inventoryTable = {}
+    if type(savedInventory) == "table" and savedInventory.PlayerInventory then
+        inventoryTable = savedInventory.PlayerInventory
+    else
+        inventoryTable = savedInventory
+    end
+    
+    -- Fill ALL slots based on actual slot count
+    print("Total slots available:", #slots.Inventory)
+    print("Inventory table length:", #inventoryTable)
+    
+    for i = 1, #slots.Inventory do
+        playerInventoryData[i] = inventoryTable[i] or ""
+        print("Slot", i, "=", playerInventoryData[i])
+    end
+    
+    RenderItems()
+    SlotHandler()
+    sendPlayerSlotData()
 end)
 
 RunService.RenderStepped:Connect(function(deltaTime)
