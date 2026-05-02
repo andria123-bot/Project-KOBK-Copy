@@ -9,10 +9,10 @@ local MoveItem = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("MoveIte
 local SaveInventoryRequest = ReplicatedStorage.Shared.Remotes:WaitForChild("SaveInventory")
 local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 local RequestPlayerData = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("RequestPlayerData")
+local SendServerInventoryBindable = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("SendServerInventory")
 
 local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
-local InventoryFunctions = require(script.Parent.InventoryFunctions)
 
 local PlayerInventories = {}
 local playerSlots = {}
@@ -59,7 +59,7 @@ end
 
 local function DebouncedSave(player, inventory)
     if saveTimers[player] then
-        task.cancel(saveTimers[player])  -- FIXED: use task.cancel()
+        task.cancel(saveTimers[player])
     end
     
     saveTimers[player] = task.delay(SAVE_DEBOUNCE, function()
@@ -81,7 +81,6 @@ function OnInventoryChanged(player)
 end
 
 local function initPlayer(player)
-    print("Initializing inventory for:", player.Name)
     local playerInventory = createPlayerInventory()
     
     local savedInventory = defaultInventory.loadSavedInventory(player)
@@ -125,13 +124,14 @@ local function initPlayer(player)
         modifiers = templateData.modifiers,
         viewmodel = nil,
         currentSlot = 0,
-    }
+    } -- Send Original inventory to client/servers
     
     SendInventory:FireClient(player, playerInventory)
+    SendServerInventoryBindable:Fire(player, playerInventory)
     print("Inventory sent to:", player.Name)
 end
 
--- Periodic backup
+-- periodic backup
 task.spawn(function()
     while true do
         task.wait(PERIODIC_SAVE)

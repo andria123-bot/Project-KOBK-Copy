@@ -2,7 +2,7 @@ local InventoryFunctions = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local DropItem = ReplicatedStorage.Shared.Remotes.InventoryFunctionEvents:WaitForChild("DropItem")
+local DropItemEvent = ReplicatedStorage.Shared.Remotes.InventoryFunctionEvents:WaitForChild("DropItem")
 local PickupItem = ReplicatedStorage.Shared.Remotes.InventoryFunctionEvents:WaitForChild("PickupItem")
 
 local player = game.Players.LocalPlayer
@@ -29,7 +29,7 @@ function InventoryFunctions.DropItem(inventory, slot)
     local item = inventory[slot]
     if not item then return end
 
-    DropItem:FireServer(item)
+    DropItemEvent:FireServer(item, slot)
     return true
 end
 
@@ -50,6 +50,7 @@ end
 
 function InventoryFunctions.FindEmptySlot(inventory)
     for i, v in pairs(inventory) do
+        print("Checking slot", i, "Value:", v)
         if v == nil or v == "" then
             return i
         end
@@ -71,12 +72,12 @@ function InventoryFunctions.PickupItem(inventory)
         raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
         raycastParams.FilterDescendantsInstances = {player.Character}
 
-        local result = workspace:Raycast(origin, direction * 5, raycastParams)
+        local result = workspace:Raycast(origin, direction * 15, raycastParams)
         if result then
             local hit = result.Instance
             local droppedItem = hit:FindFirstAncestorWhichIsA("Model")
             if droppedItem and droppedItem:GetAttribute("IsDroppedItem") then
-                PickupItem:FireServer(droppedItem.Name)
+                PickupItem:FireServer(droppedItem)
             end
         end
     end

@@ -45,6 +45,7 @@ local remoteFunctions = {
 }
 
 local bindableEvents = {
+	"SendServerInventory"
 }
 
 local bindableFunctions = {

@@ -223,9 +223,11 @@ UserInputService.InputEnded:Connect(function(input)
     end
 
 	if input.KeyCode == Enum.KeyCode.X then
-		local slot, _ = getSlotUnderMouse()
-		if slot then 
-			InventoryFunctions.DropItem(playerInventoryData, slot)
+		if not dragging.active then 
+			local slot, _ = getSlotUnderMouse()
+			if playerInventoryData[slot] ~= "" then 
+				InventoryFunctions.DropItem(playerInventoryData, slot)
+			end
 		end
 	end
 

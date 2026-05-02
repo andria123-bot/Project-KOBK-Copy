@@ -102,6 +102,7 @@ local playerWeaponSystemData = {
 }
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local RequestPlayerData = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChild("RequestPlayerData")
 
 RequestPlayerData.OnInvoke = function()
