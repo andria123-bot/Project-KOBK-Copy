@@ -70,8 +70,8 @@ function defaultInventory.mergeInventory(playerData, savedInventory)
     
     local inventory = playerData.weaponSystem.Inventory.PlayerInventory
     
-    if savedInventory and type(savedInventory) == "table" and #savedInventory > 0 then
-        -- Has valid saved data, use it
+    if savedInventory and type(savedInventory) == "table" then
+        -- Load saved data (even if empty slots)
         for i = 1, #savedInventory do
             if savedInventory[i] and savedInventory[i] ~= "" then
                 inventory[i] = savedInventory[i]
@@ -80,22 +80,29 @@ function defaultInventory.mergeInventory(playerData, savedInventory)
             end
         end
         
-        -- Check if saved inventory is empty
-        local hasItems = false
-        for _, item in ipairs(inventory) do
+        -- Check if saved inventory has ANY items
+        local hasAnyItem = false
+        for _, item in pairs(inventory) do
             if item and item ~= "" then
-                hasItems = true
+                hasAnyItem = true
                 break
             end
         end
         
-        if not hasItems then
-            return defaultInventory.loadDefaultInventory(playerData)
+        -- ONLY give starter kit if NO items AND no saved data found
+        if not hasAnyItem then
+            -- Check if saved file actually existed
+            if savedInventory._exists then
+                -- Saved file existed but was empty, don't give starter kit
+                print("Player has empty inventory, not giving starter kit")
+            else
+                return defaultInventory.loadDefaultInventory(playerData)
+            end
         end
         
         return true
     else
-        -- NO saved data or invalid saved data, give starter kit
+        -- No saved file at all, give starter kit
         return defaultInventory.loadDefaultInventory(playerData)
     end
 end
@@ -138,18 +145,14 @@ function defaultInventory.saveInventory(player, playerData)
     return true
 end
 
--- Main function to initialize player inventory
 function defaultInventory.initPlayerInventory(player, playerData)
     defaultInventory.ensureWeaponSystem(playerData)
     
-    -- Try to load saved inventory
     local savedInventory = defaultInventory.loadSavedInventory(player)
     
-    -- Merge saved inventory or load default
     local success = defaultInventory.mergeInventory(playerData, savedInventory)
     
     if success then
-        -- Send to client after inventory is properly loaded
         defaultInventory.sendInventoryToClient(player, playerData)
         return true
     else
@@ -171,13 +174,11 @@ function defaultInventory.sendInventoryToClient(player, playerData)
         return false
     end
     
-    -- Small delay to ensure player is fully loaded
     task.wait(0.5)
     
     local inventory = playerData.weaponSystem.Inventory.PlayerInventory
     print("Sending inventory to client:", player.Name, "Items:", #inventory)
     
-    -- Convert any nil values to empty strings for client
     local cleanInventory = {}
     for i = 1, #inventory do
         cleanInventory[i] = inventory[i] or ""
@@ -187,18 +188,15 @@ function defaultInventory.sendInventoryToClient(player, playerData)
     return true
 end
 
--- Helper function to check current inventory
 function defaultInventory.getInventory(playerData)
     defaultInventory.ensureWeaponSystem(playerData)
     return playerData.weaponSystem.Inventory.PlayerInventory
 end
 
--- Helper function to add an item to inventory
 function defaultInventory.addItem(playerData, itemName)
     defaultInventory.ensureWeaponSystem(playerData)
     local inventory = playerData.weaponSystem.Inventory.PlayerInventory
     
-    -- Find first empty slot
     for i = 1, #inventory do
         if not inventory[i] or inventory[i] == "" then
             inventory[i] = itemName
@@ -206,12 +204,10 @@ function defaultInventory.addItem(playerData, itemName)
         end
     end
     
-    -- Add to next slot if all slots are filled
     table.insert(inventory, itemName)
     return true, #inventory
 end
 
--- Helper function to remove item from inventory
 function defaultInventory.removeItem(playerData, slotIndex)
     defaultInventory.ensureWeaponSystem(playerData)
     local inventory = playerData.weaponSystem.Inventory.PlayerInventory
