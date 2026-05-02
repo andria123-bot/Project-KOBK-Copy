@@ -19,7 +19,7 @@ local playerSlots = {}
 local lastMoveTime = {}
 local saveTimers = {}
 
-local SAVE_DEBOUNCE = 3
+local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
 
 local templateData = RequestPlayerData:Invoke()
@@ -58,6 +58,7 @@ local function createPlayerInventory()
 end
 
 local function DebouncedSave(player, inventory)
+    print("DebouncedSave called for:", player.Name)
     if saveTimers[player] then
         task.cancel(saveTimers[player])
     end
@@ -163,11 +164,12 @@ Players.PlayerRemoving:Connect(function(player)
         task.cancel(saveTimers[player])
     end
     local playerData = PlayerInventories[player]
+    print(playerData, playerData.Inventory)
     if playerData and playerData.Inventory then
         pcall(function()
             defaultInventory.saveInventory(player, { weaponSystem = { Inventory = playerData.Inventory } })
+            print("Leave save for:", player.Name)
         end)
-        print("Leave save for:", player.Name)
     end
     
     PlayerInventories[player] = nil
@@ -236,3 +238,14 @@ MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
     
     return true
 end
+
+-- game:BindToClose(function()
+--     print("Server shutting down, saving all inventories")
+--     for player, playerData in pairs(PlayerInventories) do
+--         if playerData and playerData.Inventory then
+--             pcall(function()
+--                 defaultInventory.saveInventory(player, { weaponSystem = { Inventory = playerData.Inventory } })
+--             end)
+--         end
+--     end
+-- end)
