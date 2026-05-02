@@ -44,7 +44,7 @@ ReplicatedStorage.Shared.Remotes.LoadSlot.OnServerEvent:Connect(function(player,
 		
 		if module then
 			createSound("Equip", module.sounds[1], 1)
-			createSound("Shoot", module.sounds[2], 1)
+			createSound("Shoot", module.sounds[2], .5)
 			createSound("Reload", module.sounds[3], 1)
 			createSound("EmptyReload", module.sounds[4], 1)
 			createSound("Inspect", module.sounds[5], 1)

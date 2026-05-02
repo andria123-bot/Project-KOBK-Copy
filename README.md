@@ -24,10 +24,10 @@ Add visual projectiles
 Tons of bugs:
 when player dies he can re-equip weapon and still shoot                         | Easy   | Fixed
 when player dies fastcast redux manager is cooked                               | Medium | Fixed
-MoveItem event is client sided so it means hackers can bypass it and dupe items | Hard   | 
+MoveItem event is client sided so it means hackers can bypass it and dupe items | Hard   | Fixed
 modules are accessable by client, red flag                                      | Hard   | Fixed
 recoil happens on client, create seperated module for that                      | Medium | Fixed
-loadslot shoul be based on weaponSlot not inventory                             | Hard   | 
+loadslot shoul be based on weaponSlot not inventory                             | Hard   | Fixed
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
 
 when ammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
@@ -35,12 +35,12 @@ remove .Unit on server                                                          
 fix death bug                                                                   | Medium | Fixed
 when died it doesnt reset ammo                                                  | Medium | Fixed
 Full auto is delayed                                                            | Medium | Fixed
-shooting needs to be more smooth                                                | Medium | Fixed Kinda Animation Left
+shooting needs to be more smooth                                                | Medium | Fixed
 Add Anti-cheat for speed, position area, inventory                              | Hard   | 
 BulletVisual is not replicated to other clients                                 | Easy   | Fixed
 
 While reloading if i run it sets state to sprinting and i can keep reloding     | Easy   | Fixed
-While shooting camera always leans on X and Z axis                              | Medium | 
+While shooting camera always leans on X and Z axis                              | Medium | Fixed
 While walking the muzzle effects and tracers are staying at old position        | Hard   | 
 
 Some stupid ass bug is breaking my inventory system, probably assigning starteritems to nil

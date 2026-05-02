@@ -1,5 +1,13 @@
 local InventoryFunctions = {}
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local DropItem = ReplicatedStorage.Shared.Remotes.InventoryFunctionEvents:WaitForChild("DropItem")
+local PickupItem = ReplicatedStorage.Shared.Remotes.InventoryFunctionEvents:WaitForChild("PickupItem")
+
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
 function InventoryFunctions.MoveItem(inventory, fromSlot, toSlot)
     local fromItem = inventory[fromSlot]
     local toItem = inventory[toSlot]
@@ -21,7 +29,7 @@ function InventoryFunctions.DropItem(inventory, slot)
     local item = inventory[slot]
     if not item then return end
 
-    inventory[slot] = ""
+    DropItem:FireServer(item)
     return true
 end
 
@@ -54,11 +62,23 @@ function InventoryFunctions.HasSpace(inventory)
     return InventoryFunctions.FindEmptySlot(inventory) ~= nil
 end
 
-function InventoryFunctions.AddItem(inventory, item)
+function InventoryFunctions.PickupItem(inventory)
     local emptySlot = InventoryFunctions.FindEmptySlot(inventory)
     if emptySlot then
-        inventory[emptySlot] = item
-        return true, emptySlot
+        local origin = camera.CFrame.Position
+        local direction = camera.CFrame.LookVector
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+        raycastParams.FilterDescendantsInstances = {player.Character}
+
+        local result = workspace:Raycast(origin, direction * 5, raycastParams)
+        if result then
+            local hit = result.Instance
+            local droppedItem = hit:FindFirstAncestorWhichIsA("Model")
+            if droppedItem and droppedItem:GetAttribute("IsDroppedItem") then
+                PickupItem:FireServer(droppedItem.Name)
+            end
+        end
     end
 
     return false

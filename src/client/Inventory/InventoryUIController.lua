@@ -27,10 +27,10 @@ InventoryUIController.slots = {
 }
 
 InventoryUIController.sizes = {
-    UDim2.fromOffset(413, 100),
-    UDim2.fromOffset(413, 210),
-    UDim2.fromOffset(413, 322),
-    UDim2.fromOffset(413, 432),
+    UDim2.fromOffset(500, 125),
+    UDim2.fromOffset(500, 245),
+    UDim2.fromOffset(500, 363),
+    UDim2.fromOffset(500, 487),
 }
 
 InventoryUIController.priority = {"Armor", "TShirt", "Pants"}
@@ -72,7 +72,7 @@ function InventoryUIController:GetEquippedClothing()
             })
         end
     end
-
+    print("Equipped clothing:", equipped)
     return equipped
 end
 
@@ -118,6 +118,7 @@ function InventoryUIController:ApplyRows()
             newRow.Name = gearName .. "Row"
             newRow.Parent = rowsParent
             newRow.RowLabel.Text = gearName
+            print(clothing, gearName, gearData, newRow.Parent, newRow.Transparency)
         end
     end
 end
@@ -145,6 +146,8 @@ end
 function InventoryUIController:ApplyParentSize()
     local count = self:GetPlayerSlotRows()
     rowsParent.Size = self.sizes[math.clamp(count, 1, #self.sizes)]
+    print(Menu:GetDescendants())
+    print(rowsParent.Size, rowsParent:GetChildren(), rowsParent.Parent)
 end
 
 function InventoryUIController:UpdateSlot(index)
@@ -195,12 +198,17 @@ SendInventory.OnClientEvent:Connect(function(savedInventory)
 end)
 
 function InventoryUIController:InitSys()
-    print(self:FetchData())
-    print(self:GetEquippedClothing())
-    print(self:ApplyParentSize())
-    print(self:ApplyRows())
-    print(self:InitSlots())
-    print(self:RenderItems())
+    self:FetchData()
+    self:GetEquippedClothing()
+    self:ApplyParentSize()
+    self:ApplyRows()
+    self:InitSlots()
+    self:RenderItems()
 end
+
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    InventoryUIController:InitSys()
+end)
 
 return InventoryUIController

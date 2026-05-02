@@ -6,6 +6,7 @@ local RemotesFolder = ReplicatedStorage.Shared.Remotes
 local InventoryFolder = RemotesFolder.InventoryEvents
 local RequestsFolder = RemotesFolder.Requests
 local BindablesFolder = RemotesFolder.Bindables
+local InventoryFunctionFolder = RemotesFolder.InventoryFunctionEvents
 
 local remoteEvents = {
 	"SendKillFeedMessage",
@@ -83,6 +84,18 @@ for _, name in ipairs(bindableFunctions) do
 	remote.Name = name
 	remote.Parent = BindablesFolder
 	remoteManager[name .. "Bindable"] = remote
+end
+
+local inventoryFunctionRemotes = {
+	"PickupItem",
+	"DropItem",
+}
+
+for _, name in ipairs(inventoryFunctionRemotes) do
+	local remote = Instance.new("RemoteEvent")
+	remote.Name = name
+	remote.Parent = InventoryFunctionFolder
+	remoteManager[name .. "Remote"] = remote
 end
 
 return remoteManager

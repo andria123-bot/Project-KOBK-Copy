@@ -13,9 +13,14 @@ local RequestInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitFo
 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
 local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 
-local InventoryUIController = require(script.Parent.InventoryUIController)
-local InventoryFunctions = require(ReplicatedStorage.Shared.Modules.Inventory.InventoryFunctions)
+local PickupItem = ReplicatedStorage.Shared.Remotes.InventoryFunctionEvents:WaitForChild("PickupItem")
+
+
+local InventoryUIController = require(script.Parent:WaitForChild("InventoryUIController"))
+local InventoryFunctions = require(ReplicatedStorage.Shared.Modules.Inventory:WaitForChild("InventoryFunctions"))
 InventoryUIController:InitSys()
+
+local camera = workspace.CurrentCamera
 
 local slots = InventoryUIController.slots
 
@@ -216,13 +221,20 @@ UserInputService.InputEnded:Connect(function(input)
         dragging.active = false
         dragging.fromSlot = nil
     end
+
+	if input.KeyCode == Enum.KeyCode.X then
+		local slot, _ = getSlotUnderMouse()
+		if slot then 
+			InventoryFunctions.DropItem(playerInventoryData, slot)
+		end
+	end
+
+	if input.KeyCode == Enum.KeyCode.E then
+		InventoryFunctions.PickupItem(playerInventoryData)
+	end
 end)
 
 SendInventory.OnClientEvent:Connect(function(inventoryData)
-	print("Received inventory type:", type(inventoryData))
-    print("Has PlayerInventory?", inventoryData.PlayerInventory ~= nil)
-    print("Has Equipment?", inventoryData.Equipment ~= nil)
-    
 	if not inventoryData then return end
 	
 	playerInventoryData = {}

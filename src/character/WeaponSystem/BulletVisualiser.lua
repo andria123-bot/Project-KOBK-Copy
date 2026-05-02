@@ -41,7 +41,7 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     task.spawn(function()
         local lastPos = startOrigin
         local gravity = 196.2
-        local duration = 1
+        local duration = .5
         
         local elapsed = 0
         local lastUpdate = tick()
@@ -122,9 +122,7 @@ SyncProjectile.OnClientEvent:Connect(function(shooter, firstPersonOrigin, thirdP
         end
     end
     
-    BulletVisualiser:CreateVisualTracer(origin, direction, weaponData.bulletSpeed or 880, loadedBulletType)
+    BulletVisualiser:CreateVisualTracer(origin, direction, weaponData.bulletSpeed, loadedBulletType)
 end)
-
-
 
 return BulletVisualiser

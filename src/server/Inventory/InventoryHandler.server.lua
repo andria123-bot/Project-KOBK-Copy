@@ -12,6 +12,7 @@ local RequestPlayerData = ReplicatedStorage.Shared.Remotes.Bindables:WaitForChil
 
 local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
+local InventoryFunctions = require(script.Parent.InventoryFunctions)
 
 local PlayerInventories = {}
 local playerSlots = {}
@@ -145,24 +146,21 @@ task.spawn(function()
     end
 end)
 
--- New players
 Players.PlayerAdded:Connect(function(player)
     task.spawn(function()
         initPlayer(player)
     end)
 end)
 
--- Existing players (Studio)
 for _, player in pairs(Players:GetPlayers()) do
     task.spawn(function()
         initPlayer(player)
     end)
 end
 
--- Player leave (immediate save)
 Players.PlayerRemoving:Connect(function(player)
     if saveTimers[player] then
-        task.cancel(saveTimers[player])  -- FIXED: use task.cancel()
+        task.cancel(saveTimers[player])
     end
     local playerData = PlayerInventories[player]
     if playerData and playerData.Inventory then
