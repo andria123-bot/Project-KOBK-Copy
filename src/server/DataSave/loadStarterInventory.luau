@@ -9,15 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local inventoryStore = DataStoreService:GetDataStore("InventoryStore")
 
-local InventoryUpdate = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("InventoryUpdate")
-local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
-
-PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
-    local slots = slotData
-    for i, v in pairs(slots) do
-        print(i, v)
-    end
-end)
+local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 
 local starterKit = {
     "HK416";
@@ -26,7 +18,6 @@ local starterKit = {
     "MK2";
 }
 
--- Helper function to ensure weaponSystem exists
 function defaultInventory.ensureWeaponSystem(playerData)
     if not playerData.weaponSystem then
         playerData.weaponSystem = {
@@ -184,7 +175,7 @@ function defaultInventory.sendInventoryToClient(player, playerData)
         cleanInventory[i] = inventory[i] or ""
     end
     
-    InventoryUpdate:FireClient(player, cleanInventory)
+    SendInventory:FireClient(player, cleanInventory)  -- was InventoryUpdate
     return true
 end
 

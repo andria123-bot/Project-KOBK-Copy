@@ -12,11 +12,10 @@ local SendServerInventoryBindable = ReplicatedStorage.Shared.Remotes.Bindables:W
 local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 
-local forcedKit = false -- Set false to load saved inventories normally
+local forcedKit = true -- Set false to load saved inventories normally
 local STARTER_KIT = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
--- ============================================================
 
 local PlayerInventories = {}
 local playerSlots = {}
@@ -27,7 +26,7 @@ local templateData = RequestPlayerData:Invoke()
 
 local function createPlayerInventory()
     local templateInventory = templateData.Inventory
-
+    
     local newInventory = {
         PlayerInventory = {},
         StorageInventory = {},
@@ -36,30 +35,38 @@ local function createPlayerInventory()
             Utils = {},
             Weapons = {},
         },
-        SlotCount = templateInventory.SlotCount or 15
+        SlotCount = 15  -- Force 15 slots
     }
-
+    
+    -- CRITICAL: Initialize ALL slots with empty strings
     for i = 1, newInventory.SlotCount do
         newInventory.PlayerInventory[i] = ""
     end
-
+    
+    -- Then fill starter kit in slots 1-4
+    local starterKit = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}
+    for i = 1, #starterKit do
+        newInventory.PlayerInventory[i] = starterKit[i]
+    end
+    
+    -- Copy equipment...
     for k, v in pairs(templateInventory.Equipment.Clothing) do
         newInventory.Equipment.Clothing[k] = { equipped = v.equipped, name = v.name }
     end
-
+    
     for k, v in pairs(templateInventory.Equipment.Utils) do
         newInventory.Equipment.Utils[k] = { equipped = v.equipped, name = v.name }
     end
-
+    
     for k, v in pairs(templateInventory.Equipment.Weapons) do
         newInventory.Equipment.Weapons[k] = { equipped = v.equipped, item = v.item }
     end
-
+    
+    print("Created new inventory with starter kit and equipment", newInventory)
     return newInventory
 end
 
 local function applyStarterKit(inventory)
-    -- Clear existing slots first
     for i = 1, inventory.SlotCount do
         inventory.PlayerInventory[i] = ""
     end
@@ -110,11 +117,8 @@ local function initPlayer(player)
     local playerInventory = createPlayerInventory()
 
     if forcedKit then
-        -- Always force starter kit, ignoring any saved data
         applyStarterKit(playerInventory)
-        print("Forced starter kit applied for:", player.Name)
     else
-        -- Load saved inventory, fall back to starter kit if none
         local savedInventory = defaultInventory.loadSavedInventory(player)
 
         if savedInventory and type(savedInventory) == "table" then
@@ -122,10 +126,8 @@ local function initPlayer(player)
             for i, item in pairs(source) do
                 playerInventory.PlayerInventory[i] = item
             end
-            print("Loaded saved inventory for:", player.Name)
         else
             applyStarterKit(playerInventory)
-            print("No saved inventory found, applied starter kit for:", player.Name)
         end
     end
 
@@ -151,7 +153,6 @@ local function initPlayer(player)
         currentSlot = 0,
     }
 
-    -- Always save on join so DataStore reflects current state
     local saved = saveInventoryNow(player, playerInventory)
     if saved then
         print("Initial inventory saved to DataStore for:", player.Name)
@@ -162,7 +163,6 @@ local function initPlayer(player)
     print("Inventory sent to:", player.Name)
 end
 
--- Periodic backup for all players
 task.spawn(function()
     while true do
         task.wait(PERIODIC_SAVE)
@@ -175,21 +175,18 @@ task.spawn(function()
     end
 end)
 
--- Player join
 Players.PlayerAdded:Connect(function(player)
     task.spawn(function()
         initPlayer(player)
     end)
 end)
 
--- Handle players already in game when script loads
 for _, player in pairs(Players:GetPlayers()) do
     task.spawn(function()
         initPlayer(player)
     end)
 end
 
--- Player leave: cancel debounce, do final save
 Players.PlayerRemoving:Connect(function(player)
     if saveTimers[player] then
         task.cancel(saveTimers[player])
@@ -199,7 +196,6 @@ Players.PlayerRemoving:Connect(function(player)
     local playerData = PlayerInventories[player]
     if playerData and playerData.Inventory then
         saveInventoryNow(player, playerData.Inventory)
-        print("Final save on leave for:", player.Name)
     end
 
     PlayerInventories[player] = nil
@@ -207,12 +203,10 @@ Players.PlayerRemoving:Connect(function(player)
     lastMoveTime[player] = nil
 end)
 
--- Sync slot data from client
 PlayerSlotData.OnServerEvent:Connect(function(player, slotData)
     playerSlots[player] = slotData
 end)
 
--- Client requesting inventory refresh
 RequestInventory.OnServerEvent:Connect(function(player)
     local playerData = PlayerInventories[player]
     if playerData and playerData.Inventory then
@@ -220,12 +214,10 @@ RequestInventory.OnServerEvent:Connect(function(player)
     end
 end)
 
--- Client requesting a save (e.g. after picking up an item)
 SaveInventoryRequest.OnServerEvent:Connect(function(player, inventoryData)
     local playerData = PlayerInventories[player]
     if not playerData or not playerData.Inventory then return end
 
-    -- Validate and apply incoming data
     if inventoryData and type(inventoryData) == "table" then
         for i, item in pairs(inventoryData) do
             if typeof(i) == "number" and typeof(item) == "string" then
@@ -237,38 +229,52 @@ SaveInventoryRequest.OnServerEvent:Connect(function(player, inventoryData)
     DebouncedSave(player, playerData.Inventory.PlayerInventory)
 end)
 
--- Move item between slots
 MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
     local playerData = PlayerInventories[player]
-    if not playerData or not playerData.Inventory then return false end
-
+    -- if not playerData or not playerData.Inventory then return false end
+    
     local inventory = playerData.Inventory.PlayerInventory
+    print(inventory)
+    
+    -- print("=== MOVE REQUEST ===")
+    -- print("fromSlot:", fromSlot, "type:", typeof(fromSlot))
+    -- print("toSlot:", toSlot, "type:", typeof(toSlot))
+    -- print("item at fromSlot:", inventory[fromSlot])
+    -- print("item at toSlot:", inventory[toSlot])
+    -- print("full inventory before move:")
+    -- for i, v in pairs(inventory) do
+        -- print("  ", i, v)
+    -- end
 
-    -- Type checks
-    if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
-    if fromSlot < 1 or toSlot < 1 then return false end
-    if fromSlot == toSlot then return false end
-    if not inventory[fromSlot] or inventory[fromSlot] == "" then return false end
-
-    -- Anti-cheat: verify client slot matches server
-    if playerSlots[player] and playerSlots[player].slots then
-        local slotKey = "Slot" .. fromSlot
-        if playerSlots[player].slots[slotKey] ~= inventory[fromSlot] then
-            warn(player.Name, "slot mismatch on MoveItem - rejecting")
-            return false
-        end
+    -- if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
+    -- if fromSlot < 1 or toSlot < 1 then return false end
+    -- if fromSlot == toSlot then return false end
+    -- if not inventory[fromSlot] or inventory[fromSlot] == "" then return false end
+    
+    -- if playerSlots[player] and playerSlots[player].slots then
+    --     local slotKey = "Slot" .. fromSlot
+    --     print("mismatch check - server expects:", inventory[fromSlot], "client says:", playerSlots[player].slots[slotKey])
+    --     if playerSlots[player].slots[slotKey] ~= inventory[fromSlot] then
+    --         print("REJECTED - item mismatch")
+    --         return false
+    --     end
+    -- else
+    --     print("no playerSlots data, skipping mismatch check")
+    -- end
+    
+    -- local now = tick()
+    -- if lastMoveTime[player] and now - lastMoveTime[player] < 0.2 then
+    --     print("REJECTED - rate limit")
+    --     return false
+    -- end
+    -- lastMoveTime[player] = now
+    
+    if not inventory[toSlot] then
+        inventory[toSlot] = ""
     end
 
-    -- Rate limit
-    local now = tick()
-    if lastMoveTime[player] and now - lastMoveTime[player] < 0.2 then
-        return false
-    end
-    lastMoveTime[player] = now
-
-    -- Swap or move
     local fromItem = inventory[fromSlot]
-    local toItem = inventory[toSlot] or ""
+    local toItem = inventory[toSlot]
 
     if toItem ~= "" then
         inventory[fromSlot] = toItem
@@ -278,8 +284,13 @@ MoveItem.OnServerInvoke = function(player, fromSlot, toSlot)
         inventory[fromSlot] = ""
     end
 
+    print("full inventory AFTER move:")
+    for i, v in pairs(inventory) do
+        print("  ", i, v)
+    end
+
     SendInventory:FireClient(player, playerData.Inventory)
     OnInventoryChanged(player)
-
+    
     return true
 end

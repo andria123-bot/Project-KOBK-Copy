@@ -49,34 +49,33 @@ connections.UpdateClientState = UpdateClientState.OnClientEvent:Connect(function
     weaponSystem.state = newState
 end)
 
-RequestInventory:FireServer()
 connections.SendInventory = SendInventory.OnClientEvent:Connect(function(savedInventory)
-	if not weaponSystem.Inventory then
-		weaponSystem.Inventory = {
-			PlayerInventory = {},
-			StorageInventory = {},
-			Equipment = {
-				Clothing = {},
-				Utils = {},
-				Weapons = {},
-			},
-			SlotCount = 0
-		}
-	end
+    if not savedInventory then return end
 
-	if not weaponSystem.Inventory.PlayerInventory then
-		weaponSystem.Inventory.PlayerInventory = {}
-	end
+    if not weaponSystem.Inventory then
+        weaponSystem.Inventory = {
+            PlayerInventory = {},
+            StorageInventory = {},
+            Equipment = {
+                Clothing = {},
+                Utils = {},
+                Weapons = {},
+            },
+            SlotCount = 0
+        }
+    end
 
-	if savedInventory.PlayerInventory then
-		weaponSystem.Inventory = savedInventory
-	else
-		for i = 1, #savedInventory do
-			weaponSystem.Inventory.PlayerInventory[i] = savedInventory[i] or ""
-		end
-	end
+    if not weaponSystem.Inventory.PlayerInventory then
+        weaponSystem.Inventory.PlayerInventory = {}
+    end
 
-	print("Inventory synced:", weaponSystem.Inventory)
+    if savedInventory.PlayerInventory then
+        weaponSystem.Inventory = savedInventory
+    else
+        for i = 1, #savedInventory do
+            weaponSystem.Inventory.PlayerInventory[i] = savedInventory[i] or ""
+        end
+    end
 end)
 
 local dof = game.Lighting.DepthOfField

@@ -96,6 +96,6 @@
 -- end
 -- player.CharacterAdded:Connect(setupCharacter)
 
-local InventoryUIController = require(script.Parent.Inventory.InventoryUIController)
+local InventoryUIController = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Modules"):WaitForChild("Inventory"):WaitForChild("InventoryUIController"))
 
 InventoryUIController:InitSys()

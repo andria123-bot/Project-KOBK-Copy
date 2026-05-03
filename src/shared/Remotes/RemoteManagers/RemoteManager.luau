@@ -30,6 +30,7 @@ local inventoryRemotes = {
 	"InventoryUpdate",
 	"PlayerSlotData",
 	"SendInventory",
+	"SlotCount",
 }
 
 local remoteFunctions = {
