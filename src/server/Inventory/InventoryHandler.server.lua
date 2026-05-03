@@ -12,7 +12,7 @@ local SendServerInventoryBindable = ReplicatedStorage.Shared.Remotes.Bindables:W
 local WeaponCategories = require(script.Parent.Parent.ModuleHandler.WeaponCategories)
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 
-local forcedKit = true -- Set false to load saved inventories normally
+local forcedKit = false -- Set false to load saved inventories normally
 local STARTER_KIT = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
