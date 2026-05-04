@@ -16,7 +16,7 @@ local saveTimers = {}
 
 local InventoryFunctions = require(script.Parent.Parent.Inventory.InventoryFunctions)
 
-local forcedKit = true
+local forcedKit = false
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
 local STARTER_KIT = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}

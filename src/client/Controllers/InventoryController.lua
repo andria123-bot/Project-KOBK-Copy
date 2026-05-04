@@ -43,6 +43,17 @@ for i = 1, SLOT_COUNT do
     playerInventoryData[i] = ""
 end
 
+local function resetDragState()
+    isMoving = false
+    isMoveInProgress = false
+    dragging.active = false
+    dragging.fromSlot = nil
+    if dragging.clone then
+        dragging.clone:Destroy()
+        dragging.clone = nil
+    end
+end
+
 local function getMousePos()
     local mousePos = UserInputService:GetMouseLocation()
     local guiInset = GuiService:GetGuiInset()
@@ -164,6 +175,8 @@ local function setupInventoryListener()
 	print(InventoryService)
 	InventoryService.InventoryUpdated:Connect(function(data)  -- Just data
 		local inventory = data.PlayerInventory
+		
+		resetDragState()
 
 		if inventory then
 			for i = 1, SLOT_COUNT do
