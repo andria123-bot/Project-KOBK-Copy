@@ -72,7 +72,7 @@ function InventoryUIController:GetEquippedClothing()
             })
         end
     end
-    print("Equipped clothing:", equipped)
+
     return equipped
 end
 
@@ -86,7 +86,6 @@ function InventoryUIController:InitSlots()
             if container then
                 for _, slot in pairs(container:GetChildren()) do
                     if slot:IsA("Frame") then
-                        print(slot)
                         self.slots.Inventory[globalIndex] = slot
                         slot.Name = "Slot" .. tostring(globalIndex)
                         local itemIcon = slot:FindFirstChild("ItemIcon")
@@ -118,7 +117,6 @@ function InventoryUIController:ApplyRows()
             newRow.Name = gearName .. "Row"
             newRow.Parent = rowsParent
             newRow.RowLabel.Text = gearName
-            print(clothing, gearName, gearData, newRow.Parent, newRow.Transparency)
         end
     end
 end
@@ -146,8 +144,6 @@ end
 function InventoryUIController:ApplyParentSize()
     local count = self:GetPlayerSlotRows()
     rowsParent.Size = self.sizes[math.clamp(count, 1, #self.sizes)]
-    print(Menu:GetDescendants())
-    print(rowsParent.Size, rowsParent:GetChildren(), rowsParent.Parent)
 end
 
 function InventoryUIController:UpdateSlot(index)
@@ -158,14 +154,14 @@ function InventoryUIController:UpdateSlot(index)
     if not itemIcon then return end
     
     local itemName = playerInventoryData[index]
-    
+
     if itemName and itemName ~= "" then
         if itemImageCache[itemName] then
             itemIcon.Image = itemImageCache[itemName]
         else
             task.spawn(function()
                 local success, module = pcall(function()
-                    return RequestModule:InvokeServer(itemName)
+                    return RequestModule:InvokeServer(playerInventoryData[index])
                 end)
                 if success and module and module.imageIconId then
                     itemImageCache[itemName] = module.imageIconId

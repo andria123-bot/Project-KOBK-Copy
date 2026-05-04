@@ -766,7 +766,7 @@ while wait() do
                     Reload()
                 end
 
-                task.wait(data.fireRate or weaponData.fireRate)
+				task.wait(data.fireRate)
             else
                 break
             end

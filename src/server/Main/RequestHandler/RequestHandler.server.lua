@@ -73,7 +73,6 @@ RequestWeaponData.OnServerInvoke = function(player, Item)
 end
 
 RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrigin)
-    print(item)
     local character = player.Character
     if not character then return false end
 
@@ -91,6 +90,7 @@ RequestShoot.OnServerInvoke = function(player, item, LookVector, firstPersonOrig
     -- rate limit
     local now = tick()
     if lastShotTime[player] and now - lastShotTime[player] < weaponData.fireRate then
+        print("Faster than firerate!")
         return false
     end
     lastShotTime[player] = now
