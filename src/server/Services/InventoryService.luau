@@ -1,5 +1,6 @@
 local Knit = require(game:GetService("ReplicatedStorage").Packages:WaitForChild("Knit"))
 local Players = game:GetService("Players")
+local SceneAnalysisService = game:GetService("SceneAnalysisService")
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 
 local InventoryService = Knit.CreateService({
@@ -13,7 +14,9 @@ local PlayerInventories = {}
 local lastMoveTime = {}
 local saveTimers = {}
 
-local forcedKit = false
+local InventoryFunctions = require(script.Parent.Parent.Inventory.InventoryFunctions)
+
+local forcedKit = true
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
 local STARTER_KIT = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}
@@ -106,35 +109,55 @@ function InventoryService:AddItem(player, itemName)
     if not playerData then return false, nil end
 
     local inventory = playerData.Inventory.PlayerInventory
-    for i = 1, SLOT_COUNT do
-        if inventory[i] == "" then
-            inventory[i] = itemName
-            normalizeToDense(playerData.Inventory)
-            InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
-            DebouncedSave(player)
-            return true, i
-        end
+	local emptySlot = InventoryFunctions.ReturnAvailableSlot(inventory)
+
+    if emptySlot then
+        inventory[emptySlot] = itemName
+        InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
+        DebouncedSave(player)
+        return true, "Added " .. itemName, emptySlot
+    else
+        return false, "Inventory Full!", nil
     end
-    return false, nil
 end
 
-function InventoryService:RemoveItem(player, slot)
+function InventoryService:PickupItem(player, itemName)
+    local playerData = PlayerInventories[player]
+    if not playerData then return false, "No player data" end
+    
+    local success, message, slot = self:AddItem(player, itemName)
+    
+    if success then
+        return true, message, slot
+    else
+        return false, message
+    end
+end
+
+function InventoryService.Client:PickupItem(player, itemName)
+    return self.Server:PickupItem(player, itemName)
+end
+
+function InventoryService:DropItem(player, slot)
     local playerData = PlayerInventories[player]
     if not playerData then return false, nil end
-
     local inventory = playerData.Inventory.PlayerInventory
+
     local item = inventory[slot]
     if item and item ~= "" then
         inventory[slot] = ""
-        normalizeToDense(playerData.Inventory)
         InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
+		InventoryFunctions.CreateItemClone(player, item)
         DebouncedSave(player)
         return true, item
     end
     return false, nil
 end
 
--- Client-facing methods (player is auto-injected by Knit)
+function InventoryService.Client:DropItem(player, slot)
+    return self.Server:DropItem(player, slot)
+end
+
 function InventoryService.Client:GetInventory(player)
     local playerData = self.Server:GetPlayerData(player)
     if not playerData then return nil end
@@ -146,41 +169,32 @@ function InventoryService.Client:MoveItem(player, fromSlot, toSlot)
     local playerData = PlayerInventories[player]
     if not playerData then return false end
 
-    -- Type and bounds validation
     if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
-    if fromSlot < 1 or toSlot < 1 or fromSlot > SLOT_COUNT or toSlot > SLOT_COUNT then return false end
+    
+    if fromSlot < 1 or fromSlot > SLOT_COUNT then return false end
+    if toSlot < 1 or toSlot > SLOT_COUNT then return false end
     if fromSlot == toSlot then return false end
 
-    -- Rate limit
     local now = tick()
-    if lastMoveTime[player] and now - lastMoveTime[player] < 0.2 then
+    if lastMoveTime[player] and now - lastMoveTime[player] < 0.13 then
         return false
     end
     lastMoveTime[player] = now
 
     local inventory = playerData.Inventory.PlayerInventory
     local fromItem = inventory[fromSlot]
+    
     if not fromItem or fromItem == "" then return false end
 
     local toItem = inventory[toSlot] or ""
     inventory[fromSlot] = toItem
     inventory[toSlot] = fromItem
 
-    -- Normalize before firing so client always gets dense array
     normalizeToDense(playerData.Inventory)
-
     DebouncedSave(player)
     InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
 
     return true
-end
-
-function InventoryService.Client:AddItem(player, itemName)
-    return self.Server:AddItem(player, itemName)
-end
-
-function InventoryService.Client:RemoveItem(player, slot)
-    return self.Server:RemoveItem(player, slot)
 end
 
 local function initPlayer(player)
@@ -204,7 +218,6 @@ local function initPlayer(player)
         end
     end
 
-    -- Always normalize after loading to ensure dense array
     normalizeToDense(playerInventory)
 
     PlayerInventories[player] = {
@@ -223,7 +236,6 @@ local function initPlayer(player)
 
     saveInventoryNow(player, playerInventory)
 
-    -- Small delay so client has time to connect the signal
     task.delay(1, function()
         if PlayerInventories[player] then
             InventoryService.Client.InventoryUpdated:Fire(player, playerInventory)
@@ -233,7 +245,6 @@ local function initPlayer(player)
     print("Inventory initialized for:", player.Name)
 end
 
--- Periodic backup
 task.spawn(function()
     while true do
         task.wait(PERIODIC_SAVE)
@@ -285,12 +296,10 @@ game:BindToClose(function()
         end
     end
 
-    -- Wait for all saves to finish
     for _, thread in ipairs(threads) do
-        task.wait() -- yields to let threads run
+        task.wait()
     end
 
-    -- Extra buffer for DataStore requests to fully complete
     task.wait(2)
     print("BindToClose: all saves completed")
 end)

@@ -1,7 +1,6 @@
 local InventoryFunctions = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ClientInventoryFunctions = require(ReplicatedStorage.Shared.Modules.Inventory:WaitForChild("InventoryFunctions"))
 local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 
 function InventoryFunctions.CreateSound(soundId, parent, volume, timePosition)
@@ -15,7 +14,7 @@ function InventoryFunctions.CreateSound(soundId, parent, volume, timePosition)
     return sound
 end
 
-function InventoryFunctions.CreateItemClone(itemName, player)
+function InventoryFunctions.CreateItemClone(player, itemName)
     local itemClone = ReplicatedStorage.Weapons:FindFirstChild(itemName):Clone()
 
     if itemClone then
@@ -27,6 +26,7 @@ function InventoryFunctions.CreateItemClone(itemName, player)
         end
 
         itemClone:SetAttribute("IsDroppedItem", true)
+        print("Set attribute for ", itemClone)
         
         itemClone.Name = itemName
         
@@ -45,12 +45,22 @@ function InventoryFunctions.CreateItemClone(itemName, player)
     end
 end
 
+function InventoryFunctions.FindEmptySlot(inventory)
+    for i, v in pairs(inventory) do
+        if v == nil or v == "" then
+            return i
+        end
+    end
+
+    return nil
+end
+
 function InventoryFunctions.TakeItem(player, playerInventory, item)
     if not player or not player.Parent then
         return false
     end
     
-    local emptySlot = ClientInventoryFunctions.FindEmptySlot(playerInventory.PlayerInventory)
+    local emptySlot = InventoryFunctions.FindEmptySlot(playerInventory.PlayerInventory)
     
     if emptySlot then
         playerInventory.PlayerInventory[emptySlot] = item.Name
@@ -61,6 +71,15 @@ function InventoryFunctions.TakeItem(player, playerInventory, item)
         return true
     end
     return false
+end
+
+function InventoryFunctions.ReturnAvailableSlot(inventory)
+    for slot = 1, #inventory do
+        if inventory[slot] == "" then
+            return slot
+        end
+    end
+    return nil
 end
 
 return InventoryFunctions

@@ -8,6 +8,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local GuiService = game:GetService("GuiService")
+local StarterPlayer = game:GetService("StarterPlayer")
+local InventoryFunctions = require(StarterPlayer.StarterPlayerScripts.Client.Inventory.InventoryFunctions)
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -217,20 +219,26 @@ UserInputService.InputEnded:Connect(function(input)
         end
     end
 
-    if input.KeyCode == Enum.KeyCode.X then
-        if not dragging.active then
-            local slot, _ = getSlotUnderMouse()
-            if slot and playerInventoryData[slot] ~= "" then
-                InventoryService:RemoveItem(slot):andThen(function(success, item)
-                    if success then
-                        playerInventoryData[slot] = ""
-                        updateSlot(slot)
-                        print("Dropped", item)
-                    end
-                end)
-            end
-        end
-    end
+	if input.KeyCode == Enum.KeyCode.X then
+		if not dragging.active then
+			local slot, _ = getSlotUnderMouse()
+			if slot and playerInventoryData[slot] ~= "" then
+				print(1)
+				InventoryService:DropItem(slot):andThen(function(success, item)
+					if success then
+						playerInventoryData[slot] = ""
+						updateSlot(slot)
+					end
+				end):catch(function(err)
+					warn("Failed to drop item:", err)
+				end)
+			end
+		end
+	end
+
+	if input.KeyCode == Enum.KeyCode.E then
+		InventoryFunctions.PickupItem()
+	end
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -243,7 +251,6 @@ RunService.RenderStepped:Connect(function()
 end)
 
 function InventoryController:KnitStart()
-	wait(1.5)
     print("InventoryController KnitStart")
     
     InventoryService = Knit.GetService("InventoryService")

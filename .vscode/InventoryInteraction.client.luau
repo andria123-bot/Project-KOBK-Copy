@@ -12,6 +12,7 @@ local Knit = require(game:GetService("ReplicatedStorage").Packages:WaitForChild(
 local InventoryUIController = require(script.Parent:WaitForChild("InventoryUIController"))
 InventoryUIController:InitSys()
 
+
 local slots = InventoryUIController.slots
 repeat task.wait() until #slots.Inventory > 0
 
@@ -36,7 +37,6 @@ for i = 1, SLOT_COUNT do
     playerInventoryData[i] = ""
 end
 
--- Services retrieved after Knit starts
 local InventoryService
 
 local function getMousePos()
@@ -186,7 +186,6 @@ UserInputService.InputEnded:Connect(function(input)
             local fromItem = playerInventoryData[fromSlot]
             local toItem = playerInventoryData[toSlot]
 
-            -- Optimistic update
             playerInventoryData[toSlot] = fromItem
             playerInventoryData[fromSlot] = toItem or ""
             updateSlot(fromSlot)
@@ -194,11 +193,9 @@ UserInputService.InputEnded:Connect(function(input)
 
             isMoveInProgress = true
 
-            -- ONE call only
             InventoryService:MoveItem(fromSlot, toSlot):andThen(function(success)
                 print("MoveItem result:", success)
                 if not success then
-                    -- Revert
                     playerInventoryData[fromSlot] = fromItem
                     playerInventoryData[toSlot] = toItem
                     updateSlot(fromSlot)
@@ -229,6 +226,8 @@ UserInputService.InputEnded:Connect(function(input)
             end
         end
     end
+
+
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -243,20 +242,16 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Wait for Knit to be ready then initialize everything
 Knit.OnStart():andThen(function()
     InventoryService = Knit.GetService("InventoryService")
     print("Knit ready, InventoryService acquired")
 
-    -- Listen for server-pushed inventory updates
-    -- Knit signals on client do NOT pass the player — server fires to specific player
     InventoryService.InventoryUpdated:Connect(function(inventoryData)
         if isMoveInProgress then return end  -- ignore during active move
         print("InventoryUpdated received from server")
         applyInventory(inventoryData)
     end)
 
-    -- Request initial inventory
     InventoryService:GetInventory():andThen(function(inventory)
         print("Initial inventory received:", inventory)
         applyInventory(inventory)
