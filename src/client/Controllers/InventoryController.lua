@@ -143,6 +143,33 @@ local function updateSlot(index)
     end
 end
 
+local function forceRefreshUI()
+    for i = 1, SLOT_COUNT do
+        local slot = slots.Inventory[i]
+        if slot then
+            local itemIcon = slot:FindFirstChild("ItemIcon")
+            if itemIcon then
+                -- Force reset visibility
+                itemIcon.Visible = true
+                -- Force reload the image
+                local itemName = playerInventoryData[i]
+                if itemName and itemName ~= "" then
+                    if itemImageCache[itemName] then
+                        itemIcon.Image = itemImageCache[itemName]
+                    else
+                        itemIcon.Image = ""
+                        -- Reload the image
+                        itemImageCache[itemName .. "_loading"] = nil
+                        updateSlot(i)
+                    end
+                else
+                    itemIcon.Image = ""
+                end
+            end
+        end
+    end
+end
+
 local function RenderItems()
     for i = 1, SLOT_COUNT do
         updateSlot(i)
@@ -170,10 +197,8 @@ local function SlotHandler()
     end
 end
 
--- SINGLE InventoryUpdated listener (will be set in KnitStart)
 local function setupInventoryListener()
-	print(InventoryService)
-	InventoryService.InventoryUpdated:Connect(function(data)  -- Just data
+	InventoryService.InventoryUpdated:Connect(function(data)
 		local inventory = data.PlayerInventory
 		
 		resetDragState()
@@ -183,6 +208,7 @@ local function setupInventoryListener()
 				playerInventoryData[i] = inventory[i] or ""
 			end
 			RenderItems()
+            forceRefreshUI() 
 		end
 	end)
 end
@@ -208,7 +234,7 @@ UserInputService.InputEnded:Connect(function(input)
         if originalSlot then
             local originalIcon = originalSlot:FindFirstChild("ItemIcon")
             if originalIcon then
-                originalIcon.Visible = true
+                originalIcon.Visible = false
             end
         end
 
@@ -223,10 +249,12 @@ UserInputService.InputEnded:Connect(function(input)
                 if not success then
                     updateSlot(fromSlot)
                     updateSlot(toSlot)
+                    forceRefreshUI()
                 end
                 isMoveInProgress = false
             end):catch(function(err)
                 print("Move error:", err)
+                forceRefreshUI()
                 isMoveInProgress = false
             end)
         end
@@ -241,8 +269,10 @@ UserInputService.InputEnded:Connect(function(input)
 					if success then
 						playerInventoryData[slot] = ""
 						updateSlot(slot)
+                        forceRefreshUI()
 					end
 				end):catch(function(err)
+                    forceRefreshUI()
 					warn("Failed to drop item:", err)
 				end)
 			end
