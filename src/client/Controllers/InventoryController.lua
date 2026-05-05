@@ -1,6 +1,6 @@
 local Knit = require(game:GetService("ReplicatedStorage").Packages:WaitForChild("Knit"))
 local InventoryController = Knit.CreateController({
-	Name = "InventoryController",
+    Name = "InventoryController",
 })
 
 local Players = game:GetService("Players")
@@ -19,10 +19,11 @@ local InventoryUIController = require(script.Parent.Parent.Inventory:WaitForChil
 InventoryUIController:InitSys()
 
 local slots = InventoryUIController.slots
-local SLOT_COUNT = #slots.Inventory
 
+-- FIX 1: wait BEFORE capturing SLOT_COUNT
 repeat task.wait() until #slots.Inventory > 0
-print("Detected slots: ", SLOT_COUNT)
+local SLOT_COUNT = #slots.Inventory
+print("Detected slots:", SLOT_COUNT)
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -43,17 +44,6 @@ for i = 1, SLOT_COUNT do
     playerInventoryData[i] = ""
 end
 
-local function resetDragState()
-    isMoving = false
-    isMoveInProgress = false
-    dragging.active = false
-    dragging.fromSlot = nil
-    if dragging.clone then
-        dragging.clone:Destroy()
-        dragging.clone = nil
-    end
-end
-
 local function getMousePos()
     local mousePos = UserInputService:GetMouseLocation()
     local guiInset = GuiService:GetGuiInset()
@@ -64,16 +54,18 @@ local function createDragClone(original, slotFrame)
     local clone = original:Clone()
     clone.Parent = MainParent
     clone.ZIndex = 10
-    clone.AnchorPoint = Vector2.new(.5, 0)
+    clone.AnchorPoint = Vector2.new(0.5, 0)
     clone.Size = UDim2.new(0, original.AbsoluteSize.X, 0, original.AbsoluteSize.Y)
 
     local slotPos = slotFrame.AbsolutePosition
     local slotSize = slotFrame.AbsoluteSize
     local mainParentPos = MainParent.AbsolutePosition
-    local localX = slotPos.X + slotSize.X / 2 - mainParentPos.X
-    local localY = slotPos.Y + slotSize.Y / 2 - mainParentPos.Y
 
-    clone.Position = UDim2.new(0, localX, 0, localY)
+    clone.Position = UDim2.new(0,
+        slotPos.X + slotSize.X / 2 - mainParentPos.X,
+        0,
+        slotPos.Y + slotSize.Y / 2 - mainParentPos.Y
+    )
     return clone
 end
 
@@ -86,7 +78,6 @@ local function getSlotUnderMouse()
         if slot then
             local slotPos = slot.AbsolutePosition
             local slotSize = slot.AbsoluteSize
-
             if adjustedMousePos.X >= slotPos.X
                 and adjustedMousePos.X <= slotPos.X + slotSize.X
                 and adjustedMousePos.Y >= slotPos.Y
@@ -96,42 +87,39 @@ local function getSlotUnderMouse()
             end
         end
     end
-
     return nil, nil
 end
 
 local function updateSlot(index)
     if not index then return end
-
     local slot = slots.Inventory[index]
     if not slot then return end
-
     local itemIcon = slot:FindFirstChild("ItemIcon")
     if not itemIcon then return end
 
-    local itemName = playerInventoryData[index]
+    -- Always make sure icon is visible when updating
+    itemIcon.Visible = true
 
+    local itemName = playerInventoryData[index]
     if itemName and itemName ~= "" then
         if itemImageCache[itemName] then
             itemIcon.Image = itemImageCache[itemName]
             return
         end
-
         if not itemImageCache[itemName .. "_loading"] then
             itemImageCache[itemName .. "_loading"] = true
             task.spawn(function()
                 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
-                local success, module = pcall(function()
+                local success, mod = pcall(function()
                     return RequestModule:InvokeServer(itemName)
                 end)
-
-                if success and module and module.imageIconId then
-                    itemImageCache[itemName] = module.imageIconId
+                if success and mod and mod.imageIconId then
+                    itemImageCache[itemName] = mod.imageIconId
                     local currentSlot = slots.Inventory[index]
                     if currentSlot then
                         local currentIcon = currentSlot:FindFirstChild("ItemIcon")
                         if currentIcon and playerInventoryData[index] == itemName then
-                            currentIcon.Image = module.imageIconId
+                            currentIcon.Image = mod.imageIconId
                         end
                     end
                 end
@@ -143,37 +131,18 @@ local function updateSlot(index)
     end
 end
 
-local function forceRefreshUI()
-    for i = 1, SLOT_COUNT do
-        local slot = slots.Inventory[i]
-        if slot then
-            local itemIcon = slot:FindFirstChild("ItemIcon")
-            if itemIcon then
-                -- Force reset visibility
-                itemIcon.Visible = true
-                -- Force reload the image
-                local itemName = playerInventoryData[i]
-                if itemName and itemName ~= "" then
-                    if itemImageCache[itemName] then
-                        itemIcon.Image = itemImageCache[itemName]
-                    else
-                        itemIcon.Image = ""
-                        -- Reload the image
-                        itemImageCache[itemName .. "_loading"] = nil
-                        updateSlot(i)
-                    end
-                else
-                    itemIcon.Image = ""
-                end
-            end
-        end
-    end
-end
-
 local function RenderItems()
     for i = 1, SLOT_COUNT do
         updateSlot(i)
     end
+end
+
+local function applyInventory(inventory)
+    if not inventory or not inventory.PlayerInventory then return end
+    for i = 1, SLOT_COUNT do
+        playerInventoryData[i] = inventory.PlayerInventory[i] or ""
+    end
+    RenderItems()
 end
 
 local function SlotHandler()
@@ -198,19 +167,22 @@ local function SlotHandler()
 end
 
 local function setupInventoryListener()
-	InventoryService.InventoryUpdated:Connect(function(data)
-		local inventory = data.PlayerInventory
-		
-		resetDragState()
+    InventoryService.InventoryUpdated:Connect(function(data)
+        -- FIX 3: never reset drag state from server push
+        -- just update the underlying data and re-render non-dragged slots
+        if not data or not data.PlayerInventory then return end
 
-		if inventory then
-			for i = 1, SLOT_COUNT do
-				playerInventoryData[i] = inventory[i] or ""
-			end
-			RenderItems()
-            forceRefreshUI() 
-		end
-	end)
+        for i = 1, SLOT_COUNT do
+            playerInventoryData[i] = data.PlayerInventory[i] or ""
+        end
+
+        -- Only re-render slots not currently being dragged
+        for i = 1, SLOT_COUNT do
+            if i ~= dragging.fromSlot then
+                updateSlot(i)
+            end
+        end
+    end)
 end
 
 UserInputService.InputEnded:Connect(function(input)
@@ -221,7 +193,7 @@ UserInputService.InputEnded:Connect(function(input)
             return
         end
 
-        local toSlot, _ = getSlotUnderMouse()
+        local toSlot = getSlotUnderMouse()
 
         if dragging.clone then
             dragging.clone:Destroy()
@@ -230,11 +202,12 @@ UserInputService.InputEnded:Connect(function(input)
 
         local fromSlot = dragging.fromSlot
 
+        -- FIX 2: restore icon visibility (was incorrectly set to false)
         local originalSlot = slots.Inventory[fromSlot]
         if originalSlot then
             local originalIcon = originalSlot:FindFirstChild("ItemIcon")
             if originalIcon then
-                originalIcon.Visible = false
+                originalIcon.Visible = true
             end
         end
 
@@ -243,45 +216,56 @@ UserInputService.InputEnded:Connect(function(input)
         dragging.fromSlot = nil
 
         if toSlot and toSlot ~= fromSlot then
+            local fromItem = playerInventoryData[fromSlot]
+            local toItem = playerInventoryData[toSlot]
+
+            -- Optimistic update
+            playerInventoryData[toSlot] = fromItem
+            playerInventoryData[fromSlot] = toItem or ""
+            updateSlot(fromSlot)
+            updateSlot(toSlot)
+
             isMoveInProgress = true
 
             InventoryService:MoveItem(fromSlot, toSlot):andThen(function(success)
                 if not success then
+                    -- Revert
+                    playerInventoryData[fromSlot] = fromItem
+                    playerInventoryData[toSlot] = toItem
                     updateSlot(fromSlot)
                     updateSlot(toSlot)
-                    forceRefreshUI()
                 end
                 isMoveInProgress = false
             end):catch(function(err)
-                print("Move error:", err)
-                forceRefreshUI()
+                warn("Move error:", err)
+                playerInventoryData[fromSlot] = fromItem
+                playerInventoryData[toSlot] = toItem
+                updateSlot(fromSlot)
+                updateSlot(toSlot)
                 isMoveInProgress = false
             end)
         end
     end
 
-	if input.KeyCode == Enum.KeyCode.X then
-		if not dragging.active then
-			local slot, _ = getSlotUnderMouse()
-			if slot and playerInventoryData[slot] ~= "" then
-				print(1)
-				InventoryService:DropItem(slot):andThen(function(success, item)
-					if success then
-						playerInventoryData[slot] = ""
-						updateSlot(slot)
-                        forceRefreshUI()
-					end
-				end):catch(function(err)
-                    forceRefreshUI()
-					warn("Failed to drop item:", err)
-				end)
-			end
-		end
-	end
+    if input.KeyCode == Enum.KeyCode.X then
+        if not dragging.active then
+            local slot = getSlotUnderMouse()
+            if slot and playerInventoryData[slot] ~= "" then
+                InventoryService:DropItem(slot):andThen(function(success)
+                    if success then
+                        playerInventoryData[slot] = ""
+                        updateSlot(slot)
+                    end
+                end):catch(function(err)
+                    warn("Failed to drop item:", err)
+                end)
+            end
+        end
+    end
 
-	if input.KeyCode == Enum.KeyCode.E then
-		InventoryFunctions.PickupItem()
-	end
+    if input.KeyCode == Enum.KeyCode.E then
+        InventoryFunctions.PickupItem()
+    end
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -295,31 +279,22 @@ end)
 
 function InventoryController:KnitStart()
     print("InventoryController KnitStart")
-    
+
     InventoryService = Knit.GetService("InventoryService")
-    print("InventoryService obtained:", InventoryService)
-    
     if not InventoryService then
         warn("InventoryService is nil!")
         return
     end
-    
+
     setupInventoryListener()
-    
+
     InventoryService:GetInventory():andThen(function(inventory)
-        print("Initial inventory received:", inventory.PlayerInventory)
-        if inventory and inventory.PlayerInventory then
-			print(SLOT_COUNT)
-            for i = 1, SLOT_COUNT do
-                playerInventoryData[i] = inventory.PlayerInventory[i] or ""
-            end
-            RenderItems()
-        end
+        print("Initial inventory received:", inventory and inventory.PlayerInventory)
+        applyInventory(inventory)
+        SlotHandler()
     end):catch(function(err)
         warn("Failed to get inventory:", err)
     end)
-    
-    SlotHandler()
 end
 
 function InventoryController:KnitInit() end

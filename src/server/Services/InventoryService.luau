@@ -1,6 +1,5 @@
 local Knit = require(game:GetService("ReplicatedStorage").Packages:WaitForChild("Knit"))
 local Players = game:GetService("Players")
-local SceneAnalysisService = game:GetService("SceneAnalysisService")
 local defaultInventory = require(script.Parent.Parent.DataSave.loadStarterInventory)
 
 local InventoryService = Knit.CreateService({
@@ -185,10 +184,10 @@ function InventoryService.Client:MoveItem(player, fromSlot, toSlot)
     local fromItem = inventory[fromSlot]
     
     if not fromItem or fromItem == "" then return false end
-
     local toItem = inventory[toSlot] or ""
     inventory[fromSlot] = toItem
     inventory[toSlot] = fromItem
+    print(playerData.Inventory, inventory)
 
     normalizeToDense(playerData.Inventory)
     DebouncedSave(player)
@@ -283,32 +282,28 @@ Players.PlayerRemoving:Connect(function(player)
     lastMoveTime[player] = nil
 end)
 
-game:BindToClose(function()
-    print("BindToClose: saving all players...")
-    local threads = {}
+-- game:BindToClose(function()
+--     print("BindToClose: saving all players...")
+--     local threads = {}
 
-    for player, playerData in pairs(PlayerInventories) do
-        if playerData and playerData.Inventory then
-            table.insert(threads, task.spawn(function()
-                saveInventoryNow(player, playerData.Inventory)
-                print("BindToClose save done for:", player.Name)
-            end))
-        end
-    end
+--     for player, playerData in pairs(PlayerInventories) do
+--         if playerData and playerData.Inventory then
+--             table.insert(threads, task.spawn(function()
+--                 saveInventoryNow(player, playerData.Inventory)
+--                 print("BindToClose save done for:", player.Name)
+--             end))
+--         end
+--     end
 
-    for _, thread in ipairs(threads) do
-        task.wait()
-    end
+--     for _, thread in ipairs(threads) do
+--         task.wait()
+--     end
 
-    task.wait(2)
-    print("BindToClose: all saves completed")
-end)
+--     task.wait(2)
+--     print("BindToClose: all saves completed")
+-- end)
 
-function InventoryService:KnitStart()
-    print("InventoryService started")
-end
-
-function InventoryService:KnitInit()
-end
+function InventoryService:KnitStart() print("InventoryService started") end
+function InventoryService:KnitInit() end
 
 return InventoryService
