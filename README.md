@@ -42,8 +42,11 @@ BulletVisual is not replicated to other clients                                 
 While reloading if i run it sets state to sprinting and i can keep reloding     | Easy   | Fixed
 While shooting camera always leans on X and Z axis                              | Medium | Fixed
 While walking the muzzle effects and tracers are staying at old position        | Hard   | 
-When I take item from floor I cant move it or it doesnt save it                 | Medium |
-Finish the inventory bugs
+When I take item from floor I cant move it or it doesnt save it                 | Medium | Fixed
+Finish the inventory bugs                                                       | Medium | Fixed
+
+possible duplication,
+if player drops item then crash it saves the old inventory and item is dropped  | Medium
 
 Some stupid ass bug is breaking my inventory system, probably assigning starteritems to nil
 Workspace.andria_noobpro.WeaponSystem.WeaponSystem:711: attempt to perform arithmetic (mul) on number and nil  -  Client - WeaponSystem:711

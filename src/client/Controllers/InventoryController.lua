@@ -20,7 +20,6 @@ InventoryUIController:InitSys()
 
 local slots = InventoryUIController.slots
 
--- FIX 1: wait BEFORE capturing SLOT_COUNT
 repeat task.wait() until #slots.Inventory > 0
 local SLOT_COUNT = #slots.Inventory
 print("Detected slots:", SLOT_COUNT)
@@ -97,7 +96,6 @@ local function updateSlot(index)
     local itemIcon = slot:FindFirstChild("ItemIcon")
     if not itemIcon then return end
 
-    -- Always make sure icon is visible when updating
     itemIcon.Visible = true
 
     local itemName = playerInventoryData[index]
@@ -168,8 +166,6 @@ end
 
 local function setupInventoryListener()
     InventoryService.InventoryUpdated:Connect(function(data)
-        -- FIX 3: never reset drag state from server push
-        -- just update the underlying data and re-render non-dragged slots
         if not data or not data.PlayerInventory then return end
 
         for i = 1, SLOT_COUNT do
@@ -202,7 +198,6 @@ UserInputService.InputEnded:Connect(function(input)
 
         local fromSlot = dragging.fromSlot
 
-        -- FIX 2: restore icon visibility (was incorrectly set to false)
         local originalSlot = slots.Inventory[fromSlot]
         if originalSlot then
             local originalIcon = originalSlot:FindFirstChild("ItemIcon")
@@ -229,7 +224,7 @@ UserInputService.InputEnded:Connect(function(input)
 
             InventoryService:MoveItem(fromSlot, toSlot):andThen(function(success)
                 if not success then
-                    -- Revert
+                    -- Revert on failure
                     playerInventoryData[fromSlot] = fromItem
                     playerInventoryData[toSlot] = toItem
                     updateSlot(fromSlot)
@@ -251,20 +246,28 @@ UserInputService.InputEnded:Connect(function(input)
         if not dragging.active then
             local slot = getSlotUnderMouse()
             if slot and playerInventoryData[slot] ~= "" then
+                -- Optimistic update
+                local oldItem = playerInventoryData[slot]
+                playerInventoryData[slot] = ""
+                updateSlot(slot)
+
                 InventoryService:DropItem(slot):andThen(function(success)
-                    if success then
-                        playerInventoryData[slot] = ""
+                    if not success then
+                        -- Revert
+                        playerInventoryData[slot] = oldItem
                         updateSlot(slot)
                     end
                 end):catch(function(err)
                     warn("Failed to drop item:", err)
+                    playerInventoryData[slot] = oldItem
+                    updateSlot(slot)
                 end)
             end
         end
     end
 
     if input.KeyCode == Enum.KeyCode.E then
-        InventoryFunctions.PickupItem()
+        InventoryFunctions:PickupItem()
     end
 end)
 

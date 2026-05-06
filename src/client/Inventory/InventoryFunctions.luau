@@ -18,29 +18,30 @@ function InventoryFunctions.HasItem(playerInventoryData, itemName)
     return false
 end
 
-function InventoryFunctions.SplitItem(inventory, slot, amount) -- unfinished, for future use
+function InventoryFunctions.SplitItem(inventory, slot, amount)
     local item = inventory[slot]
     if not item or item == "" then return false end
-
     return true
 end
 
 function InventoryFunctions.DropItem(inventory, slot)
     local item = inventory[slot]
     if not item then return end
-    
+
     local InventoryService = Knit.GetService("InventoryService")
-    
+
     InventoryService:DropItem(slot):andThen(function(success, droppedItem)
         if success then
             print("Dropped:", droppedItem)
         end
+    end):catch(function(err)
+        warn("Drop error:", err)
     end)
-    
+
     return true
 end
 
-function InventoryFunctions.FindItem(inventory, itemName) -- for search
+function InventoryFunctions.FindItem(inventory, itemName)
     for i, item in pairs(inventory) do
         local name = type(item) == "table" and item.name or item
         if name == itemName then
@@ -56,7 +57,6 @@ function InventoryFunctions.FindEmptySlot(inventory)
             return i
         end
     end
-
     return nil
 end
 
@@ -68,31 +68,36 @@ function InventoryFunctions.PickupItem()
     local mouseLocation = player:GetMouse().UnitRay
     local origin = camera.CFrame.Position
     local direction = mouseLocation.Direction
-    
+
     local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude  -- Blacklist is deprecated
     raycastParams.FilterDescendantsInstances = {player.Character}
-    
+
     local result = workspace:Raycast(origin, direction * RAY_DISTANCE, raycastParams)
-    
+
     if result and result.Instance then
         local hitPart = result.Instance
-        
-        -- Get the actual model (could be the part's parent or the part itself)
         local droppedItem = hitPart:FindFirstAncestorWhichIsA("Model") or hitPart
-        
-        -- Check if the model has the attribute
+
         if droppedItem:GetAttribute("IsDroppedItem") then
-            print("Found dropped item:", droppedItem.Name)
-            local itemName = droppedItem.Name or droppedItem:GetAttribute("ItemName")
-            
-            local dropId = droppedItem:GetAttribute("DropID") or tostring(droppedItem)
-            
+            local itemName = droppedItem:GetAttribute("ItemName") or droppedItem.Name
+            local dropId = droppedItem:GetAttribute("DropID")
+
+            if not dropId then
+                warn("PickupItem: dropped item has no DropID")
+                return
+            end
+
+            print("Attempting pickup:", itemName, "DropID:", dropId)
+
             local InventoryService = Knit.GetService("InventoryService")
+
+            -- Send only itemName and dropId — server finds the real position itself
+            -- NEVER send position from client or destroy item on client
             InventoryService:PickupItem(itemName, dropId):andThen(function(success, message)
                 if success then
                     print("Successfully picked up:", itemName)
-                    droppedItem:Destroy() -- Destroy the model
+                    -- DO NOT destroy here — server handles destruction
                 else
                     warn("Failed to pick up:", message)
                 end
@@ -107,20 +112,20 @@ function InventoryFunctions.GetLookedAtItem()
     local mouseLocation = player:GetMouse().UnitRay
     local origin = camera.CFrame.Position
     local direction = mouseLocation.Direction
-    
+
     local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
     raycastParams.FilterDescendantsInstances = {player.Character}
-    
+
     local result = workspace:Raycast(origin, direction * RAY_DISTANCE, raycastParams)
-    
+
     if result and result.Instance then
         local hitItem = result.Instance
         if hitItem:GetAttribute("IsDroppedItem") then
             return hitItem, result.Distance
         end
     end
-    
+
     return nil, nil
 end
 
@@ -133,14 +138,14 @@ function InventoryFunctions.ReturnAvailableSlot(inventory)
     return nil
 end
 
-function InventoryFunctions.GetOccupiedSlots(inventory, returnCount) -- usage: local count = InventoryFunctions.GetOccupiedSlots(inventory, true)  -- Returns number, true means number
+function InventoryFunctions.GetOccupiedSlots(inventory, returnCount)
     local occupied = {}
     for i = 1, #inventory do
         if inventory[i] and inventory[i] ~= "" then
             table.insert(occupied, i)
         end
     end
-    
+
     if returnCount then
         return #occupied
     end
