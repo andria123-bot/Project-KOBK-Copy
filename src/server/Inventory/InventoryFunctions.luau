@@ -26,22 +26,53 @@ function InventoryFunctions.CreateItemClone(player, itemName)
         end
 
         itemClone:SetAttribute("IsDroppedItem", true)
-        print("Set attribute for ", itemClone)
-        
+        itemClone:SetAttribute("ItemName", itemName)
         itemClone.Name = itemName
-        
+
         local id = tostring(tick())
         itemClone:SetAttribute("DropID", id)
-        
+
         itemClone.Parent = workspace:WaitForChild("DroppedItems")
-        
+
         local character = player.Character
         if character and character.HumanoidRootPart then
             itemClone:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -2))
         end
-        
+
         InventoryFunctions.CreateSound("rbxassetid://9125747060", itemClone, 1, 0.7567)
         game:GetService("Debris"):AddItem(itemClone, 600)
+
+        local primaryPart = itemClone.PrimaryPart
+        if primaryPart then
+            local connection
+            connection = primaryPart.Touched:Connect(function(hit)
+                local isCharacter = hit.Parent and hit.Parent:FindFirstChild("Humanoid")
+                if isCharacter then return end
+
+                local velocity = primaryPart.AssemblyLinearVelocity
+                if velocity.Magnitude < 1 then
+                    for _, v in pairs(itemClone:GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            v.Anchored = true
+                        end
+                    end
+                    connection:Disconnect()
+                end
+            end)
+
+            task.delay(1.7, function()
+                if itemClone and itemClone.Parent then
+                    for _, v in pairs(itemClone:GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            v.Anchored = true
+                        end
+                    end
+                    if connection then
+                        connection:Disconnect()
+                    end
+                end
+            end)
+        end
     end
 end
 

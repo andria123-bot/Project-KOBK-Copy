@@ -17,7 +17,7 @@ local inventoryReady = {}
 
 local InventoryFunctions = require(script.Parent.Parent.Inventory.InventoryFunctions)
 
-local forcedKit = false
+local forcedKit = true
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
 local SLOT_COUNT = 15
