@@ -22,7 +22,6 @@ local slots = InventoryUIController.slots
 
 repeat task.wait() until #slots.Inventory > 0
 local SLOT_COUNT = #slots.Inventory
-print("Detected slots:", SLOT_COUNT)
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -246,14 +245,12 @@ UserInputService.InputEnded:Connect(function(input)
         if not dragging.active then
             local slot = getSlotUnderMouse()
             if slot and playerInventoryData[slot] ~= "" then
-                -- Optimistic update
                 local oldItem = playerInventoryData[slot]
                 playerInventoryData[slot] = ""
                 updateSlot(slot)
 
                 InventoryService:DropItem(slot):andThen(function(success)
                     if not success then
-                        -- Revert
                         playerInventoryData[slot] = oldItem
                         updateSlot(slot)
                     end

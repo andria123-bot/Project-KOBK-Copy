@@ -36,17 +36,23 @@ fix death bug                                                                   
 when died it doesnt reset ammo                                                  | Medium | Fixed
 Full auto is delayed                                                            | Medium | Fixed
 shooting needs to be more smooth                                                | Medium | Fixed
-Add Anti-cheat for speed, position area, inventory                              | Hard   | Almost Fixed, Only speed and position left
+Add Anti-cheat for speed, position area, inventory                              | Hard   | Making custom anticheat module which will handle everything
 BulletVisual is not replicated to other clients                                 | Easy   | Fixed
 
 While reloading if i run it sets state to sprinting and i can keep reloding     | Easy   | Fixed
 While shooting camera always leans on X and Z axis                              | Medium | Fixed
-While walking the muzzle effects and tracers are staying at old position        | Hard   | 
+While walking the muzzle effects and tracers are staying at old position        | Hard   | HARD COZ I have no diea how to do that
 When I take item from floor I cant move it or it doesnt save it                 | Medium | Fixed
 Finish the inventory bugs                                                       | Medium | Fixed
+InventorySlots on server is hardcoded                                           | Medium | 
 
 possible duplication,
-if player drops item then crash it saves the old inventory and item is dropped  | Medium
+if player drops item then crash it saves the old inventory and item is dropped  | Medium | Fixed
+
+mini goals:
+
+Make equipable armor/loadout
+Finish map
 
 Some stupid ass bug is breaking my inventory system, probably assigning starteritems to nil
 Workspace.andria_noobpro.WeaponSystem.WeaponSystem:711: attempt to perform arithmetic (mul) on number and nil  -  Client - WeaponSystem:711

@@ -20,20 +20,18 @@ local forcedKit = true
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
 local SLOT_COUNT = 15
-local MOVE_RATE_LIMIT = 0.2
-local DROP_RATE_LIMIT = 0.5
-local MAX_PICKUP_DISTANCE = 10  -- studs
+local MOVE_RATE_LIMIT = 0.1
+local DROP_RATE_LIMIT = 0.2
+local MAX_PICKUP_DISTANCE = 10
 
 local STARTER_KIT = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}
 
--- Whitelist of valid item names — add all your items here
--- This is the single most important anti-cheat measure
 local VALID_ITEMS = {
     HK416 = true,
     Khrissy10R = true,
     Tomahawk = true,
     MK2 = true,
-    -- add more items here
+    
 }
 
 local function isValidItem(itemName)
@@ -232,6 +230,7 @@ end
 function InventoryService:DropItem(player, slot)
     local playerData = PlayerInventories[player]
     if not playerData then return false, nil end
+    print(playerData)
 
     if typeof(slot) ~= "number" or slot < 1 or slot > SLOT_COUNT then
         return false, nil
@@ -244,14 +243,47 @@ function InventoryService:DropItem(player, slot)
         normalizeToDense(playerData.Inventory)
         InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
         InventoryFunctions.CreateItemClone(player, item)
-        DebouncedSave(player)
+        saveInventoryNow(player, inventory)
         return true, item
     end
     return false, nil
 end
 
--- Client methods — these are what exploiters can call
--- Keep them minimal and always validated server-side
+function InitSlots(player)
+    local inventory = PlayerInventories[player]
+    local globalIndex = 1
+    SLOT_COUNT = 0
+
+    for _, type in inventory do
+        print(type)
+    end
+end
+
+-- function InventoryService:InitSlots()
+--     local globalIndex = 1
+--     self.slots.Inventory = {}
+
+--     for _, row in pairs(rowsParent:GetChildren()) do
+--         if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
+--             local container = row:FindFirstChild("SlotRow")
+--             if container then
+--                 for _, slot in pairs(container:GetChildren()) do
+--                     if slot:IsA("Frame") then
+--                         self.slots.Inventory[globalIndex] = slot
+--                         slot.Name = "Slot" .. tostring(globalIndex)
+--                         local itemIcon = slot:FindFirstChild("ItemIcon")
+--                         if itemIcon then
+--                             itemIcon.Image = ""
+--                         end
+--                         globalIndex += 1
+--                     end
+--                 end
+--             end
+--         end
+--     end
+
+--     return globalIndex - 1
+-- end
 
 function InventoryService.Client:GetInventory(player)
     local playerData = self.Server:GetPlayerData(player)
@@ -349,7 +381,8 @@ local function initPlayer(player)
         viewmodel = nil,
         currentSlot = 0,
     }
-
+    
+    InitSlots(player)
     saveInventoryNow(player, playerInventory)
 
     task.delay(1, function()
@@ -361,7 +394,6 @@ local function initPlayer(player)
     print("Inventory initialized for:", player.Name)
 end
 
--- Periodic backup
 task.spawn(function()
     while true do
         task.wait(PERIODIC_SAVE)
@@ -414,7 +446,6 @@ game:BindToClose(function()
         end
     end
 
-    -- Wait for all save threads to finish
     for _, t in ipairs(saveTasks) do
         repeat task.wait() until coroutine.status(t) == "dead"
     end
