@@ -1,50 +1,56 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local AmmoList = require(ReplicatedStorage.Shared.Modules.Ammos:WaitForChild("AmmoList"))
+
 local data = {
 	name = "MG42",
 
-	-- Animations (unchanged)
-	fireAnim = "rbxassetid://95024054063945",
-	emptyFireAnim = "rbxassetid://95024054063945",
-	equipAnim = "rbxassetid://133514477466822",
-	deequipAnim = "rbxassetid://96095541989669",
-	reloadAnim = "rbxassetid://98970778537699",
-	emptyReloadAnim = "rbxassetid://86389481538214",
-	inspectAnim = "rbxassetid://80262626757998",
-	idleAnim = "rbxassetid://90962731439428",
-	
-	--[[	fireAnim = "rbxassetid://95024054063945",
-	emptyFireAnim = "rbxassetid://95024054063945",
-	equipAnim = "rbxassetid://133514477466822",
-	deequipAnim = "rbxassetid://96095541989669",
-	reloadAnim = "rbxassetid://98970778537699",
-	emptyReloadAnim = "rbxassetid://86389481538214",
-	inspectAnim = "rbxassetid://80262626757998",
-	idleAnim = "rbxassetid://90962731439428",]]
+	animations = {
+		fireAnim = "rbxassetid://95024054063945",
+		emptyFireAnim = "rbxassetid://95024054063945",
+		equipAnim = "rbxassetid://133514477466822",
+		deequipAnim = "rbxassetid://96095541989669",
+		reloadAnim = "rbxassetid://98970778537699",
+		emptyReloadAnim = "rbxassetid://86389481538214",
+		inspectAnim = "rbxassetid://80262626757998",
+		idleAnim = "rbxassetid://90962731439428",
 
-	tpIdleAnim = "rbxassetid://131819337932852",
-	tpShootAnim = "rbxassetid://131819337932852",
-	tpReloadAnim = "rbxassetid://131819337932852",
-	tpEmptyReloadAnim = "rbxassetid://131819337932852",
-	tpInspectAnim = "rbxassetid://131819337932852",
-	tpEquipAnim = "rbxassetid://131819337932852",
-	tpDeequipAnim = "rbxassetid://131819337932852",
+		tpIdleAnim = "rbxassetid://131819337932852",
+		tpShootAnim = "rbxassetid://131819337932852",
+		tpReloadAnim = "rbxassetid://131819337932852",
+		tpEmptyReloadAnim = "rbxassetid://131819337932852",
+		tpInspectAnim = "rbxassetid://131819337932852",
+		tpEquipAnim = "rbxassetid://131819337932852",
+		tpDeequipAnim = "rbxassetid://131819337932852",
+	},
 
-	-- Sounds (unchanged)
 	sounds = {
-		"rbxassetid://127619339252879"; -- equip/draw
-		"rbxassetid://1245969465"; -- Shoot/use
-		"rbxassetid://134817048219417"; -- reload
-		"rbxassetid://134817048219417"; -- empty reload
-		"rbxassetid://127619339252879"; -- inspect
-		"rbxassetid://127619339252879"; -- deequip/holster
+		"rbxassetid://127619339252879";
+		"rbxassetid://1245969465";
+		"rbxassetid://134817048219417";
+		"rbxassetid://134817048219417";
+		"rbxassetid://127619339252879";
+		"rbxassetid://127619339252879";
 
 		attachmentSounds = {
-			"rbxassetid://17589930440" -- Suppressor
-		}
+			"rbxassetid://17589930440";
+		};
+	},
+
+	scopeData = {
+		currentScope = "Empty",
+
+		defaultScope = "Holo",
+
+		allowedScopes = {
+			RedDot = false,
+			Holo = true,
+			ACOG = false,
+			PulsarThermion2 = false,
+		};
 	},
 
 	imageIconId = "rbxassetid://91662687299133",
 
-	-- Weapon behavior
 	canAim = true,
 	aimSmooth = 0.005,
 	canSemi = false,
@@ -53,68 +59,98 @@ local data = {
 	maxAmmo = 75,
 	fireMode = "Full Auto",
 
-	fireRate = 0.05,  
-
 	sprintCF = CFrame.new(0, 0, 0) * CFrame.Angles(math.rad(-95/5), math.rad(95/4), math.rad(95/5)),
-	
+
 	aimCF = CFrame.new(),
-	currentSwayAMT = .1,
-	swayAMT = .2,
-	aimSwayAMT = -.9,
+	currentSwayAMT = 0.1,
+	swayAMT = 0.2,
+	aimSwayAMT = -0.9,
 	swayCF = CFrame.new(0, 0, 0),
 	lastCameraCF = CFrame.new(0, 0, 0),
 
-	-- Durability
-	durable = 1800,
+	durable = 1800,    
 	isStackable = false,
 	maxStack = 1,
 
-	-- Piercing
 	canPenetrate = true,
 	maxDepth = 3.0,
 	damageFalloff = 0.85,
 
-	-- Attachments
 	canAddSight = false,
 	canAddLaser = false,
 	canAddExtendedMag = false,
 
-	-- Damage
-	damage = 44.9,
+	damage = 44.9,  
 	headshot = 78.9,
 	debounce = 0.05,
 	reloadTime = 5.2,
+	emptyReloadTime = 6.4,
 	jamChance = 0.01,
 	value = 7500,
+	weight = 11.6,
 
-	-- Recoil
-	x = 1.8,
-	y = 0.12,
-	currentRecoilCycle = 1,
+	fireRate = 0.0083, -- ~1200 RPM (MG42 known for extreme fire rate)
 
-	hipfire = 3.5,
-	aimed = 0.9,
-	increasePerShot = 0.35,
-	maxSpread = 8.0,
-	bulletSpeed = 400,
-	bulletDistance = 800,
+	recoilSprings = {
+        rotFrequency = 25,
+        rotDamping = 2.5,
+        posFrequency = 25,
+        posDamping = 3.0,
+        camFrequency = 80,
+        camDamping = 5.0,
+    },
+    
+    recoilForce = {
+        rot = Vector3.new(0.15, 0.10, 0.05),
+        pos = Vector3.new(0, 0, 65.0),
+        camera = Vector3.new(6.5, 6.5, 6.5),
+    },
+
+	serverRecoilPattern = {
+		{x = 0.012, y = 0.010},
+		{x = 0.018, y = 0.012},
+		{x = 0.024, y = 0.014},
+		{x = 0.030, y = 0.010},
+		{x = 0.028, y = 0.005},
+		{x = 0.025, y = -0.005},
+		{x = 0.022, y = -0.010},
+		{x = 0.018, y = -0.008},
+		{x = 0.015, y = -0.005},
+	},
+		
+	bulletSpeed = 3100,
+	maxDistanceTravel = 2000;
+	dragCoefficient = 0.00028,
 
 	slotType = "Loadout",
 	ammoType = "7.92x57mm",
 	canBeStored = false,
+	loadedBulletType = "Zero",
 
 	isGrenade = false,
 	isMelee = false,
 	isShootgun = false,
 }
 
-data.recoil = {}
-
-for i = 1, data.maxAmmo do
-	local up = math.clamp(2 - (i * 0.05), 0.2, 2) * data.x
-	local side = math.sin(i * 0.4) * 1.2 * data.y + math.random(-5, 5) / 50
-
-	table.insert(data.recoil, CFrame.Angles(math.rad(up), math.rad(side), 90))
+function data:SetBulletType(bullType)
+    local ammoData = AmmoList[bullType]
+    if ammoData then
+        self.loadedBulletType = bullType
+        self.damage = ammoData.damage
+        self.headshot = ammoData.headshot
+        self.muzzleVelocity = ammoData.muzzleVelocity
+        self.dragCoefficient = ammoData.dragCoefficient
+        self.gravity = ammoData.gravity
+        self.hipSpread = ammoData.hipSpread
+        self.aimingSpread = ammoData.aimingSpread
+        self.spreadRecovery = ammoData.spreadRecovery
+        self.armorPen = ammoData.armorPen
+        self.penetrationPower = ammoData.penetrationPower
+    else
+        warn("Ammo type not found: " .. bullType)
+    end
 end
+
+data:SetBulletType("7.92x57 M")
 
 return data

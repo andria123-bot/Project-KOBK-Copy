@@ -13,16 +13,18 @@ local PlayerInventories = {}
 local lastMoveTime = {}
 local lastDropTime = {}
 local saveTimers = {}
+local inventoryReady = {}
 
 local InventoryFunctions = require(script.Parent.Parent.Inventory.InventoryFunctions)
 
-local forcedKit = true
+local forcedKit = false
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
 local SLOT_COUNT = 15
-local MOVE_RATE_LIMIT = 0.1
-local DROP_RATE_LIMIT = 0.2
+local MOVE_RATE_LIMIT = 0.2
+local DROP_RATE_LIMIT = 0.5
 local MAX_PICKUP_DISTANCE = 10
+local DROPPED_ITEMS_FOLDER_NAME = "DroppedItems"
 
 local STARTER_KIT = {"HK416", "Khrissy10R", "Tomahawk", "MK2"}
 
@@ -31,7 +33,6 @@ local VALID_ITEMS = {
     Khrissy10R = true,
     Tomahawk = true,
     MK2 = true,
-    
 }
 
 local function isValidItem(itemName)
@@ -79,8 +80,6 @@ local function saveInventoryNow(player, inventory)
 end
 
 local function DebouncedSave(player)
-    -- Don't reset timer if one is already pending within debounce window
-    -- This prevents move spam from blocking saves indefinitely
     if saveTimers[player] then return end
 
     saveTimers[player] = task.delay(SAVE_DEBOUNCE, function()
@@ -123,9 +122,7 @@ function InventoryService:GetPlayerData(player)
     return PlayerInventories[player]
 end
 
--- SERVER ONLY — never expose this directly as a Client method
 function InventoryService:AddItem(player, itemName)
-    -- Always validate item exists in whitelist
     if not isValidItem(itemName) then
         warn("AddItem: invalid item name:", itemName, "from", player.Name)
         return false, "Invalid item", nil
@@ -148,89 +145,9 @@ function InventoryService:AddItem(player, itemName)
     end
 end
 
--- SERVER ONLY — called by your pickup logic scripts, never by client directly
--- Pass the item instance so we can do proximity check
-function InventoryService:PickupItem(player, itemName, itemPosition)
-    local playerData = PlayerInventories[player]
-    if not playerData then return false, "No player data" end
-
-    -- Validate item name against whitelist
-    if not isValidItem(itemName) then
-        warn("PickupItem: invalid item:", itemName, "player:", player.Name)
-        return false, "Invalid item"
-    end
-
-    -- Proximity check — make sure player is actually near the item
-    if itemPosition then
-        local character = player.Character
-        local hrp = character and character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            local distance = (hrp.Position - itemPosition).Magnitude
-            if distance > MAX_PICKUP_DISTANCE then
-                warn("PickupItem: player too far from item:", player.Name, "distance:", distance)
-                return false, "Too far away"
-            end
-        end
-    end
-
-    return self:AddItem(player, itemName)
-end
-
-local DROPPED_ITEMS_FOLDER_NAME = "DroppedItems"
-
-function InventoryService.Client:PickupItem(player, itemName, dropId)
-    if not isValidItem(itemName) then
-        warn("PickupItem: invalid item:", itemName, "from:", player.Name)
-        return false, "Invalid item"
-    end
-
-    if typeof(dropId) ~= "string" then
-        warn("PickupItem: invalid dropId from:", player.Name)
-        return false, "Invalid dropId"
-    end
-
-    local droppedItemsFolder = workspace:FindFirstChild(DROPPED_ITEMS_FOLDER_NAME)
-    local droppedItem = nil
-
-    if droppedItemsFolder then
-        for _, item in pairs(droppedItemsFolder:GetChildren()) do
-            if item:GetAttribute("DropID") == dropId then
-                droppedItem = item
-                break
-            end
-        end
-    end
-
-    if not droppedItem then
-        warn("PickupItem: item not found in workspace, dropId:", dropId, "player:", player.Name)
-        return false, "Item not found"
-    end
-
-    local character = player.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return false, "No character" end
-
-    local itemPosition = droppedItem:GetPivot().Position
-    local distance = (hrp.Position - itemPosition).Magnitude
-    if distance > MAX_PICKUP_DISTANCE then
-        warn("PickupItem: too far:", player.Name, "dist:", distance)
-        return false, "Too far away"
-    end
-
-    local success, message, slot = self.Server:AddItem(player, itemName)
-
-    if success then
-        droppedItem:Destroy()
-        print("PickupItem: success for", player.Name, "item:", itemName, "slot:", slot)
-    end
-
-    return success, message
-end
-
 function InventoryService:DropItem(player, slot)
     local playerData = PlayerInventories[player]
     if not playerData then return false, nil end
-    print(playerData)
 
     if typeof(slot) ~= "number" or slot < 1 or slot > SLOT_COUNT then
         return false, nil
@@ -243,51 +160,30 @@ function InventoryService:DropItem(player, slot)
         normalizeToDense(playerData.Inventory)
         InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
         InventoryFunctions.CreateItemClone(player, item)
-        saveInventoryNow(player, inventory)
+        DebouncedSave(player)
         return true, item
     end
     return false, nil
 end
 
-function InitSlots(player)
-    local inventory = PlayerInventories[player]
-    local globalIndex = 1
-    SLOT_COUNT = 0
-
-    for _, type in inventory do
-        print(type)
-    end
-end
-
--- function InventoryService:InitSlots()
---     local globalIndex = 1
---     self.slots.Inventory = {}
-
---     for _, row in pairs(rowsParent:GetChildren()) do
---         if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
---             local container = row:FindFirstChild("SlotRow")
---             if container then
---                 for _, slot in pairs(container:GetChildren()) do
---                     if slot:IsA("Frame") then
---                         self.slots.Inventory[globalIndex] = slot
---                         slot.Name = "Slot" .. tostring(globalIndex)
---                         local itemIcon = slot:FindFirstChild("ItemIcon")
---                         if itemIcon then
---                             itemIcon.Image = ""
---                         end
---                         globalIndex += 1
---                     end
---                 end
---             end
---         end
---     end
-
---     return globalIndex - 1
--- end
-
 function InventoryService.Client:GetInventory(player)
+    -- Wait efficiently until initPlayer finishes
+    local elapsed = 0
+    while not inventoryReady[player] do
+        task.wait(0.1)
+        elapsed = elapsed + 0.1
+        if elapsed >= 10 then
+            warn("GetInventory: timed out waiting for inventory:", player.Name)
+            break
+        end
+    end
+
     local playerData = self.Server:GetPlayerData(player)
-    if not playerData then return nil end
+    if not playerData then
+        warn("GetInventory: no data for", player.Name)
+        return nil
+    end
+
     normalizeToDense(playerData.Inventory)
     return playerData.Inventory
 end
@@ -296,15 +192,11 @@ function InventoryService.Client:MoveItem(player, fromSlot, toSlot)
     local playerData = PlayerInventories[player]
     if not playerData then return false end
 
-    -- Type check
     if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
-
-    -- Bounds check
     if fromSlot < 1 or fromSlot > SLOT_COUNT then return false end
     if toSlot < 1 or toSlot > SLOT_COUNT then return false end
     if fromSlot == toSlot then return false end
 
-    -- Rate limit
     local now = tick()
     if lastMoveTime[player] and now - lastMoveTime[player] < MOVE_RATE_LIMIT then
         return false
@@ -327,7 +219,6 @@ function InventoryService.Client:MoveItem(player, fromSlot, toSlot)
 end
 
 function InventoryService.Client:DropItem(player, slot)
-    -- Rate limit drops
     local now = tick()
     if lastDropTime[player] and now - lastDropTime[player] < DROP_RATE_LIMIT then
         return false, nil
@@ -337,8 +228,56 @@ function InventoryService.Client:DropItem(player, slot)
     return self.Server:DropItem(player, slot)
 end
 
--- DO NOT expose PickupItem or AddItem as Client methods
--- Pickup should be triggered by server-side touched/proximity events only
+function InventoryService.Client:PickupItem(player, itemName, dropId)
+    if not isValidItem(itemName) then
+        warn("PickupItem: invalid item:", itemName, "from:", player.Name)
+        return false, "Invalid item"
+    end
+
+    if typeof(dropId) ~= "string" then
+        warn("PickupItem: invalid dropId from:", player.Name)
+        return false, "Invalid dropId"
+    end
+
+    -- Find item in workspace by DropID server-side
+    local droppedItemsFolder = workspace:FindFirstChild(DROPPED_ITEMS_FOLDER_NAME)
+    local droppedItem = nil
+
+    if droppedItemsFolder then
+        for _, item in pairs(droppedItemsFolder:GetChildren()) do
+            if item:GetAttribute("DropID") == dropId then
+                droppedItem = item
+                break
+            end
+        end
+    end
+
+    if not droppedItem then
+        warn("PickupItem: item not found in workspace, dropId:", dropId, "player:", player.Name)
+        return false, "Item not found"
+    end
+
+    -- Proximity check using real server-side position
+    local character = player.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false, "No character" end
+
+    local itemPosition = droppedItem:GetPivot().Position
+    local distance = (hrp.Position - itemPosition).Magnitude
+    if distance > MAX_PICKUP_DISTANCE then
+        warn("PickupItem: too far:", player.Name, "dist:", distance)
+        return false, "Too far away"
+    end
+
+    local success, message, slot = self.Server:AddItem(player, itemName)
+
+    if success then
+        droppedItem:Destroy()
+        print("PickupItem: success for", player.Name, "item:", itemName, "slot:", slot)
+    end
+
+    return success, message
+end
 
 local function initPlayer(player)
     local playerInventory = InventoryService:CreatePlayerInventory()
@@ -350,19 +289,24 @@ local function initPlayer(player)
         if savedInventory and type(savedInventory) == "table" then
             local source = savedInventory.PlayerInventory or savedInventory
             for i, item in pairs(source) do
-                if item and item ~= "" then
-                    -- Validate saved items against whitelist too
-                    if isValidItem(item) then
-                        playerInventory.PlayerInventory[i] = item
-                    else
-                        warn("initPlayer: skipping invalid saved item:", item)
-                    end
+                if item and item ~= "" and isValidItem(item) then
+                    playerInventory.PlayerInventory[i] = item
                 end
             end
-            print("Loaded saved inventory for:", player.Name)
-        else
+        end
+
+        -- If inventory is still empty after loading, give starter kit
+        local isEmpty = true
+        for i = 1, SLOT_COUNT do
+            if playerInventory.PlayerInventory[i] ~= "" then
+                isEmpty = false
+                break
+            end
+        end
+
+        if isEmpty then
+            print("Empty inventory after load, applying starter kit for:", player.Name)
             applyStarterKit(playerInventory)
-            print("No saved inventory, gave starter kit for:", player.Name)
         end
     end
 
@@ -381,9 +325,11 @@ local function initPlayer(player)
         viewmodel = nil,
         currentSlot = 0,
     }
-    
-    InitSlots(player)
+
     saveInventoryNow(player, playerInventory)
+
+    -- Signal that inventory is ready for GetInventory calls
+    inventoryReady[player] = true
 
     task.delay(1, function()
         if PlayerInventories[player] then
@@ -431,6 +377,7 @@ Players.PlayerRemoving:Connect(function(player)
     PlayerInventories[player] = nil
     lastMoveTime[player] = nil
     lastDropTime[player] = nil
+    inventoryReady[player] = nil
 end)
 
 game:BindToClose(function()
