@@ -28,7 +28,6 @@ function defaultInventory.saveInventory(player, playerData)
         return false
     end
 
-    -- Save the FULL inventory structure, not just PlayerInventory array
     local dataToSave = {
         PlayerInventory = playerData.weaponSystem.Inventory.PlayerInventory,
         Equipment = playerData.weaponSystem.Inventory.Equipment,

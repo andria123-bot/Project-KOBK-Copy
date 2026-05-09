@@ -271,7 +271,7 @@ function loadSlot(Item)
 			weaponSystem.animations.FirstPerson[2]:Play()
 			weaponSystem.animations.ThirdPerson[2]:Play()
 
-			wait(.5)
+			task.wait(.5)
 
 			ReplicatedStorage.Shared.Remotes.ItemFoley:FireServer(script.Parent.Parent:WaitForChild("UpperTorso"):WaitForChild("Deequip"))
 
@@ -320,7 +320,7 @@ function Shoot()
 				weaponSystem.animations.ThirdPerson[6]:Stop()
 
 				debounce = true
-				wait(data.debounce)
+				task.wait(data.debounce)
 				debounce = false
 			end
 		end
@@ -414,10 +414,10 @@ function Reload()
 
     if currentAmmo == 0 then
         weaponSystem.animations.FirstPerson[6]:Play()
-        wait(weaponData.emptyReloadTime)
+        task.wait(weaponData.emptyReloadTime)
     else
         weaponSystem.animations.FirstPerson[5]:Play()
-        wait(weaponData.reloadTime)
+        task.wait(weaponData.reloadTime)
     end
     
     local success, data = RequestReload:InvokeServer(gun)
@@ -685,7 +685,7 @@ end)
 
 local patternIndex = 1
 
-while wait() do
+while task.wait() do
     while weaponSystem.modifiers.IsShooting and weaponData do
         if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
             local success, data, ammoType = RequestShoot:InvokeServer(
@@ -773,7 +773,7 @@ while wait() do
 
                 if data.ammoLeft == 0 then
                     weaponSystem.modifiers.IsShooting = false
-                    wait(0.4)
+                    task.wait(0.4)
                     Reload()
                 end
 

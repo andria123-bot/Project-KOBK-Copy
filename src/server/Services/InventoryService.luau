@@ -63,11 +63,6 @@ local function saveInventoryNow(player, inventory)
     if not playerData then return false end
 
     normalizeToDense(inventory)
-    print("=== SAVING INVENTORY ===")
-    print("Player:", player.Name)
-    print("PlayerInventory:", inventory.PlayerInventory)
-    print("Equipment:", inventory.Equipment)
-    print("Equipment.Weapons:", inventory.Equipment and inventory.Equipment.Weapons)
     local success, err = pcall(function()
         defaultInventory.saveInventory(player, {
             weaponSystem = {
@@ -120,10 +115,6 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
     if inventory[fromSlot] ~= itemName then
         return false, "Item not found in slot"
     end
-    print("=== EQUIP ITEM ===")
-    print("Before equip - Weapons:", playerData.Inventory.Equipment.Weapons)
-    -- ... do equip ...
-    
     
     inventory[fromSlot] = ""
     print(inventory)
@@ -172,7 +163,6 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
             name = itemName
         }
     end
-    print("After equip - Weapons:", playerData.Inventory.Equipment.Weapons)
     InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
     DebouncedSave(player)
     
@@ -199,7 +189,6 @@ local function GetSlotCount(equipment)
     for i, v in pairs(equipment.Clothing) do
         if table.find(availableSlots, i) then 
             if v.equipped then
-                print(slotCount)
                 slotCount += 5
             end
         end
@@ -238,10 +227,8 @@ function InventoryService:CreatePlayerInventory()
         SlotCount = 0,
     }
 
-    print(newInventory.Equipment)
     local slotCount = GetSlotCount(newInventory.Equipment)
     newInventory.SlotCount = slotCount
-    print(newInventory.SlotCount)
 
     for i = 1, slotCount do
         newInventory.PlayerInventory[i] = ""
@@ -268,8 +255,6 @@ function InventoryService.Client:GetInventory(player)
 
     normalizeToDense(playerData.Inventory)
 
-    print(playerData.Inventory.SlotCount, playerData.Inventory.Equ)
-    
     return {
         PlayerInventory = playerData.Inventory.PlayerInventory,
         SlotCount = playerData.Inventory.SlotCount,
@@ -407,7 +392,6 @@ function InventoryService.Client:PickupItem(player, itemName, dropId)
 
     if success then
         droppedItem:Destroy()
-        print("PickupItem: success for", player.Name, "item:", itemName, "slot:", slot)
     end
 
     return success, message
@@ -431,13 +415,7 @@ local function initPlayer(player)
     else
         local savedInventory = defaultInventory.loadSavedInventory(player)
         if savedInventory and type(savedInventory) == "table" then
-            print("=== LOADED SAVED INVENTORY ===")
-            print("PlayerInventory:", savedInventory.PlayerInventory)
-            print("Equipment:", savedInventory.Equipment)
-            print("Equipment.Weapons:", savedInventory.Equipment and savedInventory.Equipment.Weapons)
-        
             if savedInventory and type(savedInventory) == "table" then
-                -- Load PlayerInventory items
                 local source = savedInventory.PlayerInventory or savedInventory
                 for i, item in pairs(source) do
                     if item and item ~= "" and isValidItem(item) then
@@ -445,7 +423,6 @@ local function initPlayer(player)
                     end
                 end
                 
-                -- Load Equipment
                 if savedInventory.Equipment then
                     if savedInventory.Equipment.Clothing then
                         for slot, data in pairs(savedInventory.Equipment.Clothing) do
@@ -464,7 +441,6 @@ local function initPlayer(player)
                     end
                 end
                 
-                -- Load gear
                 if savedInventory.gear then
                     for slot, value in pairs(savedInventory.gear) do
                         playerGear[slot] = value
@@ -510,7 +486,6 @@ local function initPlayer(player)
     task.delay(1, function()
         if PlayerInventories[player] then
             InventoryService.Client.InventoryUpdated:Fire(player, playerInventory)
-            print(playerInventory)
         end
     end)
 end
@@ -554,26 +529,6 @@ Players.PlayerRemoving:Connect(function(player)
     lastDropTime[player] = nil
     inventoryReady[player] = nil
 end)
-
--- game:BindToClose(function()
---     print("BindToClose: saving all players...")
-
---     local saveTasks = {}
---     for player, playerData in pairs(PlayerInventories) do
---         if playerData and playerData.Inventory then
---             table.insert(saveTasks, task.spawn(function()
---                 saveInventoryNow(player, playerData.Inventory)
---                 print("BindToClose save done for:", player.Name)
---             end))
---         end
---     end
-
---     for _, t in ipairs(saveTasks) do
---         repeat task.wait() until coroutine.status(t) == "dead"
---     end
-
---     print("BindToClose: all saves completed")
--- end)
 
 function InventoryService:KnitStart()
     print("InventoryService started")

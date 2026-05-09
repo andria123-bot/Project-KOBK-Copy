@@ -226,27 +226,63 @@ local function setupInventoryListener()
     end)
 end
 
+-- Add this function to update equipment slots visually
+local function updateEquipmentSlot(slotName, itemName)
+    local slotFrame = slots.WeaponSlots[slotName] or slots.Gear[slotName] or slots.Utils[slotName]
+    if not slotFrame then return end
+    
+    local itemIcon = slotFrame:FindFirstChild("ItemIcon")
+    if not itemIcon then return end
+    
+    if itemName and itemName ~= "" then
+        if itemImageCache[itemName] then
+            itemIcon.Image = itemImageCache[itemName]
+        else
+            -- Load image asynchronously
+            task.spawn(function()
+                local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
+                local success, mod = pcall(function()
+                    return RequestModule:InvokeServer(itemName)
+                end)
+                if success and mod and mod.imageIconId then
+                    itemImageCache[itemName] = mod.imageIconId
+                    if itemIcon and itemIcon.Parent then
+                        itemIcon.Image = mod.imageIconId
+                    end
+                end
+            end)
+        end
+        itemIcon.Visible = true
+    else
+        itemIcon.Image = ""
+        itemIcon.Visible = true
+    end
+end
+
+-- Then in equipItem, update both the source slot AND the equipment slot:
 local function equipItem(fromSlot, toSlot, slotFrame, slotType)
     local fromItem = playerInventoryData[fromSlot]
     if not fromItem or fromItem == "" then return end
     if slotType == "inventory" then return end
 
-    print(slotType)
-    print(playerInventoryData)
-
     local oldItem = playerInventoryData[toSlot] or ""
     
+    -- Update local data
     playerInventoryData[fromSlot] = ""
     playerInventoryData[toSlot] = fromItem
-    updateSlot(fromSlot)
-    updateSlot(toSlot)
     
+    -- Update UI
+    updateSlot(fromSlot)                    -- Clear source slot
+    updateEquipmentSlot(toSlot, fromItem)   -- Show item in equipment slot
+    
+    -- Send to server
     InventoryService.EquipItem(player, fromSlot, toSlot, fromItem, slotType):andThen(function(success, message)
         if not success then
+            -- Revert on failure
             playerInventoryData[fromSlot] = fromItem
             playerInventoryData[toSlot] = oldItem
             updateSlot(fromSlot)
-            updateSlot(toSlot)
+            updateEquipmentSlot(toSlot, oldItem)
             warn("Equip failed:", message)
         else
             print("Equipped", fromItem, "to", toSlot)
@@ -256,10 +292,9 @@ local function equipItem(fromSlot, toSlot, slotFrame, slotType)
         playerInventoryData[fromSlot] = fromItem
         playerInventoryData[toSlot] = oldItem
         updateSlot(fromSlot)
-        updateSlot(toSlot)
+        updateEquipmentSlot(toSlot, oldItem)
     end)
 end
-
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active then
         if not dragging.fromSlot then
