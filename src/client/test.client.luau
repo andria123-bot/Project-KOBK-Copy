@@ -96,6 +96,6 @@
 -- end
 -- player.CharacterAdded:Connect(setupCharacter)
 
-local InventoryUIController = require(script.Parent.Inventory.InventoryUIController)
+-- local InventoryUIController = require(script.Parent.Inventory.InventoryUIController)
 
-InventoryUIController:InitSys()
+-- InventoryUIController:InitSys()

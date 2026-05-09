@@ -69,10 +69,10 @@ local function saveInventoryNow(player, inventory)
                 Inventory = {
                     PlayerInventory = inventory.PlayerInventory,
                     StorageInventory = inventory.StorageInventory or {},
-                    Equipment = inventory.Equipment,  -- ✅ Save full Equipment
+                    Equipment = inventory.Equipment, 
                     SlotCount = inventory.SlotCount,
                 },
-                gear = playerData.gear,  -- ✅ Save currently equipped gear
+                gear = playerData.gear, 
                 animations = playerData.animations,
                 sounds = playerData.sounds,
                 lastShotTime = playerData.lastShotTime,
@@ -104,6 +104,73 @@ local function DebouncedSave(player)
     end)
 end
 
+function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType)
+    local playerData = PlayerInventories[player]
+    if not playerData then 
+        return false, "No player data" 
+    end
+    
+    local inventory = playerData.Inventory.PlayerInventory
+    
+    if inventory[fromSlot] ~= itemName then
+        return false, "Item not found in slot"
+    end
+    
+    inventory[fromSlot] = ""
+    
+    if slotType == "weapon" then
+        local currentWeapon = playerData.Inventory.Equipment.Weapons[toSlot]
+        if currentWeapon and currentWeapon.equipped then
+            local emptySlot = InventoryFunctions.ReturnAvailableSlot(inventory)
+            if emptySlot then
+                inventory[emptySlot] = currentWeapon.item
+            end
+        end
+        
+        playerData.Inventory.Equipment.Weapons[toSlot] = {
+            equipped = true,
+            item = itemName
+        }
+        
+    elseif slotType == "gear" then
+        local currentGear = playerData.Inventory.Equipment.Clothing[toSlot]
+        if currentGear and currentGear.equipped then
+            local emptySlot = InventoryFunctions.ReturnAvailableSlot(inventory)
+            if emptySlot then
+                inventory[emptySlot] = currentGear.name
+            end
+        end
+        
+        playerData.Inventory.Equipment.Clothing[toSlot] = {
+            equipped = true,
+            name = itemName
+        }
+        
+    elseif slotType == "utils" then
+        local currentUtil = playerData.Inventory.Equipment.Utils[toSlot]
+        if currentUtil and currentUtil.equipped then
+            local emptySlot = InventoryFunctions.ReturnAvailableSlot(inventory)
+            if emptySlot then
+                inventory[emptySlot] = currentUtil.name
+            end
+        end
+        
+        playerData.Inventory.Equipment.Utils[toSlot] = {
+            equipped = true,
+            name = itemName
+        }
+    end
+    
+    InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
+    DebouncedSave(player)
+    
+    return true, "Equipped " .. itemName
+end
+
+function InventoryService.Client:EquipItem(player, fromSlot, toSlot, itemName, slotType)
+    return self.Server:EquipItem(player, fromSlot, toSlot, itemName, slotType)
+end
+
 local function applyStarterKit(inventory)
     for i = 1, inventory.SlotCount do
         inventory.PlayerInventory[i] = ""
@@ -120,6 +187,7 @@ local function GetSlotCount(equipment)
     for i, v in pairs(equipment.Clothing) do
         if table.find(availableSlots, i) then 
             if v.equipped then
+                print(slotCount)
                 slotCount += 5
             end
         end
@@ -136,12 +204,12 @@ function InventoryService:CreatePlayerInventory()
             Clothing = {
                 Mask = { equipped = false, name = "" },
                 Gloves = { equipped = false, name = "" },
+                Armor = { equipped = true, name = "6B45" },
                 TShirt = { equipped = true, name = "Default" },
                 Pants = { equipped = true, name = "Default" },
                 Backpack = { equipped = false, name = "Fieldpack45" },
                 Leggings = { equipped = false, name = "" },
                 Helmet = { equipped = false, name = "" },
-                Armor = { equipped = true, name = "6B45" },
             },
             Utils = {
                 Melee = { equipped = true, name = "Tomahawk" },
@@ -158,8 +226,10 @@ function InventoryService:CreatePlayerInventory()
         SlotCount = 0,
     }
 
+    print(newInventory.Equipment)
     local slotCount = GetSlotCount(newInventory.Equipment)
     newInventory.SlotCount = slotCount
+    print(newInventory.SlotCount)
 
     for i = 1, slotCount do
         newInventory.PlayerInventory[i] = ""
@@ -186,7 +256,7 @@ function InventoryService.Client:GetInventory(player)
 
     normalizeToDense(playerData.Inventory)
 
-    print(playerData.Inventory.SlotCount, playerData.Inventory.Equipment)
+    print(playerData.Inventory.SlotCount, playerData.Inventory.Equ)
     
     return {
         PlayerInventory = playerData.Inventory.PlayerInventory,
@@ -294,7 +364,6 @@ function InventoryService.Client:PickupItem(player, itemName, dropId)
         return false, "Invalid dropId"
     end
 
-    -- Find item in workspace by DropID server-side
     local droppedItemsFolder = workspace:FindFirstChild(DROPPED_ITEMS_FOLDER_NAME)
     local droppedItem = nil
 
@@ -308,11 +377,9 @@ function InventoryService.Client:PickupItem(player, itemName, dropId)
     end
 
     if not droppedItem then
-        warn("PickupItem: item not found in workspace, dropId:", dropId, "player:", player.Name)
         return false, "Item not found"
     end
 
-    -- Proximity check using real server-side position
     local character = player.Character
     local hrp = character and character:FindFirstChild("HumanoidRootPart")
     if not hrp then return false, "No character" end
@@ -337,7 +404,6 @@ end
 local function initPlayer(player)
     local playerInventory = InventoryService:CreatePlayerInventory() -- This already has default Equipment
 
-    -- Default gear values
     local playerGear = {
         Backpack = nil,
         Leggings = nil,
@@ -353,7 +419,6 @@ local function initPlayer(player)
     else
         local savedInventory = defaultInventory.loadSavedInventory(player)
         if savedInventory and type(savedInventory) == "table" then
-            -- Load inventory items
             local source = savedInventory.PlayerInventory or savedInventory
             for i, item in pairs(source) do
                 if item and item ~= "" and isValidItem(item) then
@@ -361,9 +426,7 @@ local function initPlayer(player)
                 end
             end
             
-            -- ✅ Load Equipment if it exists in save
             if savedInventory.Equipment then
-                -- Merge saved clothing with defaults
                 if savedInventory.Equipment.Clothing then
                     for slot, data in pairs(savedInventory.Equipment.Clothing) do
                         playerInventory.Equipment.Clothing[slot] = data
@@ -380,21 +443,16 @@ local function initPlayer(player)
                     end
                 end
             else
-                -- ✅ No saved Equipment? Use defaults from CreatePlayerInventory
                 print("No saved Equipment, using defaults for:", player.Name)
-                -- playerInventory already has defaults from CreatePlayerInventory
             end
             
-            -- Load gear if it exists
             if savedInventory.gear then
                 for slot, value in pairs(savedInventory.gear) do
                     playerGear[slot] = value
                 end
             end
         else
-            -- No saved inventory at all, apply starter kit
             applyStarterKit(playerInventory)
-            print("No saved inventory, gave starter kit for:", player.Name)
         end
     end
 
@@ -414,10 +472,6 @@ local function initPlayer(player)
         currentSlot = 0,
     }
 
-    -- Debug: Print what was loaded
-    print("Equipment after init for", player.Name, ":", playerInventory.Equipment)
-    print("gear after init:", playerGear)
-
     saveInventoryNow(player, playerInventory)
     inventoryReady[player] = true
 
@@ -426,8 +480,6 @@ local function initPlayer(player)
             InventoryService.Client.InventoryUpdated:Fire(player, playerInventory)
         end
     end)
-
-    print("Inventory initialized for:", player.Name, PlayerInventories[player])
 end
 
 task.spawn(function()

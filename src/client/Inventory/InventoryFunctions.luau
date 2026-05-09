@@ -70,7 +70,7 @@ function InventoryFunctions.PickupItem()
     local direction = mouseLocation.Direction
 
     local raycastParams = RaycastParams.new()
-    raycastParams.FilterType = Enum.RaycastFilterType.Exclude  -- Blacklist is deprecated
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
     raycastParams.FilterDescendantsInstances = {player.Character}
 
     local result = workspace:Raycast(origin, direction * RAY_DISTANCE, raycastParams)

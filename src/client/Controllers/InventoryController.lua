@@ -16,13 +16,9 @@ local playerGui = player:WaitForChild("PlayerGui")
 local InventoryService
 
 local InventoryUIController = require(script.Parent.Parent.Inventory:WaitForChild("InventoryUIController"))
-InventoryUIController:InitSys()
 
 local slots = InventoryUIController.slots
-
-repeat task.wait() until #slots.Inventory > 0
-local SLOT_COUNT = #slots.Inventory
-print("Initial SLOT_COUNT from UI:", SLOT_COUNT)
+print(slots)
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -38,10 +34,6 @@ local dragging = {
     fromSlot = nil,
     clone = nil,
 }
-
-for i = 1, SLOT_COUNT do
-    playerInventoryData[i] = ""
-end
 
 local function getMousePos()
     local mousePos = UserInputService:GetMouseLocation()
@@ -73,6 +65,7 @@ local function getSlotUnderMouse()
     local guiInset = GuiService:GetGuiInset()
     local adjustedMousePos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
 
+    -- Check inventory slots
     for index, slot in pairs(slots.Inventory) do
         if slot then
             local slotPos = slot.AbsolutePosition
@@ -82,11 +75,57 @@ local function getSlotUnderMouse()
                 and adjustedMousePos.Y >= slotPos.Y
                 and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
             then
-                return index, slot
+                return index, slot, "inventory"
             end
         end
     end
-    return nil, nil
+    
+    -- Check weapon slots
+    for slotName, slotFrame in pairs(slots.WeaponSlots) do
+        if slotFrame and slotFrame:IsA("Frame") then
+            local slotPos = slotFrame.AbsolutePosition
+            local slotSize = slotFrame.AbsoluteSize
+            if adjustedMousePos.X >= slotPos.X
+                and adjustedMousePos.X <= slotPos.X + slotSize.X
+                and adjustedMousePos.Y >= slotPos.Y
+                and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
+            then
+                return slotName, slotFrame, "weapon"
+            end
+        end
+    end
+    
+    -- Check gear slots
+    for slotName, slotFrame in pairs(slots.Gear) do
+        if slotFrame and slotFrame:IsA("Frame") then
+            local slotPos = slotFrame.AbsolutePosition
+            local slotSize = slotFrame.AbsoluteSize
+            if adjustedMousePos.X >= slotPos.X
+                and adjustedMousePos.X <= slotPos.X + slotSize.X
+                and adjustedMousePos.Y >= slotPos.Y
+                and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
+            then
+                return slotName, slotFrame, "gear"
+            end
+        end
+    end
+    
+    -- -- Check utils slots
+    -- for slotName, slotFrame in pairs(slots.Utils) do -- first 3 slot shoul be not be availabe from equiping directly
+    --     if slotFrame and slotFrame:IsA("Frame") then
+    --         local slotPos = slotFrame.AbsolutePosition
+    --         local slotSize = slotFrame.AbsoluteSize
+    --         if adjustedMousePos.X >= slotPos.X
+    --             and adjustedMousePos.X <= slotPos.X + slotSize.X
+    --             and adjustedMousePos.Y >= slotPos.Y
+    --             and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
+    --         then
+    --             return slotName, slotFrame, "utils"
+    --         end
+    --     end
+    -- end
+    
+    return nil, nil, nil
 end
 
 local function updateSlot(index)
@@ -129,8 +168,8 @@ local function updateSlot(index)
     end
 end
 
-local function RenderItems()
-    for i = 1, SLOT_COUNT do
+local function RenderItems(slotCount)
+    for i = 1, slotCount do
         updateSlot(i)
     end
 end
@@ -141,17 +180,13 @@ local function applyInventory(inventory)
         return
     end
 
-    if inventory.SlotCount and inventory.SlotCount > 0 then
-        SLOT_COUNT = inventory.SlotCount
-        print("SLOT_COUNT updated from server:", SLOT_COUNT)
-    end
-
-    for i = 1, SLOT_COUNT do
+    for i = 1, inventory.SlotCount do
         playerInventoryData[i] = inventory.PlayerInventory[i] or ""
     end
 
-    InventoryUIController:ApplyInventoryData(inventory.PlayerInventory)
-    RenderItems()
+    print("Applying", inventory)
+    InventoryUIController:ApplyInventoryData(inventory)
+    RenderItems(inventory.SlotCount)
 end
 
 local function SlotHandler()
@@ -179,19 +214,49 @@ local function setupInventoryListener()
     InventoryService.InventoryUpdated:Connect(function(data)
         if not data or not data.PlayerInventory then return end
 
-        if data.SlotCount and data.SlotCount > 0 then
-            SLOT_COUNT = data.SlotCount
-        end
-
-        for i = 1, SLOT_COUNT do
+        for i = 1, data.SlotCount do
             playerInventoryData[i] = data.PlayerInventory[i] or ""
         end
 
-        for i = 1, SLOT_COUNT do
+        for i = 1, data.SlotCount do
             if i ~= dragging.fromSlot then
                 updateSlot(i)
             end
         end
+    end)
+end
+
+local function equipItem(fromSlot, toSlot, slotFrame, slotType)
+    local fromItem = playerInventoryData[fromSlot]
+    if not fromItem or fromItem == "" then return end
+    if slotType == "inventory" then return end
+
+    print(slotType)
+    print(playerInventoryData)
+
+    local oldItem = playerInventoryData[toSlot] or ""
+    
+    playerInventoryData[fromSlot] = ""
+    playerInventoryData[toSlot] = fromItem
+    updateSlot(fromSlot)
+    updateSlot(toSlot)
+    
+    InventoryService.EquipItem(player, fromSlot, toSlot, fromItem, slotType):andThen(function(success, message)
+        if not success then
+            playerInventoryData[fromSlot] = fromItem
+            playerInventoryData[toSlot] = oldItem
+            updateSlot(fromSlot)
+            updateSlot(toSlot)
+            warn("Equip failed:", message)
+        else
+            print("Equipped", fromItem, "to", toSlot)
+        end
+    end):catch(function(err)
+        warn("Equip error:", err)
+        playerInventoryData[fromSlot] = fromItem
+        playerInventoryData[toSlot] = oldItem
+        updateSlot(fromSlot)
+        updateSlot(toSlot)
     end)
 end
 
@@ -203,7 +268,8 @@ UserInputService.InputEnded:Connect(function(input)
             return
         end
 
-        local toSlot = getSlotUnderMouse()
+        local toSlot, slotFrame, slotType = getSlotUnderMouse()
+        equipItem(dragging.fromSlot, toSlot, slotFrame, slotType)
 
         if dragging.clone then
             dragging.clone:Destroy()
@@ -302,7 +368,7 @@ function InventoryController:KnitStart()
     setupInventoryListener()
 
     InventoryService:GetInventory():andThen(function(inventory)
-        print("Initial inventory received, SlotCount:", inventory and inventory.SlotCount)
+        print("Initial inventory received, SlotCount:", inventory)
         applyInventory(inventory)
         SlotHandler()
     end):catch(function(err)
