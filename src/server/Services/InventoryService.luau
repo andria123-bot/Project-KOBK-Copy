@@ -17,7 +17,7 @@ local inventoryReady = {}
 
 local InventoryFunctions = require(script.Parent.Parent.Inventory.InventoryFunctions)
 
-local forcedKit = true
+local forcedKit = false
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
 local MOVE_RATE_LIMIT = 0.2
@@ -63,12 +63,17 @@ local function saveInventoryNow(player, inventory)
     if not playerData then return false end
 
     normalizeToDense(inventory)
+    print("=== SAVING INVENTORY ===")
+    print("Player:", player.Name)
+    print("PlayerInventory:", inventory.PlayerInventory)
+    print("Equipment:", inventory.Equipment)
+    print("Equipment.Weapons:", inventory.Equipment and inventory.Equipment.Weapons)
     local success, err = pcall(function()
         defaultInventory.saveInventory(player, {
             weaponSystem = {
                 Inventory = {
                     PlayerInventory = inventory.PlayerInventory,
-                    StorageInventory = inventory.StorageInventory or {},
+                    StorageInventory = inventory.StorageInventory,
                     Equipment = inventory.Equipment, 
                     SlotCount = inventory.SlotCount,
                 },
@@ -115,8 +120,13 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
     if inventory[fromSlot] ~= itemName then
         return false, "Item not found in slot"
     end
+    print("=== EQUIP ITEM ===")
+    print("Before equip - Weapons:", playerData.Inventory.Equipment.Weapons)
+    -- ... do equip ...
+    
     
     inventory[fromSlot] = ""
+    print(inventory)
     
     if slotType == "weapon" then
         local currentWeapon = playerData.Inventory.Equipment.Weapons[toSlot]
@@ -127,6 +137,8 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
             end
         end
         
+        print(playerData.Inventory.Equipment.Weapons)
+        print(toSlot)
         playerData.Inventory.Equipment.Weapons[toSlot] = {
             equipped = true,
             item = itemName
@@ -160,7 +172,7 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
             name = itemName
         }
     end
-    
+    print("After equip - Weapons:", playerData.Inventory.Equipment.Weapons)
     InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
     DebouncedSave(player)
     
@@ -218,9 +230,9 @@ function InventoryService:CreatePlayerInventory()
                 Compass = { equipped = false, name = "" },
             },
             Weapons = {
-                Slot1 = { equipped = true, item = "HK416" },
-                Slot2 = { equipped = true, item = "Khrissy10R" },
-                Slot3 = { equipped = true, item = "Tomahawk" },
+                Gun1 = { equipped = false, item = "" },
+                Gun2 = { equipped = false, item = "" },
+                Gun3 = { equipped = false, item = "" },
             },
         },
         SlotCount = 0,
@@ -402,7 +414,7 @@ function InventoryService.Client:PickupItem(player, itemName, dropId)
 end
 
 local function initPlayer(player)
-    local playerInventory = InventoryService:CreatePlayerInventory() -- This already has default Equipment
+    local playerInventory = InventoryService:CreatePlayerInventory()
 
     local playerGear = {
         Backpack = nil,
@@ -419,42 +431,62 @@ local function initPlayer(player)
     else
         local savedInventory = defaultInventory.loadSavedInventory(player)
         if savedInventory and type(savedInventory) == "table" then
-            local source = savedInventory.PlayerInventory or savedInventory
-            for i, item in pairs(source) do
-                if item and item ~= "" and isValidItem(item) then
-                    playerInventory.PlayerInventory[i] = item
-                end
-            end
-            
-            if savedInventory.Equipment then
-                if savedInventory.Equipment.Clothing then
-                    for slot, data in pairs(savedInventory.Equipment.Clothing) do
-                        playerInventory.Equipment.Clothing[slot] = data
+            print("=== LOADED SAVED INVENTORY ===")
+            print("PlayerInventory:", savedInventory.PlayerInventory)
+            print("Equipment:", savedInventory.Equipment)
+            print("Equipment.Weapons:", savedInventory.Equipment and savedInventory.Equipment.Weapons)
+        
+            if savedInventory and type(savedInventory) == "table" then
+                -- Load PlayerInventory items
+                local source = savedInventory.PlayerInventory or savedInventory
+                for i, item in pairs(source) do
+                    if item and item ~= "" and isValidItem(item) then
+                        playerInventory.PlayerInventory[i] = item
                     end
                 end
-                if savedInventory.Equipment.Utils then
-                    for slot, data in pairs(savedInventory.Equipment.Utils) do
-                        playerInventory.Equipment.Utils[slot] = data
+                
+                -- Load Equipment
+                if savedInventory.Equipment then
+                    if savedInventory.Equipment.Clothing then
+                        for slot, data in pairs(savedInventory.Equipment.Clothing) do
+                            playerInventory.Equipment.Clothing[slot] = data
+                        end
+                    end
+                    if savedInventory.Equipment.Utils then
+                        for slot, data in pairs(savedInventory.Equipment.Utils) do
+                            playerInventory.Equipment.Utils[slot] = data
+                        end
+                    end
+                    if savedInventory.Equipment.Weapons then
+                        for slot, data in pairs(savedInventory.Equipment.Weapons) do
+                            playerInventory.Equipment.Weapons[slot] = data
+                        end
                     end
                 end
-                if savedInventory.Equipment.Weapons then
-                    for slot, data in pairs(savedInventory.Equipment.Weapons) do
-                        playerInventory.Equipment.Weapons[slot] = data
+                
+                -- Load gear
+                if savedInventory.gear then
+                    for slot, value in pairs(savedInventory.gear) do
+                        playerGear[slot] = value
                     end
                 end
             else
-                print("No saved Equipment, using defaults for:", player.Name)
+                applyStarterKit(playerInventory)
             end
-            
-            if savedInventory.gear then
-                for slot, value in pairs(savedInventory.gear) do
-                    playerGear[slot] = value
-                end
-            end
-        else
-            applyStarterKit(playerInventory)
         end
     end
+
+    -- ✅ RECALCULATE SlotCount AFTER loading equipment
+    local newSlotCount = GetSlotCount(playerInventory.Equipment)
+    playerInventory.SlotCount = newSlotCount
+    
+    -- Resize PlayerInventory if slot count changed
+    local oldInventory = playerInventory.PlayerInventory
+    local newInventory = {}
+    for i = 1, newSlotCount do
+        newInventory[i] = oldInventory[i] or ""
+    end
+    playerInventory.PlayerInventory = newInventory
 
     normalizeToDense(playerInventory)
 
@@ -478,6 +510,7 @@ local function initPlayer(player)
     task.delay(1, function()
         if PlayerInventories[player] then
             InventoryService.Client.InventoryUpdated:Fire(player, playerInventory)
+            print(playerInventory)
         end
     end)
 end

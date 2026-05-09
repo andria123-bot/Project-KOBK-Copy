@@ -28,8 +28,17 @@ function defaultInventory.saveInventory(player, playerData)
         return false
     end
 
+    -- Save the FULL inventory structure, not just PlayerInventory array
+    local dataToSave = {
+        PlayerInventory = playerData.weaponSystem.Inventory.PlayerInventory,
+        Equipment = playerData.weaponSystem.Inventory.Equipment,
+        SlotCount = playerData.weaponSystem.Inventory.SlotCount,
+        StorageInventory = playerData.weaponSystem.Inventory.StorageInventory or {},
+        gear = playerData.weaponSystem.gear,
+    }
+
     local success, err = pcall(function()
-        inventoryStore:SetAsync(tostring(player.UserId), playerData.weaponSystem.Inventory.PlayerInventory)
+        inventoryStore:SetAsync(tostring(player.UserId), dataToSave)
     end)
 
     if not success then
