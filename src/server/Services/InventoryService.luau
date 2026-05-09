@@ -20,7 +20,6 @@ local InventoryFunctions = require(script.Parent.Parent.Inventory.InventoryFunct
 local forcedKit = true
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
-local SLOT_COUNT = 15
 local MOVE_RATE_LIMIT = 0.2
 local DROP_RATE_LIMIT = 0.2
 local MAX_PICKUP_DISTANCE = 10
@@ -43,7 +42,7 @@ end
 
 local function normalizeToDense(inventory)
     local dense = {}
-    for i = 1, SLOT_COUNT do
+    for i = 1, inventory.SlotCount do
         dense[i] = inventory.PlayerInventory[i] or ""
     end
     inventory.PlayerInventory = dense
@@ -60,6 +59,9 @@ local function saveInventoryNow(player, inventory)
         return false
     end
 
+    local playerData = PlayerInventories[player]
+    if not playerData then return false end
+
     normalizeToDense(inventory)
     local success, err = pcall(function()
         defaultInventory.saveInventory(player, {
@@ -67,9 +69,19 @@ local function saveInventoryNow(player, inventory)
                 Inventory = {
                     PlayerInventory = inventory.PlayerInventory,
                     StorageInventory = inventory.StorageInventory or {},
-                    Equipment = inventory.Equipment,
+                    Equipment = inventory.Equipment,  -- ✅ Save full Equipment
                     SlotCount = inventory.SlotCount,
                 },
+                gear = playerData.gear,  -- ✅ Save currently equipped gear
+                animations = playerData.animations,
+                sounds = playerData.sounds,
+                lastShotTime = playerData.lastShotTime,
+                bulletId = playerData.bulletId,
+                state = playerData.state,
+                states = playerData.states,
+                modifiers = playerData.modifiers,
+                viewmodel = playerData.viewmodel,
+                currentSlot = playerData.currentSlot,
             }
         })
     end)
@@ -93,7 +105,7 @@ local function DebouncedSave(player)
 end
 
 local function applyStarterKit(inventory)
-    for i = 1, SLOT_COUNT do
+    for i = 1, inventory.SlotCount do
         inventory.PlayerInventory[i] = ""
     end
     for i, item in ipairs(STARTER_KIT) do
@@ -101,21 +113,86 @@ local function applyStarterKit(inventory)
     end
 end
 
+local function GetSlotCount(equipment)
+    local availableSlots = {"Armor", "TShirt", "Pants"}
+    local slotCount = 0
+
+    for i, v in pairs(equipment.Clothing) do
+        if table.find(availableSlots, i) then 
+            if v.equipped then
+                slotCount += 5
+            end
+        end
+    end
+
+    return slotCount
+end
+
 function InventoryService:CreatePlayerInventory()
     local newInventory = {
         PlayerInventory = {},
         StorageInventory = {},
         Equipment = {
-            Clothing = {},
-            Utils = {},
-            Weapons = {},
+            Clothing = {
+                Mask = { equipped = false, name = "" },
+                Gloves = { equipped = false, name = "" },
+                TShirt = { equipped = true, name = "Default" },
+                Pants = { equipped = true, name = "Default" },
+                Backpack = { equipped = false, name = "Fieldpack45" },
+                Leggings = { equipped = false, name = "" },
+                Helmet = { equipped = false, name = "" },
+                Armor = { equipped = true, name = "6B45" },
+            },
+            Utils = {
+                Melee = { equipped = true, name = "Tomahawk" },
+                GPS = { equipped = false, name = "" },
+                Map = { equipped = false, name = "" },
+                Compass = { equipped = false, name = "" },
+            },
+            Weapons = {
+                Slot1 = { equipped = true, item = "HK416" },
+                Slot2 = { equipped = true, item = "Khrissy10R" },
+                Slot3 = { equipped = true, item = "Tomahawk" },
+            },
         },
-        SlotCount = SLOT_COUNT,
+        SlotCount = 0,
     }
-    for i = 1, SLOT_COUNT do
+
+    local slotCount = GetSlotCount(newInventory.Equipment)
+    newInventory.SlotCount = slotCount
+
+    for i = 1, slotCount do
         newInventory.PlayerInventory[i] = ""
     end
     return newInventory
+end
+
+function InventoryService.Client:GetInventory(player)
+    local elapsed = 0
+    while not inventoryReady[player] do
+        task.wait(0.1)
+        elapsed = elapsed + 0.1
+        if elapsed >= 10 then
+            warn("GetInventory: timed out waiting for inventory:", player.Name)
+            break
+        end
+    end
+
+    local playerData = self.Server:GetPlayerData(player)
+    if not playerData then
+        warn("GetInventory: no data for", player.Name)
+        return nil
+    end
+
+    normalizeToDense(playerData.Inventory)
+
+    print(playerData.Inventory.SlotCount, playerData.Inventory.Equipment)
+    
+    return {
+        PlayerInventory = playerData.Inventory.PlayerInventory,
+        SlotCount = playerData.Inventory.SlotCount,
+        Equipment = playerData.Inventory.Equipment
+    }
 end
 
 function InventoryService:GetPlayerData(player)
@@ -149,7 +226,7 @@ function InventoryService:DropItem(player, slot)
     local playerData = PlayerInventories[player]
     if not playerData then return false, nil end
 
-    if typeof(slot) ~= "number" or slot < 1 or slot > SLOT_COUNT then
+    if typeof(slot) ~= "number" or slot < 1 or slot > playerData.Inventory.SlotCount then
         return false, nil
     end
 
@@ -166,35 +243,13 @@ function InventoryService:DropItem(player, slot)
     return false, nil
 end
 
-function InventoryService.Client:GetInventory(player)
-    -- Wait efficiently until initPlayer finishes
-    local elapsed = 0
-    while not inventoryReady[player] do
-        task.wait(0.1)
-        elapsed = elapsed + 0.1
-        if elapsed >= 10 then
-            warn("GetInventory: timed out waiting for inventory:", player.Name)
-            break
-        end
-    end
-
-    local playerData = self.Server:GetPlayerData(player)
-    if not playerData then
-        warn("GetInventory: no data for", player.Name)
-        return nil
-    end
-
-    normalizeToDense(playerData.Inventory)
-    return playerData.Inventory
-end
-
 function InventoryService.Client:MoveItem(player, fromSlot, toSlot)
     local playerData = PlayerInventories[player]
     if not playerData then return false end
 
     if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
-    if fromSlot < 1 or fromSlot > SLOT_COUNT then return false end
-    if toSlot < 1 or toSlot > SLOT_COUNT then return false end
+    if fromSlot < 1 or fromSlot > playerData.Inventory.SlotCount then return false end
+    if toSlot < 1 or toSlot > playerData.Inventory.SlotCount then return false end
     if fromSlot == toSlot then return false end
 
     local now = tick()
@@ -280,33 +335,66 @@ function InventoryService.Client:PickupItem(player, itemName, dropId)
 end
 
 local function initPlayer(player)
-    local playerInventory = InventoryService:CreatePlayerInventory()
+    local playerInventory = InventoryService:CreatePlayerInventory() -- This already has default Equipment
+
+    -- Default gear values
+    local playerGear = {
+        Backpack = nil,
+        Leggings = nil,
+        TShirt = nil,
+        Helmet = nil,
+        Pants = nil,
+        Armor = nil,
+        Mask = nil,
+    }
 
     if forcedKit then
         applyStarterKit(playerInventory)
     else
         local savedInventory = defaultInventory.loadSavedInventory(player)
         if savedInventory and type(savedInventory) == "table" then
+            -- Load inventory items
             local source = savedInventory.PlayerInventory or savedInventory
             for i, item in pairs(source) do
                 if item and item ~= "" and isValidItem(item) then
                     playerInventory.PlayerInventory[i] = item
                 end
             end
-        end
-
-        -- If inventory is still empty after loading, give starter kit
-        local isEmpty = true
-        for i = 1, SLOT_COUNT do
-            if playerInventory.PlayerInventory[i] ~= "" then
-                isEmpty = false
-                break
+            
+            -- ✅ Load Equipment if it exists in save
+            if savedInventory.Equipment then
+                -- Merge saved clothing with defaults
+                if savedInventory.Equipment.Clothing then
+                    for slot, data in pairs(savedInventory.Equipment.Clothing) do
+                        playerInventory.Equipment.Clothing[slot] = data
+                    end
+                end
+                if savedInventory.Equipment.Utils then
+                    for slot, data in pairs(savedInventory.Equipment.Utils) do
+                        playerInventory.Equipment.Utils[slot] = data
+                    end
+                end
+                if savedInventory.Equipment.Weapons then
+                    for slot, data in pairs(savedInventory.Equipment.Weapons) do
+                        playerInventory.Equipment.Weapons[slot] = data
+                    end
+                end
+            else
+                -- ✅ No saved Equipment? Use defaults from CreatePlayerInventory
+                print("No saved Equipment, using defaults for:", player.Name)
+                -- playerInventory already has defaults from CreatePlayerInventory
             end
-        end
-
-        if isEmpty then
-            print("Empty inventory after load, applying starter kit for:", player.Name)
+            
+            -- Load gear if it exists
+            if savedInventory.gear then
+                for slot, value in pairs(savedInventory.gear) do
+                    playerGear[slot] = value
+                end
+            end
+        else
+            -- No saved inventory at all, apply starter kit
             applyStarterKit(playerInventory)
+            print("No saved inventory, gave starter kit for:", player.Name)
         end
     end
 
@@ -314,7 +402,7 @@ local function initPlayer(player)
 
     PlayerInventories[player] = {
         Inventory = playerInventory,
-        gear = {},
+        gear = playerGear,
         animations = {},
         sounds = {},
         lastShotTime = 0,
@@ -326,9 +414,11 @@ local function initPlayer(player)
         currentSlot = 0,
     }
 
-    saveInventoryNow(player, playerInventory)
+    -- Debug: Print what was loaded
+    print("Equipment after init for", player.Name, ":", playerInventory.Equipment)
+    print("gear after init:", playerGear)
 
-    -- Signal that inventory is ready for GetInventory calls
+    saveInventoryNow(player, playerInventory)
     inventoryReady[player] = true
 
     task.delay(1, function()
@@ -337,7 +427,7 @@ local function initPlayer(player)
         end
     end)
 
-    print("Inventory initialized for:", player.Name)
+    print("Inventory initialized for:", player.Name, PlayerInventories[player])
 end
 
 task.spawn(function()
@@ -380,25 +470,25 @@ Players.PlayerRemoving:Connect(function(player)
     inventoryReady[player] = nil
 end)
 
-game:BindToClose(function()
-    print("BindToClose: saving all players...")
+-- game:BindToClose(function()
+--     print("BindToClose: saving all players...")
 
-    local saveTasks = {}
-    for player, playerData in pairs(PlayerInventories) do
-        if playerData and playerData.Inventory then
-            table.insert(saveTasks, task.spawn(function()
-                saveInventoryNow(player, playerData.Inventory)
-                print("BindToClose save done for:", player.Name)
-            end))
-        end
-    end
+--     local saveTasks = {}
+--     for player, playerData in pairs(PlayerInventories) do
+--         if playerData and playerData.Inventory then
+--             table.insert(saveTasks, task.spawn(function()
+--                 saveInventoryNow(player, playerData.Inventory)
+--                 print("BindToClose save done for:", player.Name)
+--             end))
+--         end
+--     end
 
-    for _, t in ipairs(saveTasks) do
-        repeat task.wait() until coroutine.status(t) == "dead"
-    end
+--     for _, t in ipairs(saveTasks) do
+--         repeat task.wait() until coroutine.status(t) == "dead"
+--     end
 
-    print("BindToClose: all saves completed")
-end)
+--     print("BindToClose: all saves completed")
+-- end)
 
 function InventoryService:KnitStart()
     print("InventoryService started")

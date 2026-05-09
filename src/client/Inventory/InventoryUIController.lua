@@ -2,9 +2,7 @@ local InventoryUIController = {}
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RequestWeaponSystemData = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestWeaponSystemData")
-local SendInventory = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("SendInventory")
 local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
-local PlayerSlotData = ReplicatedStorage.Shared.Remotes.InventoryEvents:WaitForChild("PlayerSlotData")
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -17,7 +15,6 @@ local rowsParent = MainParent.InventoryParent.InventoryItemsFrame.SingleRowParen
 local TemplateInvRow = ReplicatedStorage.GUIS.TemplateInvRow
 
 InventoryUIController.cachedData = nil
-local equipped = {}
 
 InventoryUIController.slots = {
     Inventory = {},
@@ -42,7 +39,7 @@ function InventoryUIController:FetchData()
     local success, result = pcall(function()
         return RequestWeaponSystemData:InvokeServer()
     end)
-    
+
     if success and result then
         self.cachedData = result[1].Inventory
         return result
@@ -56,13 +53,13 @@ function InventoryUIController:GetEquippedClothing()
     if not self.cachedData then
         self:FetchData()
     end
-    
+
     if not self.cachedData then
         return {}
     end
-    
+
     local clothing = self.cachedData.Equipment.Clothing
-    equipped = {}
+    local equipped = {}
 
     for slotName, slotData in pairs(clothing) do
         if slotData.equipped and slotData.name ~= "" then
@@ -73,36 +70,39 @@ function InventoryUIController:GetEquippedClothing()
         end
     end
 
+    print("Equipped clothing:", equipped)
     return equipped
 end
 
-function InventoryUIController:InitSlots()
-    local globalIndex = 1
-    self.slots.Inventory = {}
+function InventoryUIController:GetPlayerSlotRows()
+    if not self.cachedData then
+        self:FetchData()
+    end
 
-    for _, row in pairs(rowsParent:GetChildren()) do
-        if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
-            local container = row:FindFirstChild("SlotRow")
-            if container then
-                for _, slot in pairs(container:GetChildren()) do
-                    if slot:IsA("Frame") then
-                        self.slots.Inventory[globalIndex] = slot
-                        slot.Name = "Slot" .. tostring(globalIndex)
-                        local itemIcon = slot:FindFirstChild("ItemIcon")
-                        if itemIcon then
-                            itemIcon.Image = ""
-                        end
-                        globalIndex += 1
-                    end
-                end
+    local count = 0
+
+    if self.cachedData then
+        for i, v in pairs(self.cachedData.Equipment.Clothing) do
+            if (i == "Armor" or i == "TShirt" or i == "Pants") and v.equipped then
+                count = count + 1
+            elseif i == "Backpack" and v.equipped and v.name then
+                print("Equipped backpack:", v.name)
             end
         end
     end
 
-    return globalIndex - 1
+    return count
+end
+
+function InventoryUIController:ApplyParentSize()
+    local count = self:GetPlayerSlotRows()
+    local clamped = math.clamp(count, 1, #self.sizes)
+    rowsParent.Size = self.sizes[clamped]
+    print("ApplyParentSize: rows =", count, "size =", rowsParent.Size)
 end
 
 function InventoryUIController:ApplyRows()
+    -- Clear existing rows, keep EquipmentRow
     for _, child in pairs(rowsParent:GetChildren()) do
         if child:IsA("Frame") and child.Name ~= "EquipmentRow" then
             child:Destroy()
@@ -117,58 +117,76 @@ function InventoryUIController:ApplyRows()
             newRow.Name = gearName .. "Row"
             newRow.Parent = rowsParent
             newRow.RowLabel.Text = gearName
+            print("ApplyRows: added row for", gearName)
         end
     end
 end
 
-function InventoryUIController:GetPlayerSlotRows()
-    local count = 1
-    
-    if not self.cachedData then
-        self:FetchData()
-    end
-    
-    if self.cachedData then
-        for i, v in pairs(self.cachedData.Equipment.Clothing) do
-            if (i == "Armor" or i == "TShirt" or i == "Pants") and v.equipped then
-                count = count + 1
-            elseif i == "Backpack" and v.equipped and v.name then
-                print("Equipped backpack", v.name)
+function InventoryUIController:InitSlots()
+    -- Wait a frame so ApplyRows layout settles before scanning
+    task.wait()
+
+    local globalIndex = 1
+    self.slots.Inventory = {}
+
+    for _, row in pairs(rowsParent:GetChildren()) do
+        if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
+            local container = row:FindFirstChild("SlotRow")
+            if container then
+                for _, slot in pairs(container:GetChildren()) do
+                    if slot:IsA("Frame") then
+                        self.slots.Inventory[globalIndex] = slot
+                        slot.Name = "Slot" .. tostring(globalIndex)
+                        local itemIcon = slot:FindFirstChild("ItemIcon")
+                        if itemIcon then
+                            itemIcon.Image = ""
+                            itemIcon.Visible = true
+                        end
+                        globalIndex += 1
+                    end
+                end
             end
         end
     end
 
-    return count
-end
-
-function InventoryUIController:ApplyParentSize()
-    local count = self:GetPlayerSlotRows()
-    rowsParent.Size = self.sizes[math.clamp(count, 1, #self.sizes)]
+    print("InitSlots: total slots registered =", globalIndex - 1)
+    return globalIndex - 1
 end
 
 function InventoryUIController:UpdateSlot(index)
     local slot = self.slots.Inventory[index]
     if not slot then return end
-    
+
     local itemIcon = slot:FindFirstChild("ItemIcon")
     if not itemIcon then return end
-    
-    local itemName = playerInventoryData[index]
 
+    -- Always restore visibility when updating
+    itemIcon.Visible = true
+
+    local itemName = playerInventoryData[index]
     if itemName and itemName ~= "" then
         if itemImageCache[itemName] then
             itemIcon.Image = itemImageCache[itemName]
-        else
+            return
+        end
+
+        if not itemImageCache[itemName .. "_loading"] then
+            itemImageCache[itemName .. "_loading"] = true
             task.spawn(function()
-                local success, module = pcall(function()
-                    return RequestModule:InvokeServer(playerInventoryData[index])
+                local success, mod = pcall(function()
+                    return RequestModule:InvokeServer(itemName)
                 end)
-                if success and module and module.imageIconId then
-                    itemImageCache[itemName] = module.imageIconId
-                    if self.slots.Inventory[index] then
-                        itemIcon.Image = module.imageIconId
+                if success and mod and mod.imageIconId then
+                    itemImageCache[itemName] = mod.imageIconId
+                    local currentSlot = self.slots.Inventory[index]
+                    if currentSlot then
+                        local currentIcon = currentSlot:FindFirstChild("ItemIcon")
+                        if currentIcon and playerInventoryData[index] == itemName then
+                            currentIcon.Image = mod.imageIconId
+                        end
                     end
                 end
+                itemImageCache[itemName .. "_loading"] = nil
             end)
         end
     else
@@ -177,21 +195,19 @@ function InventoryUIController:UpdateSlot(index)
 end
 
 function InventoryUIController:RenderItems()
-    for index, _ in pairs(playerInventoryData) do
-        self:UpdateSlot(index)
+    for i = 1, #self.slots.Inventory do
+        self:UpdateSlot(i)
     end
 end
 
-SendInventory.OnClientEvent:Connect(function(savedInventory)
-    if type(savedInventory) == "table" and savedInventory.PlayerInventory then
-        playerInventoryData = savedInventory.PlayerInventory
-    else
-        playerInventoryData = savedInventory or {}
+function InventoryUIController:ApplyInventoryData(inventoryTable)
+    if not inventoryTable then return end
+    playerInventoryData = {}
+    for i = 1, #self.slots.Inventory do
+        playerInventoryData[i] = inventoryTable[i] or ""
     end
-    
-    task.wait(0.1)
-    InventoryUIController:RenderItems()
-end)
+    self:RenderItems()
+end
 
 function InventoryUIController:InitSys()
     self:FetchData()

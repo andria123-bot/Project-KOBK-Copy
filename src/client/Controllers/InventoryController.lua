@@ -22,6 +22,7 @@ local slots = InventoryUIController.slots
 
 repeat task.wait() until #slots.Inventory > 0
 local SLOT_COUNT = #slots.Inventory
+print("Initial SLOT_COUNT from UI:", SLOT_COUNT)
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -135,10 +136,21 @@ local function RenderItems()
 end
 
 local function applyInventory(inventory)
-    if not inventory or not inventory.PlayerInventory then return end
+    if not inventory or not inventory.PlayerInventory then
+        warn("applyInventory: invalid inventory data")
+        return
+    end
+
+    if inventory.SlotCount and inventory.SlotCount > 0 then
+        SLOT_COUNT = inventory.SlotCount
+        print("SLOT_COUNT updated from server:", SLOT_COUNT)
+    end
+
     for i = 1, SLOT_COUNT do
         playerInventoryData[i] = inventory.PlayerInventory[i] or ""
     end
+
+    InventoryUIController:ApplyInventoryData(inventory.PlayerInventory)
     RenderItems()
 end
 
@@ -167,11 +179,14 @@ local function setupInventoryListener()
     InventoryService.InventoryUpdated:Connect(function(data)
         if not data or not data.PlayerInventory then return end
 
+        if data.SlotCount and data.SlotCount > 0 then
+            SLOT_COUNT = data.SlotCount
+        end
+
         for i = 1, SLOT_COUNT do
             playerInventoryData[i] = data.PlayerInventory[i] or ""
         end
 
-        -- Only re-render slots not currently being dragged
         for i = 1, SLOT_COUNT do
             if i ~= dragging.fromSlot then
                 updateSlot(i)
@@ -213,7 +228,6 @@ UserInputService.InputEnded:Connect(function(input)
             local fromItem = playerInventoryData[fromSlot]
             local toItem = playerInventoryData[toSlot]
 
-            -- Optimistic update
             playerInventoryData[toSlot] = fromItem
             playerInventoryData[fromSlot] = toItem or ""
             updateSlot(fromSlot)
@@ -223,7 +237,6 @@ UserInputService.InputEnded:Connect(function(input)
 
             InventoryService:MoveItem(fromSlot, toSlot):andThen(function(success)
                 if not success then
-                    -- Revert on failure
                     playerInventoryData[fromSlot] = fromItem
                     playerInventoryData[toSlot] = toItem
                     updateSlot(fromSlot)
@@ -264,7 +277,7 @@ UserInputService.InputEnded:Connect(function(input)
     end
 
     if input.KeyCode == Enum.KeyCode.E then
-        InventoryFunctions:PickupItem()
+        InventoryFunctions.PickupItem()
     end
 end)
 
@@ -289,7 +302,7 @@ function InventoryController:KnitStart()
     setupInventoryListener()
 
     InventoryService:GetInventory():andThen(function(inventory)
-        print("Initial inventory received:", inventory and inventory.PlayerInventory)
+        print("Initial inventory received, SlotCount:", inventory and inventory.SlotCount)
         applyInventory(inventory)
         SlotHandler()
     end):catch(function(err)

@@ -8,12 +8,12 @@ local playerWeaponSystemData = {
                 Clothing = {
                     Mask     = { equipped = false, name = "" },
                     Gloves   = { equipped = false, name = "" },
-                    TShirt   = { equipped = true,  name = "Default" },
-                    Pants    = { equipped = true,  name = "Default" },
+                    Armor    = { equipped = false, name = "6B45" },
+                    TShirt   = { equipped = false,  name = "Default" },
+                    Pants    = { equipped = false,  name = "Default" },
                     Backpack = { equipped = false, name = "Fieldpack45" },
                     Leggings = { equipped = false, name = "" },
                     Helmet   = { equipped = false, name = "" },
-                    Armor    = { equipped = true, name = "6B45" },
                 },
                 Utils = {
                     Melee   = { equipped = true, name = "Tomahawk" },
@@ -32,13 +32,13 @@ local playerWeaponSystemData = {
         };
         
         gear = {
-            Backpack = nil,
-            Leggings = nil,
-            TShirt = nil,
-            Helmet = nil,
-            Pants = nil,
-            Armor = nil,
-            Mask = nil,
+            Backpack = "nil",
+            Leggings = "nil",
+            TShirt = "nil",
+            Helmet = "nil",
+            Pants = "nil",
+            Armor = "nil",
+            Mask = "nil",
         },
 
         animations = {

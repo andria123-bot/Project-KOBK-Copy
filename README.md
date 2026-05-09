@@ -30,13 +30,15 @@ recoil happens on client, create seperated module for that                      
 loadslot shoul be based on weaponSlot not inventory                             | Hard   | Fixed
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
 
+Create NullCheatModule which will flag sussy players                            | Very Hard | Almost Done
+
 when ammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
 remove .Unit on server                                                          | Easy   | Fixed
 fix death bug                                                                   | Medium | Fixed
 when died it doesnt reset ammo                                                  | Medium | Fixed
 Full auto is delayed                                                            | Medium | Fixed
 shooting needs to be more smooth                                                | Medium | Fixed
-Add Anti-cheat for speed, position area, inventory                              | Hard   | Making custom anticheat module which will handle everything
+Add Anti-cheat for speed, position area, inventory                              | Hard   | NullCheatModule
 BulletVisual is not replicated to other clients                                 | Easy   | Fixed
 
 While reloading if i run it sets state to sprinting and i can keep reloding     | Easy   | Fixed
@@ -44,7 +46,8 @@ While shooting camera always leans on X and Z axis                              
 While walking the muzzle effects and tracers are staying at old position        | Hard   | HARD COZ I have no diea how to do that
 When I take item from floor I cant move it or it doesnt save it                 | Medium | Fixed
 Finish the inventory bugs                                                       | Medium | Fixed
-InventorySlots on server is hardcoded                                           | Medium | 
+InventorySlots on server is hardcoded                                           | Medium | Fixed
+Add bullet casing ejection                                                      | Easy   | Server sync left
 
 possible duplication,
 if player drops item then crash it saves the old inventory and item is dropped  | Medium | Fixed

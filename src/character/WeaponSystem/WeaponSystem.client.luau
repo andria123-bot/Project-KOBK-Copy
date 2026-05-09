@@ -90,6 +90,8 @@ local cachedData = {
 	sprintCF = CFrame.new(),
 }
 
+local oldCamCF = CFrame.new()
+
 local isEquipedWeapon = false
 
 function stopAllAnims()
@@ -433,6 +435,13 @@ function Reload()
 end
 
 local zeroAng = CFrame.Angles(0, 0, 0)
+function updateCameraShake()
+	if weaponData and weaponSystem.viewmodel then
+		local newCamCF = weaponSystem.viewmodel:WaitForChild("FakeCamera").CFrame:ToObjectSpace(weaponSystem.viewmodel.PrimaryPart.CFrame)
+		camera.CFrame = camera.CFrame * newCamCF:ToObjectSpace(oldCamCF)
+		oldCamCF =  newCamCF
+	end
+end
 
 connections.RunService = RunService.RenderStepped:Connect(function(dt)
 	if humanoid and weaponSystem.viewmodel and weaponData then
@@ -453,6 +462,8 @@ connections.RunService = RunService.RenderStepped:Connect(function(dt)
 				local kickbackOffset = CFrame.new(posVal.X, posVal.Y, posVal.Z) * CFrame.Angles(rotVal.X, rotVal.Y, rotVal.Z)
 
 				weaponSystem.viewmodel:SetPrimaryPartCFrame(camera.CFrame * cachedData.swayCF * cachedData.aimCF * bobOffset * sideRotOffset * kickbackOffset)
+				print("Updating")
+				updateCameraShake()
 			
 				camera.CFrame = camera.CFrame * CFrame.Angles(camVal.X, camVal.Y, camVal.Z)
 

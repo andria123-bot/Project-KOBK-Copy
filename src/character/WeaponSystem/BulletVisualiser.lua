@@ -11,7 +11,6 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     if not AmmoTracer then return end
     if loadedBulletType:sub(-1) ~= "T" then return end
 
-    -- Ensure folder exists
     local tracerFolder = workspace:FindFirstChild("BulletTracers")
     if not tracerFolder then
         tracerFolder = Instance.new("Folder")
@@ -37,7 +36,6 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
 
     table.insert(activeTracers, tracerData)
 
-    -- tracer movement
     task.spawn(function()
         local lastPos = startOrigin
         local gravity = 196.2
@@ -89,10 +87,88 @@ function BulletVisualiser:CreateVisualTracer(origin, direction, speed, loadedBul
     return tracer
 end
 
+local function EjectCasing(weapon, bulletType, character)
+    if not bulletType or not character or not weapon then return end
+
+    local ejectPart = weapon:FindFirstChild("EjectPart")
+    if not ejectPart then return end
+    
+    local casing = ReplicatedStorage.Objects.BulletCasings:FindFirstChild(bulletType):Clone()
+    if not casing then return end
+    
+    casing.Parent = workspace.EjectedCasings
+    casing.CFrame = ejectPart.WorldCFrame  -- Server uses weapon's actual position
+    casing.Anchored = false
+    casing.CanCollide = true
+    
+    casing.AssemblyLinearVelocity = ejectPart.CFrame.RightVector * 10 + Vector3.new(0, 8, 0)
+    casing.AssemblyAngularVelocity = Vector3.new(math.random(-30, 30), math.random(-30, 30), math.random(-30, 30))
+    
+    game:GetService("Debris"):AddItem(casing, 15)
+end
+
+
 SyncProjectile.OnClientEvent:Connect(function(shooter, firstPersonOrigin, thirdPersonOrigin, direction, weaponData)
     local player = game.Players.LocalPlayer
 
     local origin = (shooter == player) and firstPersonOrigin or thirdPersonOrigin
+    
+    if shooter == player then
+        local character = player.Character
+        if character then
+            local weapon = character:FindFirstChild(weaponData.name)
+            if weapon then
+                local ejectPart = weapon:FindFirstChild("EjectPart")
+                if ejectPart then
+                    local bulletType = weaponData.loadedBulletType
+                    local casing = ReplicatedStorage.Objects.BulletCasings:FindFirstChild(bulletType):Clone()
+                    if casing then
+                        casing.Parent = workspace.EjectedCasings
+                        casing.CFrame = ejectPart.CFrame
+                        casing.Anchored = false
+                        casing.CanCollide = true
+                        
+                        local camera = workspace.CurrentCamera
+                        casing.AssemblyLinearVelocity = camera.CFrame.RightVector * 12 + Vector3.new(0, 8, -2)
+                        casing.AssemblyAngularVelocity = Vector3.new(
+                            math.random(-40, 40),
+                            math.random(-40, 40),
+                            math.random(-40, 40)
+                        )
+                        
+                        game:GetService("Debris"):AddItem(casing, 5)
+                    end
+                end
+            end
+        end
+    else
+        local character = shooter.Character
+        if character then
+            local weapon = character:FindFirstChild(weaponData.name)
+            if weapon then
+                local ejectPart = weapon:FindFirstChild("EjectPart")
+                if ejectPart then
+                    local bulletType = weaponData.loadedBulletType
+                    local casing = ReplicatedStorage.Objects.BulletCasings:FindFirstChild(bulletType):Clone()
+                    if casing then
+                        casing.Parent = workspace.EjectedCasings
+                        casing.CFrame = ejectPart.WorldCFrame
+                        casing.Anchored = false
+                        casing.CanCollide = true
+                        
+                        casing.AssemblyLinearVelocity = ejectPart.CFrame.RightVector * 10 + Vector3.new(0, 6, 0)
+                        casing.AssemblyAngularVelocity = Vector3.new(
+                            math.random(-30, 30),
+                            math.random(-30, 30),
+                            math.random(-30, 30)
+                        )
+                        
+                        game:GetService("Debris"):AddItem(casing, 5)
+                    end
+                end
+            end
+        end
+    end
     
     local loadedBulletType = weaponData.loadedBulletType
 
