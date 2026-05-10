@@ -194,7 +194,7 @@ local function GetSlotCount(equipment)
         end
     end
 
-    return slotCount
+    return slotCount + 15 -- hardcoded 
 end
 
 function InventoryService:CreatePlayerInventory()
@@ -217,6 +217,7 @@ function InventoryService:CreatePlayerInventory()
                 GPS = { equipped = false, name = "" },
                 Map = { equipped = false, name = "" },
                 Compass = { equipped = false, name = "" },
+                Radio   = { equipped = false, name = "" },
             },
             Weapons = {
                 Gun1 = { equipped = false, item = "" },
@@ -293,12 +294,13 @@ function InventoryService:DropItem(player, slot)
     local playerData = PlayerInventories[player]
     if not playerData then return false, nil end
 
-    if typeof(slot) ~= "number" or slot < 1 or slot > playerData.Inventory.SlotCount then
-        return false, nil
-    end
+    -- if typeof(slot) ~= "number" or slot < 1 or slot > 20 then
+    --     return false, nil
+    -- end
 
     local inventory = playerData.Inventory.PlayerInventory
     local item = inventory[slot]
+    print(item)
     if item and item ~= "" then
         inventory[slot] = ""
         normalizeToDense(playerData.Inventory)
@@ -310,14 +312,15 @@ function InventoryService:DropItem(player, slot)
     return false, nil
 end
 
-function InventoryService.Client:MoveItem(player, fromSlot, toSlot)
+function InventoryService:MoveItem(player, fromSlot, toSlot)
     local playerData = PlayerInventories[player]
     if not playerData then return false end
 
-    if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
-    if fromSlot < 1 or fromSlot > playerData.Inventory.SlotCount then return false end
-    if toSlot < 1 or toSlot > playerData.Inventory.SlotCount then return false end
-    if fromSlot == toSlot then return false end
+    -- if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
+    -- if fromSlot < 1 or fromSlot > playerData.Inventory.SlotCount then return false end
+    -- if toSlot < 1 or toSlot > 20 then return false end
+    -- if fromSlot == toSlot then return false end
+    print(fromSlot, toSlot)
 
     local now = tick()
     if lastMoveTime[player] and now - lastMoveTime[player] < MOVE_RATE_LIMIT then
@@ -326,18 +329,23 @@ function InventoryService.Client:MoveItem(player, fromSlot, toSlot)
     lastMoveTime[player] = now
 
     local inventory = playerData.Inventory.PlayerInventory
+    local gear = playerData.Inventory.Equipment.Weapons
     local fromItem = inventory[fromSlot]
     if not fromItem or fromItem == "" then return false end
 
     local toItem = inventory[toSlot] or ""
     inventory[fromSlot] = toItem
-    inventory[toSlot] = fromItem
+    inventory[toSlot] = fromItem -- it should detect if item is dropped on gears slot and if yes then it should change gear[toslot] = fromItem
 
     normalizeToDense(playerData.Inventory)
     DebouncedSave(player)
     InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
 
     return true
+end
+
+function InventoryService.Client:MoveItem(player, fromSlot, toSlot)
+    return self.Server:MoveItem(player, fromSlot, toSlot)
 end
 
 function InventoryService.Client:DropItem(player, slot)

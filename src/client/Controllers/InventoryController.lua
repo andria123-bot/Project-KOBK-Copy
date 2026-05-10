@@ -17,8 +17,7 @@ local InventoryService
 
 local InventoryUIController = require(script.Parent.Parent.Inventory:WaitForChild("InventoryUIController"))
 
-local slots = InventoryUIController.slots
-print(slots)
+local slots = InventoryUIController.slots -- THIS IS NIL
 
 local Menu = playerGui:WaitForChild("Menu")
 local MainParent = Menu.MainParent
@@ -46,7 +45,9 @@ local function createDragClone(original, slotFrame)
     clone.Parent = MainParent
     clone.ZIndex = 10
     clone.AnchorPoint = Vector2.new(0.5, 0)
-    clone.Size = UDim2.new(0, original.AbsoluteSize.X, 0, original.AbsoluteSize.Y)
+    clone.Size = UDim2.new(0, 80, 0, 80)
+    clone.BackgroundTransparency = 1
+    clone.BorderSizePixel = 1
 
     local slotPos = slotFrame.AbsolutePosition
     local slotSize = slotFrame.AbsoluteSize
@@ -65,106 +66,87 @@ local function getSlotUnderMouse()
     local guiInset = GuiService:GetGuiInset()
     local adjustedMousePos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
 
-    -- Check inventory slots
-    for index, slot in pairs(slots.Inventory) do
-        if slot then
-            local slotPos = slot.AbsolutePosition
-            local slotSize = slot.AbsoluteSize
-            if adjustedMousePos.X >= slotPos.X
-                and adjustedMousePos.X <= slotPos.X + slotSize.X
-                and adjustedMousePos.Y >= slotPos.Y
-                and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
-            then
-                return index, slot, "inventory"
-            end
+    local function isHit(frame)
+        if not frame then return false end
+        local pos = frame.AbsolutePosition
+        local size = frame.AbsoluteSize
+        return adjustedMousePos.X >= pos.X and adjustedMousePos.X <= pos.X + size.X
+            and adjustedMousePos.Y >= pos.Y and adjustedMousePos.Y <= pos.Y + size.Y
+    end
+
+    -- Check all slots in order (inventory + equipment)
+    for slotId, slotInfo in pairs(slots.All) do
+        if slotInfo and slotInfo.frame and isHit(slotInfo.frame) then
+            return slotId, slotInfo.type, slotInfo.frame
         end
     end
-    
-    -- Check weapon slots
-    for slotName, slotFrame in pairs(slots.WeaponSlots) do
-        if slotFrame and slotFrame:IsA("Frame") then
-            local slotPos = slotFrame.AbsolutePosition
-            local slotSize = slotFrame.AbsoluteSize
-            if adjustedMousePos.X >= slotPos.X
-                and adjustedMousePos.X <= slotPos.X + slotSize.X
-                and adjustedMousePos.Y >= slotPos.Y
-                and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
-            then
-                return slotName, slotFrame, "weapon"
-            end
-        end
-    end
-    
-    -- Check gear slots
-    for slotName, slotFrame in pairs(slots.Gear) do
-        if slotFrame and slotFrame:IsA("Frame") then
-            local slotPos = slotFrame.AbsolutePosition
-            local slotSize = slotFrame.AbsoluteSize
-            if adjustedMousePos.X >= slotPos.X
-                and adjustedMousePos.X <= slotPos.X + slotSize.X
-                and adjustedMousePos.Y >= slotPos.Y
-                and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
-            then
-                return slotName, slotFrame, "gear"
-            end
-        end
-    end
-    
-    -- -- Check utils slots
-    -- for slotName, slotFrame in pairs(slots.Utils) do -- first 3 slot shoul be not be availabe from equiping directly
-    --     if slotFrame and slotFrame:IsA("Frame") then
-    --         local slotPos = slotFrame.AbsolutePosition
-    --         local slotSize = slotFrame.AbsoluteSize
-    --         if adjustedMousePos.X >= slotPos.X
-    --             and adjustedMousePos.X <= slotPos.X + slotSize.X
-    --             and adjustedMousePos.Y >= slotPos.Y
-    --             and adjustedMousePos.Y <= slotPos.Y + slotSize.Y
-    --         then
-    --             return slotName, slotFrame, "utils"
-    --         end
-    --     end
-    -- end
-    
+
     return nil, nil, nil
 end
 
-local function updateSlot(index)
-    if not index then return end
-    local slot = slots.Inventory[index]
-    if not slot then return end
-    local itemIcon = slot:FindFirstChild("ItemIcon")
+local SLOT_MAPPINGS = {
+    [16] = {"rbxassetid://116460202128729"},
+    [17] = {"rbxassetid://116460202128729"},
+    [18] = {"rbxassetid://116460202128729"},
+
+    [19] = {"rbxassetid://131689103359132"},
+    [20] = {"rbxassetid://138566981597980"},
+    [21] = {"rbxassetid://76798103842404"},
+    [22] = {"rbxassetid://116460202128729"},
+
+    [23] = {"rbxassetid://140060749395813"},
+    [24] = {"rbxassetid://106536134525419"},
+    [25] = {"rbxassetid://127049093744923"},
+    [26] = {"rbxassetid://72916872741117"},
+}
+
+local function updateSlot(slotId)
+    local slotInfo = slots.All[slotId]
+    if not slotInfo or not slotInfo.frame then return end
+
+    local itemIcon = slotInfo.frame:FindFirstChild("ItemIcon")
     if not itemIcon then return end
 
     itemIcon.Visible = true
+    local itemName = playerInventoryData[slotId]
 
-    local itemName = playerInventoryData[index]
     if itemName and itemName ~= "" then
         if itemImageCache[itemName] then
             itemIcon.Image = itemImageCache[itemName]
-            return
-        end
-        if not itemImageCache[itemName .. "_loading"] then
-            itemImageCache[itemName .. "_loading"] = true
-            task.spawn(function()
-                local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
-                local success, mod = pcall(function()
-                    return RequestModule:InvokeServer(itemName)
-                end)
-                if success and mod and mod.imageIconId then
-                    itemImageCache[itemName] = mod.imageIconId
-                    local currentSlot = slots.Inventory[index]
-                    if currentSlot then
-                        local currentIcon = currentSlot:FindFirstChild("ItemIcon")
-                        if currentIcon and playerInventoryData[index] == itemName then
-                            currentIcon.Image = mod.imageIconId
+        else
+            if not itemImageCache[itemName .. "_loading"] then
+                itemImageCache[itemName .. "_loading"] = true
+                task.spawn(function()
+                    local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
+                    local success, mod = pcall(function()
+                        return RequestModule:InvokeServer(itemName)
+                    end)
+                    if success and mod and mod.imageIconId then
+                        itemImageCache[itemName] = mod.imageIconId
+                        local currentSlotInfo = slots.All[slotId]
+                        if currentSlotInfo and currentSlotInfo.frame then
+                            local currentIcon = currentSlotInfo.frame:FindFirstChild("ItemIcon")
+                            if currentIcon and playerInventoryData[slotId] == itemName then
+                                currentIcon.Image = mod.imageIconId
+                            end
                         end
                     end
-                end
-                itemImageCache[itemName .. "_loading"] = nil
-            end)
+                    itemImageCache[itemName .. "_loading"] = nil
+                end)
+            end
         end
     else
-        itemIcon.Image = ""
+        if slotId >= 16 then
+            local mapping = SLOT_MAPPINGS[slotId]
+            if mapping then
+                itemIcon.Image = mapping[1]
+            else
+                itemIcon.Image = ""
+            end
+        else
+            -- Empty inventory slot: clear the image
+            itemIcon.Image = ""
+        end
     end
 end
 
@@ -184,7 +166,6 @@ local function applyInventory(inventory)
         playerInventoryData[i] = inventory.PlayerInventory[i] or ""
     end
 
-    print("Applying", inventory)
     InventoryUIController:ApplyInventoryData(inventory)
     RenderItems(inventory.SlotCount)
 end
@@ -208,6 +189,28 @@ local function SlotHandler()
             end)
         end
     end
+
+    for slotId, slotInfo in pairs(slots.All) do
+        if slotInfo and slotInfo.type ~= "inventory" then
+            local slotFrame = slotInfo.frame
+            local itemIcon = slotFrame:FindFirstChild("ItemIcon")
+            if itemIcon and not itemIcon:GetAttribute("DragHandlerAttached") then
+                itemIcon:SetAttribute("DragHandlerAttached", true)
+                itemIcon.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        if isMoving or isMoveInProgress then return end
+                        if playerInventoryData[slotId] and playerInventoryData[slotId] ~= "" then
+                            isMoving = true
+                            dragging.fromSlot = slotId
+                            dragging.active = true
+                            dragging.clone = createDragClone(itemIcon, slotFrame)
+                            itemIcon.Visible = false
+                        end
+                    end
+                end)
+            end
+        end
+    end
 end
 
 local function setupInventoryListener()
@@ -226,75 +229,15 @@ local function setupInventoryListener()
     end)
 end
 
--- Add this function to update equipment slots visually
-local function updateEquipmentSlot(slotName, itemName)
-    local slotFrame = slots.WeaponSlots[slotName] or slots.Gear[slotName] or slots.Utils[slotName]
-    if not slotFrame then return end
-    
-    local itemIcon = slotFrame:FindFirstChild("ItemIcon")
-    if not itemIcon then return end
-    
-    if itemName and itemName ~= "" then
-        if itemImageCache[itemName] then
-            itemIcon.Image = itemImageCache[itemName]
-        else
-            -- Load image asynchronously
-            task.spawn(function()
-                local RequestModule = ReplicatedStorage.Shared.Remotes.Requests:WaitForChild("RequestModule")
-                local success, mod = pcall(function()
-                    return RequestModule:InvokeServer(itemName)
-                end)
-                if success and mod and mod.imageIconId then
-                    itemImageCache[itemName] = mod.imageIconId
-                    if itemIcon and itemIcon.Parent then
-                        itemIcon.Image = mod.imageIconId
-                    end
-                end
-            end)
-        end
-        itemIcon.Visible = true
-    else
-        itemIcon.Image = ""
-        itemIcon.Visible = true
-    end
+-- Helper: get the ItemIcon for any slot id, whether inventory or equipment
+local function getIconForSlot(id)
+    local invSlot = slots.Inventory[id]
+    if invSlot then return invSlot:FindFirstChild("ItemIcon") end
+    local allSlot = slots.All[id]
+    if allSlot and allSlot.frame then return allSlot.frame:FindFirstChild("ItemIcon") end
+    return nil
 end
 
--- Then in equipItem, update both the source slot AND the equipment slot:
-local function equipItem(fromSlot, toSlot, slotFrame, slotType)
-    local fromItem = playerInventoryData[fromSlot]
-    if not fromItem or fromItem == "" then return end
-    if slotType == "inventory" then return end
-
-    local oldItem = playerInventoryData[toSlot] or ""
-    
-    -- Update local data
-    playerInventoryData[fromSlot] = ""
-    playerInventoryData[toSlot] = fromItem
-    
-    -- Update UI
-    updateSlot(fromSlot)                    -- Clear source slot
-    updateEquipmentSlot(toSlot, fromItem)   -- Show item in equipment slot
-    
-    -- Send to server
-    InventoryService.EquipItem(player, fromSlot, toSlot, fromItem, slotType):andThen(function(success, message)
-        if not success then
-            -- Revert on failure
-            playerInventoryData[fromSlot] = fromItem
-            playerInventoryData[toSlot] = oldItem
-            updateSlot(fromSlot)
-            updateEquipmentSlot(toSlot, oldItem)
-            warn("Equip failed:", message)
-        else
-            print("Equipped", fromItem, "to", toSlot)
-        end
-    end):catch(function(err)
-        warn("Equip error:", err)
-        playerInventoryData[fromSlot] = fromItem
-        playerInventoryData[toSlot] = oldItem
-        updateSlot(fromSlot)
-        updateEquipmentSlot(toSlot, oldItem)
-    end)
-end
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging.active then
         if not dragging.fromSlot then
@@ -303,8 +246,7 @@ UserInputService.InputEnded:Connect(function(input)
             return
         end
 
-        local toSlot, slotFrame, slotType = getSlotUnderMouse()
-        equipItem(dragging.fromSlot, toSlot, slotFrame, slotType)
+        local toSlot, slotType, slotFrame = getSlotUnderMouse()
 
         if dragging.clone then
             dragging.clone:Destroy()
@@ -313,19 +255,12 @@ UserInputService.InputEnded:Connect(function(input)
 
         local fromSlot = dragging.fromSlot
 
-        local originalSlot = slots.Inventory[fromSlot]
-        if originalSlot then
-            local originalIcon = originalSlot:FindFirstChild("ItemIcon")
-            if originalIcon then
-                originalIcon.Visible = true
-            end
-        end
-
         isMoving = false
         dragging.active = false
         dragging.fromSlot = nil
 
         if toSlot and toSlot ~= fromSlot then
+            -- Valid drop target: swap data and let updateSlot handle icon visibility
             local fromItem = playerInventoryData[fromSlot]
             local toItem = playerInventoryData[toSlot]
 
@@ -335,9 +270,11 @@ UserInputService.InputEnded:Connect(function(input)
             updateSlot(toSlot)
 
             isMoveInProgress = true
+            print(fromSlot, toSlot)
 
             InventoryService:MoveItem(fromSlot, toSlot):andThen(function(success)
                 if not success then
+                    print("Not success")
                     playerInventoryData[fromSlot] = fromItem
                     playerInventoryData[toSlot] = toItem
                     updateSlot(fromSlot)
@@ -352,6 +289,10 @@ UserInputService.InputEnded:Connect(function(input)
                 updateSlot(toSlot)
                 isMoveInProgress = false
             end)
+        else
+            -- Dropped on nothing or same slot: just restore the icon at fromSlot
+            local icon = getIconForSlot(fromSlot)
+            if icon then icon.Visible = true end
         end
     end
 
@@ -362,6 +303,7 @@ UserInputService.InputEnded:Connect(function(input)
                 local oldItem = playerInventoryData[slot]
                 playerInventoryData[slot] = ""
                 updateSlot(slot)
+                print(oldItem, slot)
 
                 InventoryService:DropItem(slot):andThen(function(success)
                     if not success then

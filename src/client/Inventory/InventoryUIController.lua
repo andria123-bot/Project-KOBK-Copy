@@ -23,6 +23,7 @@ InventoryUIController.slots = {
     Gear = {},
     WeaponSlots = {},
     Utils = {},
+    All = {},
 }
 
 InventoryUIController.sizes = {
@@ -41,56 +42,81 @@ function InventoryUIController:InitGearSlots()
     self.slots.WeaponSlots = {}
     self.slots.Utils = {}
     
+    -- Start from after inventory slots (assuming inventory ended at 15)
+    local nextSlotId = 16
+    
     for _, row in pairs(equipmentFrame:GetChildren()) do
         if row:IsA("Frame") then
-            
             local slotContainer = row:FindFirstChild("SlotRow") or row
+            local rowName = row.Name
             
             for _, slotFrame in pairs(slotContainer:GetChildren()) do
                 if slotFrame:IsA("Frame") then
-                    
-                    local rowName = row.Name
-                    local slotName = slotFrame.Name
-                    
-                    if rowName:find("Weapon") or slotName:find("Weapon") or slotName:find("Slot") then
-                        self.slots.WeaponSlots[slotName] = slotFrame
-                    elseif rowName:find("Util") or rowName:find("Tool") or slotName:find("Melee") then
-                        self.slots.Utils[slotName] = slotFrame
+                    if rowName == "Weapons" then
+                        self.slots.WeaponSlots[#self.slots.WeaponSlots + 1] = slotFrame
+                        self.slots.All[nextSlotId] = {frame = slotFrame, type = "weapon", index = nextSlotId}
+                        nextSlotId = nextSlotId + 1
+                    elseif rowName == "Utils" then
+                        self.slots.Utils[#self.slots.Utils + 1] = slotFrame
+                        self.slots.All[nextSlotId] = {frame = slotFrame, type = "utils", index = nextSlotId}
+                        nextSlotId = nextSlotId + 1
                     else
-                        self.slots.Gear[slotName] = slotFrame
+                        self.slots.Gear[#self.slots.Gear + 1] = slotFrame
+                        self.slots.All[nextSlotId] = {frame = slotFrame, type = "gear", index = nextSlotId}
+                        nextSlotId = nextSlotId + 1
                     end
                 end
             end
         end
     end
+    
+    print("Total All slots:", #self.slots.All)
 end
+
+local SLOT_MAPPINGS = {
+    [1] = {"rbxassetid://132850954017584"}, -- Compass
+    [2] = {"rbxassetid://80638653462369"},  -- Map
+    [3] = {"rbxassetid://109094995752217"}, -- GPS
+    [4] = {"rbxassetid://97881204816864"},  -- Knife
+    [5] = {"rbxassetid://71615413080701"},  -- Radio
+}
 
 function InventoryUIController:InitSlots()
     task.wait()
 
     local globalIndex = 1
     self.slots.Inventory = {}
+    
+    -- Start All from 1
+    self.slots.All = {}
 
     for _, row in pairs(rowsParent:GetChildren()) do
-        if row:IsA("Frame") and row.Name ~= "EquipmentRow" then
-            local container = row:FindFirstChild("SlotRow")
-            if container then
-                for _, slot in pairs(container:GetChildren()) do
-                    if slot:IsA("Frame") then
-                        self.slots.Inventory[globalIndex] = slot
-                        slot.Name = "Slot" .. tostring(globalIndex)
-                        local itemIcon = slot:FindFirstChild("ItemIcon")
-                        if itemIcon then
-                            itemIcon.Image = ""
-                            itemIcon.Visible = true
+        if row:IsA("Frame") then
+            if row.Name == "EquipmentRow" then
+                print("Equipment ;3")
+            else
+                local container = row:FindFirstChild("SlotRow")
+                if container then
+                    for _, slot in pairs(container:GetChildren()) do
+                        if slot:IsA("Frame") then
+                            self.slots.Inventory[globalIndex] = slot
+                            -- Add to All table with correct ID
+                            self.slots.All[globalIndex] = {frame = slot, type = "inventory", index = globalIndex}
+                            slot.Name = "Slot" .. tostring(globalIndex)
+                            local itemIcon = slot:FindFirstChild("ItemIcon")
+                            if itemIcon then
+                                itemIcon.Image = ""
+                                itemIcon.Visible = true
+                            end
+                            globalIndex += 1
                         end
-                        globalIndex += 1
                     end
                 end
             end
         end
     end
 
+    print("InitSlots: total slots registered =", globalIndex - 1)
     return globalIndex - 1
 end
 

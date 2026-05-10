@@ -20,6 +20,7 @@ local playerWeaponSystemData = {
                     GPS     = { equipped = false, name = "" },
                     Map     = { equipped = false, name = "" },
                     Compass = { equipped = false, name = "" },
+                    Radio   = { equipped = false, name = "" },
                 },
                 Weapons = {
                     Slot1 = { equipped = false, item = "" }, -- loadstartergear should fill these orr player could manually equip these, both are easy way. gn
