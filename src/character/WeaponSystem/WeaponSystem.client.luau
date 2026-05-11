@@ -1,6 +1,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Knit = require(ReplicatedStorage.Packages:WaitForChild("Knit"))
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
+
+-- Knit.Start():await()
+-- local InventoryService = Knit.GetService("InventoryService")
+
+-- InventoryService.InventoryUpdated:Connect(function(inventory)
+-- 	print(inventory)
+-- end)
 
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait() or script.Parent.Parent

@@ -17,7 +17,7 @@ local inventoryReady = {}
 
 local InventoryFunctions = require(script.Parent.Parent.Inventory.InventoryFunctions)
 
-local forcedKit = false
+local forcedKit = true
 local SAVE_DEBOUNCE = 2
 local PERIODIC_SAVE = 60
 local MOVE_RATE_LIMIT = 0.2
@@ -117,10 +117,21 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
     end
     
     inventory[fromSlot] = ""
-    print(inventory)
     
     if slotType == "weapon" then
-        local currentWeapon = playerData.Inventory.Equipment.Weapons[toSlot]
+        -- ✅ Convert numeric slot ID to weapon name
+        local weaponSlotMap = {
+            [16] = "Gun1",
+            [17] = "Gun2", 
+            [18] = "Gun3",
+        }
+        local weaponSlotName = weaponSlotMap[toSlot]
+        
+        if not weaponSlotName then
+            return false, "Invalid weapon slot"
+        end
+        
+        local currentWeapon = playerData.Inventory.Equipment.Weapons[weaponSlotName]
         if currentWeapon and currentWeapon.equipped then
             local emptySlot = InventoryFunctions.ReturnAvailableSlot(inventory)
             if emptySlot then
@@ -128,15 +139,30 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
             end
         end
         
-        print(playerData.Inventory.Equipment.Weapons)
-        print(toSlot)
-        playerData.Inventory.Equipment.Weapons[toSlot] = {
+        playerData.Inventory.Equipment.Weapons[weaponSlotName] = {
             equipped = true,
             item = itemName
         }
         
     elseif slotType == "gear" then
-        local currentGear = playerData.Inventory.Equipment.Clothing[toSlot]
+        -- Convert numeric slot ID to gear name
+        local gearSlotMap = {
+            [19] = "Helmet",
+            [20] = "Armor",
+            [21] = "TShirt",
+            [22] = "Pants",
+            [23] = "Mask",
+            [24] = "Gloves",
+            [25] = "Leggings",
+            [26] = "Backpack",
+        }
+        local gearSlotName = gearSlotMap[toSlot]
+        
+        if not gearSlotName then
+            return false, "Invalid gear slot"
+        end
+        
+        local currentGear = playerData.Inventory.Equipment.Clothing[gearSlotName]
         if currentGear and currentGear.equipped then
             local emptySlot = InventoryFunctions.ReturnAvailableSlot(inventory)
             if emptySlot then
@@ -144,13 +170,27 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
             end
         end
         
-        playerData.Inventory.Equipment.Clothing[toSlot] = {
+        playerData.Inventory.Equipment.Clothing[gearSlotName] = {
             equipped = true,
             name = itemName
         }
         
     elseif slotType == "utils" then
-        local currentUtil = playerData.Inventory.Equipment.Utils[toSlot]
+        -- Convert numeric slot ID to utils name
+        local utilsSlotMap = {
+            [27] = "Compass",
+            [28] = "Map",
+            [29] = "GPS",
+            [30] = "Melee",
+            [31] = "Radio",
+        }
+        local utilsSlotName = utilsSlotMap[toSlot]
+        
+        if not utilsSlotName then
+            return false, "Invalid utils slot"
+        end
+        
+        local currentUtil = playerData.Inventory.Equipment.Utils[utilsSlotName]
         if currentUtil and currentUtil.equipped then
             local emptySlot = InventoryFunctions.ReturnAvailableSlot(inventory)
             if emptySlot then
@@ -158,11 +198,14 @@ function InventoryService:EquipItem(player, fromSlot, toSlot, itemName, slotType
             end
         end
         
-        playerData.Inventory.Equipment.Utils[toSlot] = {
+        playerData.Inventory.Equipment.Utils[utilsSlotName] = {
             equipped = true,
             name = itemName
         }
     end
+    
+    print(playerData.Inventory.Equipment.Weapons)
+    print(playerData.Inventory)
     InventoryService.Client.InventoryUpdated:Fire(player, playerData.Inventory)
     DebouncedSave(player)
     
@@ -318,7 +361,7 @@ function InventoryService:MoveItem(player, fromSlot, toSlot)
 
     -- if typeof(fromSlot) ~= "number" or typeof(toSlot) ~= "number" then return false end
     -- if fromSlot < 1 or fromSlot > playerData.Inventory.SlotCount then return false end
-    -- if toSlot < 1 or toSlot > 20 then return false end
+    -- if toSlot < 1 or toSlot > playerData.Inventory.SlotCount then return false end
     -- if fromSlot == toSlot then return false end
     print(fromSlot, toSlot)
 
@@ -460,11 +503,9 @@ local function initPlayer(player)
         end
     end
 
-    -- ✅ RECALCULATE SlotCount AFTER loading equipment
     local newSlotCount = GetSlotCount(playerInventory.Equipment)
     playerInventory.SlotCount = newSlotCount
     
-    -- Resize PlayerInventory if slot count changed
     local oldInventory = playerInventory.PlayerInventory
     local newInventory = {}
     for i = 1, newSlotCount do

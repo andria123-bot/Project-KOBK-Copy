@@ -23,9 +23,9 @@ local playerWeaponSystemData = {
                     Radio   = { equipped = false, name = "" },
                 },
                 Weapons = {
-                    Slot1 = { equipped = false, item = "" }, -- loadstartergear should fill these orr player could manually equip these, both are easy way. gn
-                    Slot2 = { equipped = false, item = "" },
-                    Slot3 = { equipped = false, item = "" },
+                    Gun1 = { equipped = false, item = "" }, -- loadstartergear should fill these orr player could manually equip these, both are easy way. gn
+                    Gun2 = { equipped = false, item = "" },
+                    Gun3 = { equipped = false, item = "" },
                 },
             };
 

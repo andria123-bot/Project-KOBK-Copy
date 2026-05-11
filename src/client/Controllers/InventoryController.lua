@@ -121,6 +121,8 @@ local function updateSlot(slotId)
                     local success, mod = pcall(function()
                         return RequestModule:InvokeServer(itemName)
                     end)
+
+                    print(slotId, success )
                     if success and mod and mod.imageIconId then
                         itemImageCache[itemName] = mod.imageIconId
                         local currentSlotInfo = slots.All[slotId]
