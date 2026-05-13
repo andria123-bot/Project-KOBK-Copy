@@ -99,3 +99,4 @@
 -- local InventoryUIController = require(script.Parent.Inventory.InventoryUIController)
 
 -- InventoryUIController:InitSys()
+require(game.ReplicatedStorage.Shared.Modules.InventoryUIController)

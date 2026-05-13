@@ -8,9 +8,9 @@ local playerWeaponSystemData = {
                 Clothing = {
                     Mask     = { equipped = false, name = "" },
                     Gloves   = { equipped = false, name = "" },
-                    Armor    = { equipped = false, name = "6B45" },
-                    TShirt   = { equipped = false,  name = "Default" },
-                    Pants    = { equipped = false,  name = "Default" },
+                    Armor    = { equipped = true, name = "6B45" },
+                    TShirt   = { equipped = true,  name = "WorkingTShirt" },
+                    Pants    = { equipped = true,  name = "WorkingPants" },
                     Backpack = { equipped = false, name = "Fieldpack45" },
                     Leggings = { equipped = false, name = "" },
                     Helmet   = { equipped = false, name = "" },
@@ -23,7 +23,7 @@ local playerWeaponSystemData = {
                     Radio   = { equipped = false, name = "" },
                 },
                 Weapons = {
-                    Gun1 = { equipped = false, item = "" }, -- loadstartergear should fill these orr player could manually equip these, both are easy way. gn
+                    Gun1 = { equipped = true, item = "HK416" }, -- loadstartergear should fill these orr player could manually equip these, both are easy way. gn
                     Gun2 = { equipped = false, item = "" },
                     Gun3 = { equipped = false, item = "" },
                 },
@@ -31,16 +31,6 @@ local playerWeaponSystemData = {
 
             SlotCount = 0;
         };
-        
-        gear = {
-            Backpack = "nil",
-            Leggings = "nil",
-            TShirt = "nil",
-            Helmet = "nil",
-            Pants = "nil",
-            Armor = "nil",
-            Mask = "nil",
-        },
 
         animations = {
             FirstPerson = {

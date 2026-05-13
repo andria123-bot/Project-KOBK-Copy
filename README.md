@@ -30,7 +30,7 @@ recoil happens on client, create seperated module for that                      
 loadslot shoul be based on weaponSlot not inventory                             | Hard   | Fixed
 loadslot can load any weapon by cheater at any time                             | Easy   | Fixed
 
-Create NullCheatModule which will flag sussy players                            | Very Hard | Almost Done
+Create NullCheatModule which will flag sussy players                            | Hard | Almost Done
 
 when ammo is 0 it reloads but never sets ammo's value                           | Easy   | Fixed
 remove .Unit on server                                                          | Easy   | Fixed
@@ -48,6 +48,7 @@ When I take item from floor I cant move it or it doesnt save it                 
 Finish the inventory bugs                                                       | Medium | Fixed
 InventorySlots on server is hardcoded                                           | Medium | Fixed
 Add bullet casing ejection                                                      | Easy   | Server sync left
+Bullet casing ejection needs re-work                                            | Easy   |
 
 possible duplication,
 if player drops item then crash it saves the old inventory and item is dropped  | Medium | Fixed

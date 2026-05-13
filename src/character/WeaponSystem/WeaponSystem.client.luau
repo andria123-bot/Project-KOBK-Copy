@@ -418,7 +418,7 @@ function Reload()
         weaponSystem.modifiers.IsInspecting = false
     end
     
-    local gun = weaponSystem.Inventory.Equipment.Weapons["Slot" .. weaponSystem.currentSlot].item
+    local gun = weaponSystem.Inventory.Equipment.Weapons["Gun" .. weaponSystem.currentSlot].item
 
     if currentAmmo == 0 then
         weaponSystem.animations.FirstPerson[6]:Play()
@@ -470,7 +470,6 @@ connections.RunService = RunService.RenderStepped:Connect(function(dt)
 				local kickbackOffset = CFrame.new(posVal.X, posVal.Y, posVal.Z) * CFrame.Angles(rotVal.X, rotVal.Y, rotVal.Z)
 
 				weaponSystem.viewmodel:SetPrimaryPartCFrame(camera.CFrame * cachedData.swayCF * cachedData.aimCF * bobOffset * sideRotOffset * kickbackOffset)
-				print("Updating")
 				updateCameraShake()
 			
 				camera.CFrame = camera.CFrame * CFrame.Angles(camVal.X, camVal.Y, camVal.Z)
@@ -504,9 +503,9 @@ connections.InputBegan = UIS.InputBegan:Connect(function(input, gpe)
 		if input.KeyCode == Enum.KeyCode.One then
 			print(weaponSystem)
 			if weaponSystem.currentSlot ~= 1 and weaponSystem.state ~= weaponSystem.states[3] and weaponSystem.state ~= weaponSystem.states[8] then
-				if weaponSystem.Inventory.Equipment.Weapons["Slot1"].equipped == true then
-					print(type(weaponSystem.Inventory.Equipment.Weapons.Slot1.item))
-					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Slot1.item)
+				if weaponSystem.Inventory.Equipment.Weapons["Gun1"].equipped == true then
+					print(type(weaponSystem.Inventory.Equipment.Weapons.Gun1.item))
+					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Gun1.item)
 					weaponSystem.currentSlot = 1
 					isEquipedWeapon = true
 				end
@@ -515,8 +514,8 @@ connections.InputBegan = UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Two then
 			if weaponSystem.currentSlot ~= 2 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.Inventory.Equipment.Weapons["Slot2"].equipped == true then
-					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Slot2.item)
+				if weaponSystem.Inventory.Equipment.Weapons["Gun2"].equipped == true then
+					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Gun2.item)
 					weaponSystem.currentSlot = 2
 					isEquipedWeapon = true
 				end
@@ -525,8 +524,8 @@ connections.InputBegan = UIS.InputBegan:Connect(function(input, gpe)
 
 		if input.KeyCode == Enum.KeyCode.Three then
 			if weaponSystem.currentSlot ~= 3 and weaponSystem.state ~= weaponSystem.states[3] then
-				if weaponSystem.Inventory.Equipment.Weapons["Slot3"].equipped == true then
-					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Slot3.item)
+				if weaponSystem.Inventory.Equipment.Weapons["Gun3"].equipped == true then
+					loadSlot(weaponSystem.Inventory.Equipment.Weapons.Gun3.item)
 					weaponSystem.currentSlot = 3
 					isEquipedWeapon = true
 				end
@@ -697,7 +696,7 @@ while task.wait() do
     while weaponSystem.modifiers.IsShooting and weaponData do
         if weaponData and weaponSystem.viewmodel and weaponSystem.modifiers.IsShooting then
             local success, data, ammoType = RequestShoot:InvokeServer(
-                weaponSystem.Inventory.Equipment.Weapons.Slot1.item, 
+                weaponSystem.Inventory.Equipment.Weapons.Gun1.item, 
                 camera.CFrame.LookVector, 
                 weaponSystem.viewmodel.Muzzle.Position
             )

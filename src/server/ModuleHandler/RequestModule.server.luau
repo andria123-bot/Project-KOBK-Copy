@@ -8,9 +8,11 @@ local WeaponCategory = require(script.Parent.WeaponCategories)
 local ItemList = require(ReplicatedStorage.Shared.Modules.ItemList)
 
 local VALID_ITEMS = {}
-for category, items in pairs(ItemList) do
-    for _, itemName in ipairs(items) do
-        VALID_ITEMS[itemName] = true
+for _, items in pairs(ItemList) do
+    if type(items) == "table" then
+        for _, itemName in ipairs(items) do
+            VALID_ITEMS[itemName] = true
+        end
     end
 end
 
