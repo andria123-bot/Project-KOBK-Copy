@@ -34,7 +34,6 @@ local function findItemInSlot(player, slotId)
     
     local slotRanges = getSlotRanges(player)
     
-    -- Find which clothing this slot belongs to
     local targetClothingType = nil
     for clothingType, range in pairs(slotRanges) do
         if slotId >= range.start and slotId < range.start + range.count then
@@ -74,7 +73,6 @@ local function findTargetFolder(player, targetSlot, sourceItem)
     
     local slotRanges = getSlotRanges(player)
     
-    -- Find which clothing this slot belongs to
     local targetClothingType = nil
     for clothingType, range in pairs(slotRanges) do
         if targetSlot >= range.start and targetSlot < range.start + range.count then
@@ -95,7 +93,6 @@ local function findTargetFolder(player, targetSlot, sourceItem)
                     local relativeSlot = targetSlot - range.start + 1
                     local targetSlotName = "Slot" .. tostring(relativeSlot)
                     
-                    -- Check if slot is occupied
                     for _, item in pairs(invFolder:GetChildren()) do
                         if item:IsA("StringValue") and item.Value == targetSlotName then
                             return invFolder, clothingItem, item
@@ -119,7 +116,6 @@ InventoryMove.OnServerEvent:Connect(function(player, fromSlot, toSlot)
     if not targetFolder then return end
     
     if existingItem then
-        -- Swap items
         local tempValue = sourceItem.Value
         local tempName = sourceItem.Name
         
@@ -129,7 +125,6 @@ InventoryMove.OnServerEvent:Connect(function(player, fromSlot, toSlot)
         existingItem.Value = tempValue
         existingItem.Name = tempName
     else
-        -- Move to empty slot
         local slotRanges = getSlotRanges(player)
         local targetClothingType = nil
         for clothingType, range in pairs(slotRanges) do

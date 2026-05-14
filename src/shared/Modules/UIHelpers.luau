@@ -1,45 +1,28 @@
--- ReplicatedStorage.Modules.UIHelpers
 local UIHelpers = {}
 
--- Get mouse position adjusted for GUI inset
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+
+local gearPlaceholders = {}
+
 function UIHelpers.getMousePosition()
-    local UserInputService = game:GetService("UserInputService")
-    local GuiService = game:GetService("GuiService")
     local mousePos = UserInputService:GetMouseLocation()
     local guiInset = GuiService:GetGuiInset()
     return Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
 end
 
--- Check if mouse is over a frame
-function UIHelpers.isMouseOverFrame(frame, adjustedMousePos)
+function UIHelpers.isMouseOverFrame(frame, mousePos)
     if not frame then return false end
     local pos = frame.AbsolutePosition
     local size = frame.AbsoluteSize
-    return adjustedMousePos.X >= pos.X and adjustedMousePos.X <= pos.X + size.X and
-           adjustedMousePos.Y >= pos.Y and adjustedMousePos.Y <= pos.Y + size.Y
+    return mousePos.X >= pos.X and mousePos.X <= pos.X + size.X
+        and mousePos.Y >= pos.Y and mousePos.Y <= pos.Y + size.Y
 end
 
--- Create a drag clone
-function UIHelpers.createDragClone(original, parent, mousePos)
-    local clone = original:Clone()
-    clone.Parent = parent
-    clone.ZIndex = 999
-    clone.AnchorPoint = Vector2.new(0.5, 0.5)
-    clone.Size = UDim2.fromOffset(original.AbsoluteSize.X, original.AbsoluteSize.Y)
-    
-    local parentPos = parent.AbsolutePosition
-    clone.Position = UDim2.fromOffset(
-        mousePos.X - parentPos.X,
-        mousePos.Y - parentPos.Y
-    )
-    return clone
-end
-
--- Calculate slot ranges based on equipped clothing
 function UIHelpers.getSlotRanges(clothingFolder, clothingOrder)
     local ranges = {}
     local currentSlot = 1
-    
+
     if clothingFolder then
         for _, clothingType in ipairs(clothingOrder) do
             for _, clothingItem in pairs(clothingFolder:GetChildren()) do
@@ -51,19 +34,18 @@ function UIHelpers.getSlotRanges(clothingFolder, clothingOrder)
             end
         end
     end
-    
+
     return ranges, currentSlot - 1
 end
 
--- Get absolute slot number from clothing type and relative slot
 function UIHelpers.getAbsoluteSlotNumber(ranges, clothingType, relativeSlot)
-    if ranges[clothingType] then
-        return ranges[clothingType].start + relativeSlot - 1
+    local range = ranges[clothingType]
+    if range then
+        return range.start + relativeSlot - 1
     end
     return nil
 end
 
--- Get clothing type from slot number
 function UIHelpers.getClothingTypeFromSlot(ranges, absoluteSlot)
     for clothingType, range in pairs(ranges) do
         if absoluteSlot >= range.start and absoluteSlot < range.start + range.count then
@@ -73,7 +55,6 @@ function UIHelpers.getClothingTypeFromSlot(ranges, absoluteSlot)
     return nil, nil
 end
 
--- Load item icon from ItemProperties
 function UIHelpers.getItemIconFromProperties(item)
     local props = item:FindFirstChild("ItemProperties")
     if props then
@@ -85,12 +66,30 @@ function UIHelpers.getItemIconFromProperties(item)
     return nil
 end
 
--- Cache item icon
-function UIHelpers.cacheItemIcon(itemName, iconId, cache)
-    cache[itemName] = iconId
+function UIHelpers.cacheGearPlaceholders(slots)
+    gearPlaceholders = {}
+    for _, slotInfo in pairs(slots.All) do
+        if slotInfo.type ~= "inventory" and slotInfo.slotName then
+            local frame = slotInfo.frame
+            local itemIcon = frame and frame:FindFirstChild("ItemIcon")
+            if itemIcon and itemIcon.Image ~= "" then
+                gearPlaceholders[slotInfo.slotName] = itemIcon.Image
+            end
+        end
+    end
+    return gearPlaceholders
 end
 
--- Get cached icon
+function UIHelpers.getStoredGearImage(slotName)
+    return gearPlaceholders[slotName]
+end
+
+function UIHelpers.cacheItemIcon(itemName, iconId, cache)
+    if itemName and iconId then
+        cache[itemName] = iconId
+    end
+end
+
 function UIHelpers.getCachedIcon(itemName, cache)
     return cache[itemName]
 end

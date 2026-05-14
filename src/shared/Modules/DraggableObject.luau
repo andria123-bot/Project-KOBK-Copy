@@ -4,9 +4,10 @@ DraggableObject.__index = DraggableObject
 function DraggableObject.new(frame, topParent)
     local self = setmetatable({
         Object = frame,
-        TopParent = topParent or frame.Parent, -- parent clone here for proper ZIndex
+        TopParent = topParent or frame.Parent,
         DragStarted = nil,
         DragEnded = nil,
+        CanDrag = nil,
         Dragging = false,
         Clone = nil,
     }, DraggableObject)
@@ -19,13 +20,17 @@ function DraggableObject:Enable()
 
     self.InputBegan = self.Object.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            -- ✅ Check if dragging is allowed
+            -- if self.CanDrag and not self.CanDrag() then
+            --     return  -- Don't start drag
+            -- end
+            
             self.Dragging = true
 
             if self.DragStarted then
                 self.DragStarted()
             end
 
-            -- Clone parented to TopParent so ZIndex is global
             self.Clone = self.Object:Clone()
             self.Clone.Parent = self.TopParent
             self.Clone.ZIndex = 999
@@ -35,7 +40,6 @@ function DraggableObject:Enable()
                 self.Object.AbsoluteSize.Y
             )
 
-            -- Position clone at object's current screen position converted to TopParent space
             local objPos = self.Object.AbsolutePosition
             local objSize = self.Object.AbsoluteSize
             local parentPos = self.TopParent.AbsolutePosition

@@ -1,6 +1,6 @@
 local Clothes = {
     name = "WorkingTShirt",
-    imageIconId = "",
+    imageIconId = "rbxassetid://103687899724625",
     durability = 100,
     maxDurability = 100,
 }
