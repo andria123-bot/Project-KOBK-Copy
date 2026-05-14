@@ -9,6 +9,8 @@ local secondaryModulesFolder = moduleFolder and moduleFolder:FindFirstChild("Sec
 local danebisModulesFolder = moduleFolder and moduleFolder:FindFirstChild("Danebi")
 local throwableModulesFolder = moduleFolder and moduleFolder:FindFirstChild("Throwables")
 
+local clothesModuleFolder = moduleFolder and moduleFolder:FindFirstChild("Clothes")
+
 local weaponCategories = require(script.Parent.WeaponCategories)
 
 function moduleFinder.FindModuleScript(Item)
@@ -56,6 +58,16 @@ function moduleFinder.FindModuleScript(Item)
                 if moduleCategory then
                     moduleScript = moduleCategory:FindFirstChild(Item)
                     if moduleScript then break end
+                end
+            end
+        end
+
+        if not moduleScript and clothesModuleFolder then
+            for _, category in ipairs(weaponCategories.clothesCategories) do
+                local moduleCategory = category
+                print(moduleCategory)
+                if moduleCategory then
+                    moduleScript = clothesModuleFolder:FindFirstChild(moduleCategory)
                 end
             end
         end

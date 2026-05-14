@@ -76,6 +76,30 @@ function Helpers.deequipItem(player, slotName)
 	end
 end
 
+-- In your Helpers.equipItem - add test items when player joins
+function Helpers.addItemToClothingInventory(player, clothingType, slotName, itemName)
+    local playerFolder = playersFolder:FindFirstChild(player.Name)
+    if not playerFolder then return end
+    
+    local clothingFolder = playerFolder:FindFirstChild("Clothing")
+    if not clothingFolder then return end
+    
+    local clothingItem = clothingFolder:FindFirstChild(clothingType) -- "Armor", "Backpack", etc.
+    if not clothingItem then return end
+    
+    -- Get or create Inventory folder inside clothing item
+    local invFolder = clothingItem:FindFirstChild("Inventory")
+    if not invFolder then
+        invFolder = Helpers.createFolder(clothingItem, "Inventory")
+    end
+    
+    -- Create the item
+    local stringValue = Helpers.createStringValue(invFolder, slotName, itemName)
+    Helpers.createItemProperties(stringValue, itemName)
+    
+    return stringValue
+end
+
 function Helpers.setupInventoryFolder(player, value, inventory)
 	local playerFolder = playersFolder:FindFirstChild(player.Name)
 	if not playerFolder then return end
@@ -87,7 +111,8 @@ function Helpers.setupInventoryFolder(player, value, inventory)
 		if extraInventories[itemName] then
 			local clothingFolder = playerFolder:FindFirstChild("Clothing")
 			if clothingFolder then
-				local strValInstance = clothingFolder:FindFirstChild(itemName)
+				local strValInstance = clothingFolder:FindFirstChild(tostring(value))
+				print(strValInstance)
 				if strValInstance then
 					-- Only create Inventory folder, NOT ItemProperties again
 					local invFolder = strValInstance:FindFirstChild("Inventory")
@@ -124,19 +149,19 @@ function Helpers.createItemProperties(parent, itemName)
 	
 	local itemIcon = Instance.new("StringValue")
 	itemIcon.Name = "IconImage"
-	itemIcon.Value = Helpers.GetItemModule("HK416")
+	itemIcon.Value = Helpers.GetItemModule(itemName)
 	itemIcon.Parent = props
 
 	-- Only create Amount/StackSize if the function exists
 	if ItemList.isStackable(itemName) then --add stacksize
 		local amount = Instance.new("NumberValue")
 		amount.Name = "Amount"
-		amount.Value = 1
+		amount.Value = Helpers.GetItemModule(itemName)
 		amount.Parent = props
 
 		local stackSize = Instance.new("NumberValue")
 		stackSize.Name = "StackSize"
-		stackSize.Value = 1
+		stackSize.Value = Helpers.GetItemModule(itemName)
 		stackSize.Parent = props
 	end
 

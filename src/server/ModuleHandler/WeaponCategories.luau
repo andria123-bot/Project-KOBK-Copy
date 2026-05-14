@@ -31,4 +31,9 @@ weaponCategories.throwableCategories = {
 	"Throwing Melee",
 }
 
+weaponCategories.clothesCategories = {
+	"WorkingPants",
+	"WorkingTShirt",
+}
+
 return weaponCategories
