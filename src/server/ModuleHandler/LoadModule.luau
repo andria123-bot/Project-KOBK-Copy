@@ -65,7 +65,6 @@ function moduleFinder.FindModuleScript(Item)
         if not moduleScript and clothesModuleFolder then
             for _, category in ipairs(weaponCategories.clothesCategories) do
                 local moduleCategory = category
-                print(moduleCategory)
                 if moduleCategory then
                     moduleScript = clothesModuleFolder:FindFirstChild(moduleCategory)
                 end

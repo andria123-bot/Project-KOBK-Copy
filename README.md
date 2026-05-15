@@ -16,6 +16,16 @@ rojo serve
 
 For more help, check out [the Rojo documentation](https://rojo.space/docs).
 
+self.cachedData = {
+    Clothing = {}, -- equipped clothes
+    Equipment = {}, -- equipped GPS, Map, Radio and compass
+    Status = {
+        Hotbar = {}, -- 4-8 slots in hotbar
+    }, -- will store badges, chattags, hotbar and stuff
+    
+}
+
+
 dont mind here:
 When player press X it should drop the item
 Add player jump cooldown

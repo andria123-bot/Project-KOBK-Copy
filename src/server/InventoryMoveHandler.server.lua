@@ -1,0 +1,13 @@
+-- -- ServerScriptService.InventoryMoveHandler
+-- local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- local Players = game:GetService("Players")
+-- local InventoryMove = ReplicatedStorage.InventoryMove
+-- local InventoryUpdated = ReplicatedStorage.InventoryUpdated
+-- local InventoryConfig = require(ReplicatedStorage.Shared.Modules.InventoryConfig)
+-- local HashManager = require(script.Parent.Managers.HashManager)
+
+-- Players.PlayerAdded:Connect(function(player)
+--     if player then
+--         HashManager.getPlayer(player)
+--     end
+-- end)
