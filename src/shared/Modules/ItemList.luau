@@ -65,6 +65,11 @@ local ItemList = {
 
 		"7.62.39 AP",
 		"7.62.39 T",
+	},
+
+	Clothes = {
+		"WorkingPants",
+		"WorkingTShirt",
 	}
 }
 

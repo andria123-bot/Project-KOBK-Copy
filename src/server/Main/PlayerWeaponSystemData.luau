@@ -251,7 +251,7 @@ local playerWeaponSystemData = {
                 Clothing = {
                     Mask     = { equipped = false, name = "" },
                     Gloves   = { equipped = false, name = "" },
-                    Armor    = { equipped = true, name = "6B45" },
+                    Armor    = { equipped = false, name = "" },
                     TShirt   = { equipped = true,  name = "WorkingTShirt" },
                     Pants    = { equipped = true,  name = "WorkingPants" },
                     Backpack = { equipped = false, name = "Fieldpack45" },

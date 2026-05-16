@@ -21,6 +21,10 @@
       }
     },
 
+    "ServerStorage": {
+
+    },
+
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "Client": {

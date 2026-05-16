@@ -9,6 +9,5 @@ Promise = "cody-nelson/promise@4.0.1"
 Networker = "reflectionnnn/networker@1.0.1"
 Knit = "sleitnick/knit@^1.7"
 
-
 [server-dependencies]
-Profileservice = "firecam702/profileservice@1.0.0"
+ProfileService = "madstudio/profileservice@1.4.0"
