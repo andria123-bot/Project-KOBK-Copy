@@ -125,7 +125,91 @@ SlotMappings.InventoryTypes = {
 }
 
 -- ============================================================
--- HELPER FUNCTIONS
+-- CLOTHING SLOT MAPPINGS
+-- ============================================================
+
+-- Map clothing item names to their slot type
+SlotMappings.ClothingToSlotType = {
+    ["6B45"] = "Armor",
+    ["WorkingTShirt"] = "TShirt",
+    ["WorkingPants"] = "Pants",
+}
+
+-- Map slot type to display name for UI
+SlotMappings.SlotTypeToDisplay = {
+    Armor = "Armor",
+    TShirt = "TShirt",
+    Pants = "Pants",
+}
+
+-- Priority order for display
+SlotMappings.ClothingPriority = {"Armor", "TShirt", "Pants"}
+
+-- Slot number to clothing mapping (15 slots total: 5 per clothing)
+-- Armor (6B45) - slots 1-5
+-- TShirt (WorkingTShirt) - slots 6-10  
+-- Pants (WorkingPants) - slots 11-15
+SlotMappings.SlotToClothing = {
+    -- Armor slots 1-5
+    [1] = { clothingName = "6B45", slotType = "Armor", localSlot = 1 },
+    [2] = { clothingName = "6B45", slotType = "Armor", localSlot = 2 },
+    [3] = { clothingName = "6B45", slotType = "Armor", localSlot = 3 },
+    [4] = { clothingName = "6B45", slotType = "Armor", localSlot = 4 },
+    [5] = { clothingName = "6B45", slotType = "Armor", localSlot = 5 },
+    -- TShirt slots 6-10
+    [6] = { clothingName = "WorkingTShirt", slotType = "TShirt", localSlot = 1 },
+    [7] = { clothingName = "WorkingTShirt", slotType = "TShirt", localSlot = 2 },
+    [8] = { clothingName = "WorkingTShirt", slotType = "TShirt", localSlot = 3 },
+    [9] = { clothingName = "WorkingTShirt", slotType = "TShirt", localSlot = 4 },
+    [10] = { clothingName = "WorkingTShirt", slotType = "TShirt", localSlot = 5 },
+    -- Pants slots 11-15
+    [11] = { clothingName = "WorkingPants", slotType = "Pants", localSlot = 1 },
+    [12] = { clothingName = "WorkingPants", slotType = "Pants", localSlot = 2 },
+    [13] = { clothingName = "WorkingPants", slotType = "Pants", localSlot = 3 },
+    [14] = { clothingName = "WorkingPants", slotType = "Pants", localSlot = 4 },
+    [15] = { clothingName = "WorkingPants", slotType = "Pants", localSlot = 5 },
+}
+
+-- ============================================================
+-- CLOTHING HELPER FUNCTIONS
+-- ============================================================
+
+-- Get slot number range for a clothing type
+function SlotMappings.GetSlotRangeForClothing(clothingName)
+    local slotType = SlotMappings.ClothingToSlotType[clothingName]
+    if slotType == "Armor" then
+        return 1, 5
+    elseif slotType == "TShirt" then
+        return 6, 10
+    elseif slotType == "Pants" then
+        return 11, 15
+    end
+    return nil, nil
+end
+
+-- Get clothing info from UI slot name (e.g., "Slot1")
+function SlotMappings.GetClothingFromUISlot(uiSlotName)
+    local slotNum = tonumber(uiSlotName:match("%d+"))
+    if not slotNum then return nil end
+    return SlotMappings.SlotToClothing[slotNum]
+end
+
+-- Get UI slot name from clothing name and local slot
+function SlotMappings.GetUISlotNameFromClothing(clothingName, localSlot)
+    local startSlot, _ = SlotMappings.GetSlotRangeForClothing(clothingName)
+    if startSlot then
+        return "Slot" .. (startSlot + localSlot - 1)
+    end
+    return nil
+end
+
+-- Get slot type from clothing item
+function SlotMappings.GetSlotTypeFromClothing(clothingItem)
+    return clothingItem.Value  -- "Armor", "TShirt", "Pants"
+end
+
+-- ============================================================
+-- GENERAL HELPER FUNCTIONS
 -- ============================================================
 
 function SlotMappings.IsEquipmentSlot(slotName)
@@ -175,7 +259,7 @@ function SlotMappings.GetInternalType(uiSlotName)
     return SlotMappings.EquipmentSlots[base] or base
 end
 
-function SlotMappings.GetUISlotName(internalType, isContainer)
+function SlotMappings.GetDisplayUISlotName(internalType, isContainer)
     local uiName = SlotMappings.ReverseEquipment[internalType] or internalType
     if isContainer then
         return SlotMappings.ContainerPrefix .. uiName

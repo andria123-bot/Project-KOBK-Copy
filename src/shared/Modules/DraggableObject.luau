@@ -5,30 +5,52 @@ function DraggableObject.new(frame, topParent)
     local self = setmetatable({
         Object = frame,
         TopParent = topParent or frame.Parent,
-        DragStarted = nil,
-        DragEnded = nil,
-        CanDrag = nil,
+        OnDragStart = nil,
+        OnDragEnd = nil,
+        OnCanDrag = nil,
         Dragging = false,
         Clone = nil,
+        SourceSlot = nil,
     }, DraggableObject)
     return self
 end
 
-function DraggableObject:Enable()
+function DraggableObject:GetTargetUnderMouse(mousePos)
+    local GuiService = game:GetService("GuiService")
+    local guiInset = GuiService:GetGuiInset()
+    local adjustedPos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
+    
+    local targets = self.TopParent:GetDescendants()
+    for _, target in pairs(targets) do
+        if target:IsA("Frame") and target:FindFirstChild("ItemIcon") and target ~= self.Object.Parent then
+            local pos = target.AbsolutePosition
+            local size = target.AbsoluteSize
+            if adjustedPos.X >= pos.X and adjustedPos.X <= pos.X + size.X
+                and adjustedPos.Y >= pos.Y and adjustedPos.Y <= pos.Y + size.Y then
+                print("[DraggableObject]: Target found:", target.Name)
+                return target
+            end
+        end
+    end
+    return nil
+end
+
+function DraggableObject:Enable(sourceSlot)
     local UserInputService = game:GetService("UserInputService")
     local GuiService = game:GetService("GuiService")
 
+    self.SourceSlot = sourceSlot
+
     self.InputBegan = self.Object.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            -- ✅ Check if dragging is allowed
-            -- if self.CanDrag and not self.CanDrag() then
-            --     return  -- Don't start drag
-            -- end
+            if self.OnCanDrag and not self.OnCanDrag() then
+                return
+            end
             
             self.Dragging = true
 
-            if self.DragStarted then
-                self.DragStarted()
+            if self.OnDragStart then
+                self.OnDragStart(self.SourceSlot)
             end
 
             self.Clone = self.Object:Clone()
@@ -74,11 +96,14 @@ function DraggableObject:Enable()
                 self.Clone = nil
             end
 
-            self.Object.Visible = true
-
-            if self.DragEnded then
-                self.DragEnded()
+            local mousePos = UserInputService:GetMouseLocation()
+            local targetFrame = self:GetTargetUnderMouse(mousePos)
+            
+            if self.OnDragEnd then
+                self.OnDragEnd(self.SourceSlot, targetFrame)
             end
+
+            self.Object.Visible = true
         end
     end)
 end
